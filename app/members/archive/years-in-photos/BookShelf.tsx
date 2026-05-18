@@ -249,7 +249,7 @@ export function BookShelf() {
 
             <div style={{ background: selected.singlePage ? '#fafaf8' : '#1c1c1c', borderRadius: '4px', padding: '1.5rem' }}>
               {selected.pages.length > 0 ? (
-                <FlipBook key={selected.id} pages={selected.pages} singlePage={selected.singlePage} />
+                <FlipBook key={selected.id} pages={selected.pages} singlepage={selected.singlePage} />
               ) : (
                 <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
                   <p style={{

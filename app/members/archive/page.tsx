@@ -88,51 +88,51 @@ export default function ArchivePage() {
                   Photos coming soon.
                 </p>
               ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'rgba(45,90,61,.08)' }}>
-                {section.items.map((item) => (
-                  <div key={item.label} style={{
-                    background: 'var(--cream)',
-                    padding: '1rem 1.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}>
-                    <span style={{
-                      fontFamily: "'Libre Baskerville', serif",
-                      fontSize: '14px',
-                      color: 'var(--text-dark)',
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'rgba(45,90,61,.08)' }}>
+                  {section.items.map((item) => (
+                    <div key={item.label} style={{
+                      background: 'var(--cream)',
+                      padding: '1rem 1.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
                     }}>
-                      {item.label}
-                    </span>
-                    {item.href ? (
-                      <a
-                        href={item.href}
-                        style={{
+                      <span style={{
+                        fontFamily: "'Libre Baskerville', serif",
+                        fontSize: '14px',
+                        color: 'var(--text-dark)',
+                      }}>
+                        {item.label}
+                      </span>
+                      {item.href ? (
+                        <a
+                          href={item.href}
+                          style={{
+                            fontFamily: "'DM Sans', sans-serif",
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            letterSpacing: '.08em',
+                            textTransform: 'uppercase',
+                            color: 'var(--green-mid)',
+                            textDecoration: 'none',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          View →
+                        </a>
+                      ) : (
+                        <span style={{
                           fontFamily: "'DM Sans', sans-serif",
                           fontSize: '11px',
-                          fontWeight: 600,
-                          letterSpacing: '.08em',
-                          textTransform: 'uppercase',
-                          color: 'var(--green-mid)',
-                          textDecoration: 'none',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        View →
-                      </a>
-                    ) : (
-                      <span style={{
-                        fontFamily: "'DM Sans', sans-serif",
-                        fontSize: '11px',
-                        color: 'var(--text-muted)',
-                        fontStyle: 'italic',
-                      }}>
-                        Coming soon
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+                          color: 'var(--text-muted)',
+                          fontStyle: 'italic',
+                        }}>
+                          Coming soon
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </section>
           ))}

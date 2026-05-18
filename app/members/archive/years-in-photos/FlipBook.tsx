@@ -95,10 +95,10 @@ function buildAlbumPage(src: string, index: number): HTMLDivElement {
 
 interface Props {
   pages: string[];
-  albumLayout?: boolean;
+  singlepage? : boolean;
 }
 
-export function FlipBook({ pages, albumLayout }: Props) {
+export function FlipBook({ pages, singlepage }: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const flipRef = useRef<{ flipPrev(): void; flipNext(): void } | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -129,7 +129,7 @@ export function FlipBook({ pages, albumLayout }: Props) {
         clickEventForward: true,
       } as object);
 
-      if (albumLayout) {
+      if (singlepage) {
         pages.forEach((src, i) => wrapper.appendChild(buildAlbumPage(src, i)));
         pf.loadFromHTML(Array.from(wrapper.querySelectorAll('.album-page')) as HTMLElement[]);
       } else {
@@ -145,7 +145,7 @@ export function FlipBook({ pages, albumLayout }: Props) {
       (flipRef.current as { destroy?: () => void } | null)?.destroy?.();
       flipRef.current = null;
     };
-  }, [pages, albumLayout]);
+  }, [pages, singlepage]);
 
   const btnStyle: React.CSSProperties = {
     padding: '9px 24px',

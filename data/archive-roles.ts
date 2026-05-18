@@ -8,8 +8,8 @@ export type RoleEntry = { year: number; name: string };
 export const pastPresidents: RoleEntry[] = [
   { year: 2026, name: 'Judith Heaton' },
   { year: 2025, name: 'Jeremy Frearson' },
-  { year: 2024, name: 'TBD' },
-  { year: 2023, name: 'TBD' },
+  { year: 2024, name: 'Catherine Mitrenas' },
+  { year: 2023, name: 'Gerry Summers' },
   { year: 2022, name: 'TBD' },
   { year: 2021, name: 'TBD' },
   { year: 2020, name: 'TBD' },

@@ -1,0 +1,1 @@
+import { Navbar } from '@/components/Navbar';export default function Success(){return <><Navbar/><main className='section'><div className='container'><span className='tag'>Success</span><h2>Thank you</h2><p>Your request has been received. If this was a payment, Stripe will confirm it via webhook and update your membership.</p></div></main></>}

@@ -1,4 +1,4 @@
-[build]
+cs[build]
   command   = "npm run build"
   publish   = ".next"
 

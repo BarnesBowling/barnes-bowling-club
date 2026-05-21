@@ -5,24 +5,9 @@ import { uploadImage } from '@/lib/images';
 
 const SLOTS = [
   { label: 'hero-carousel', title: 'Hero Banner (top of page)', fallback: '/images/Barnes_Bowling_Club_Sep_1_SV_2.JPG' },
-  { label: 'whats-happening-1', title: "What's Happening — Card 1", fallback: '/images/gallery1.JPG' },
-  { label: 'whats-happening-2', title: "What's Happening — Card 2", fallback: '/images/gallery5.JPG' },
-  { label: 'whats-happening-3', title: "What's Happening — Card 3", fallback: '/images/gallery2.JPG' },
-  { label: 'featured-banner', title: 'Featured Banner', fallback: '/images/gallery4.JPG' },
-  { label: 'activity-1', title: 'Activity Card 1', fallback: '/images/IMG_9105.JPG' },
-  { label: 'activity-2', title: 'Activity Card 2', fallback: '/images/gallery6.JPG' },
-  { label: 'activity-
-cat > "app/admin/hero-images/page.tsx" << 'ENDOFFILE'
-'use client';
-
-import { useState } from 'react';
-import { uploadImage } from '@/lib/images';
-
-const SLOTS = [
-  { label: 'hero-carousel', title: 'Hero Banner (top of page)', fallback: '/images/Barnes_Bowling_Club_Sep_1_SV_2.JPG' },
-  { label: 'whats-happening-1', title: "What's Happening — Card 1", fallback: '/images/gallery1.JPG' },
-  { label: 'whats-happening-2', title: "What's Happening — Card 2", fallback: '/images/gallery5.JPG' },
-  { label: 'whats-happening-3', title: "What's Happening — Card 3", fallback: '/images/gallery2.JPG' },
+  { label: 'whats-happening-1', title: "What's Happening - Card 1", fallback: '/images/gallery1.JPG' },
+  { label: 'whats-happening-2', title: "What's Happening - Card 2", fallback: '/images/gallery5.JPG' },
+  { label: 'whats-happening-3', title: "What's Happening - Card 3", fallback: '/images/gallery2.JPG' },
   { label: 'featured-banner', title: 'Featured Banner', fallback: '/images/gallery4.JPG' },
   { label: 'activity-1', title: 'Activity Card 1', fallback: '/images/IMG_9105.JPG' },
   { label: 'activity-2', title: 'Activity Card 2', fallback: '/images/gallery6.JPG' },
@@ -30,10 +15,10 @@ const SLOTS = [
 ];
 
 export default function AdminHeroImagesPage() {
-  const [uploading, setUploading] = useState<string | null>(null);
-  const [uploaded, setUploaded] = useState<Record<string, string>>({});
+  const [uploading, setUploading] = useState(null);
+  const [uploaded, setUploaded] = useState({});
 
-  async function handleUpload(label: string, file: File) {
+  async function handleUpload(label, file) {
     setUploading(label);
     try {
       const img = await uploadImage(file, 'hero', undefined, label);
@@ -59,23 +44,18 @@ export default function AdminHeroImagesPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {SLOTS.map(slot => (
           <div key={slot.label} style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', padding: '1.25rem', border: '1px solid rgba(45,90,61,.15)', background: 'white' }}>
-            <div style={{ width: '140px', height: '90px', flexShrink: 0, backgroundImage: `url('${uploaded[slot.label] ?? slot.fallback}')`, backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid rgba(45,90,61,.1)' }} />
+            <div style={{ width: '140px', height: '90px', flexShrink: 0, backgroundImage: 'url(' + (uploaded[slot.label] || slot.fallback) + ')', backgroundSize: 'cover', backgroundPosition: 'center' }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '15px', color: 'var(--green-deep)', marginBottom: '0.25rem' }}>
                 {slot.title}
               </div>
-              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-                Slot: <code>{slot.label}</code>
-              </div>
-              <label style={{ display: 'inline-block', padding: '0.45rem 1rem', background: uploading === slot.label ? 'rgba(45,90,61,.4)' : 'var(--green-deep)', color: 'white', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', cursor: uploading === slot.label ? 'wait' : 'pointer' }}>
+              <label style={{ display: 'inline-block', padding: '0.45rem 1rem', background: uploading === slot.label ? 'rgba(45,90,61,.4)' : 'var(--green-deep)', color: 'white', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', cursor: 'pointer' }}>
                 {uploading === slot.label ? 'Uploading...' : uploaded[slot.label] ? 'Replace Image' : 'Upload Image'}
-                <input type="file" accept="image/*" style={{ display: 'none' }} disabled={uploading === slot.label}
-                  onChange={e => { const file = e.target.files?.[0]; if (file) handleUpload(slot.label, file); }} />
+                <input type="file" accept="image/*" style={{ display: 'none' }}
+                  onChange={e => { const file = e.target.files && e.target.files[0]; if (file) handleUpload(slot.label, file); }} />
               </label>
               {uploaded[slot.label] && (
-                <span style={{ marginLeft: '0.75rem', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'green' }}>
-                  Updated
-                </span>
+                <span style={{ marginLeft: '0.75rem', fontSize: '12px', color: 'green' }}>Updated</span>
               )}
             </div>
           </div>

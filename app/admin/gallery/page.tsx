@@ -165,7 +165,7 @@ export default function AdminGalleryPage() {
             >
               <div style={{ position: 'relative', paddingTop: '66.66%', overflow: 'hidden', background: '#f8fafc' }}>
                 <img
-                  src={img.url}
+                  src={img.public_url}
                   alt={img.caption ?? 'Gallery image'}
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                 />

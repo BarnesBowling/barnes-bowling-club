@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
+  <!-- Bowl: wide at top, narrows and curves to base -->
+  <path d="M7,4 L25,4 L22,18 Q16,22 10,18 Z" fill="#A89560"/>
+  <!-- Left handle -->
+  <path d="M9,8 C3,8 3,16 9,16" fill="none" stroke="#A89560" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Right handle -->
+  <path d="M23,8 C29,8 29,16 23,16" fill="none" stroke="#A89560" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Stem -->
+  <rect x="14.5" y="21" width="3" height="5.5" fill="#A89560"/>
+  <!-- Knop (wider band between stem and base) -->
+  <rect x="12" y="25" width="8" height="2" rx="1" fill="#A89560"/>
+  <!-- Base plate -->
+  <rect x="9" y="27" width="14" height="3" rx="1.5" fill="#A89560"/>
+</svg>

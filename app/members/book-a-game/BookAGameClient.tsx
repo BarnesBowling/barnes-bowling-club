@@ -590,7 +590,7 @@ export function BookAGameClient() {
             <p className="section-lead" style={{ color: 'rgba(245,240,232,.65)' }}>
               Reserve a time slot for a Shield, Cup, Pairs or Manser fixture. One game per hour slot — check availability before booking.
             </p>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'rgba(245,240,232,.55)', marginTop: '0.75rem', borderLeft: '2px solid #c9a84c', paddingLeft: '0.75rem' }}>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#ffffff', marginTop: '0.75rem', borderLeft: '2px solid #c9a84c', paddingLeft: '0.75rem' }}>
               Please note: A maximum of 2 match games can be booked per day per member.
             </p>
           </div>

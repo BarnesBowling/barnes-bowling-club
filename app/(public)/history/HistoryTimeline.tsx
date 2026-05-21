@@ -1,21 +1,30 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { historyTimeline } from '@/data/history-timeline';
+
+export interface TimelineEntry {
+  year: number;
+  title: string;
+  description: string;
+}
+
+interface Props {
+  entries: TimelineEntry[];
+}
 
 interface PopupPos {
-  entry: (typeof historyTimeline)[0];
+  entry: TimelineEntry;
   x: number;
   y: number;
 }
 
-export function HistoryTimeline() {
+export function HistoryTimeline({ entries }: Props) {
   const [popup, setPopup] = useState<PopupPos | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
-  const open = useCallback((el: HTMLElement, entry: (typeof historyTimeline)[0]) => {
+  const open = useCallback((el: HTMLElement, entry: TimelineEntry) => {
     const rect = el.getBoundingClientRect();
     setPopup({ entry, x: rect.left + rect.width / 2, y: rect.bottom });
   }, []);
@@ -26,7 +35,7 @@ export function HistoryTimeline() {
 
       <div className="yt-wrap">
         <div className="yt-rail">
-          {historyTimeline.map((entry) => {
+          {entries.map((entry) => {
             const hasContent = entry.title !== 'TBD';
             const isActive = popup?.entry.year === entry.year;
             return (

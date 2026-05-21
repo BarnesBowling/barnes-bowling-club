@@ -2,13 +2,18 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { createClient } from '@/lib/supabase/server';
 import { HistoryTimeline } from './HistoryTimeline';
+import { historyTimeline } from '@/data/history-timeline';
 
 export default async function HistoryPage() {
   const supabase = await createClient();
-  const { data: sections } = await supabase
-    .from('history_sections')
-    .select('*')
-    .order('sort_order');
+  const [{ data: sections }, { data: timelineData }] = await Promise.all([
+    supabase.from('history_sections').select('*').order('sort_order'),
+    supabase.from('history_timeline').select('year, title, description').order('year'),
+  ]);
+
+  const timelineEntries = (timelineData && timelineData.length > 0)
+    ? timelineData
+    : historyTimeline;
 
   return (
     <>
@@ -176,7 +181,7 @@ export default async function HistoryPage() {
             )}
 
             {/* History year timeline */}
-            <HistoryTimeline />
+            <HistoryTimeline entries={timelineEntries} />
 
             {/* Divider before CTA */}
             <div style={{ height: '1px', background: 'rgba(45,90,61,.12)', margin: '4rem 0' }} />

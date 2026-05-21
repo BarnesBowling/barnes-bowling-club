@@ -62,3 +62,21 @@ export async function deleteClubMember(id: string): Promise<void> {
   revalidatePath('/admin/club-members');
   revalidatePath('/members/handicaps');
 }
+
+export async function inviteClubMember(id: string, email: string): Promise<void> {
+  await requireAdminSession();
+
+  // Create Supabase auth user and send magic link invite
+  const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/set-password`,
+  });
+  if (inviteError) throw new Error(inviteError.message);
+
+  // Link the new auth user to this club_members record
+  await supabaseAdmin
+    .from('club_members')
+    .update({ auth_user_id: inviteData.user.id, updated_at: new Date().toISOString() })
+    .eq('id', id);
+
+  revalidatePath('/admin/club-members');
+}

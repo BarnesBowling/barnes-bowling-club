@@ -23,7 +23,7 @@ export default async function AdminResultsPage() {
           <div className="section-inner">
             <a href="/admin" className="section-tag" style={{ color: 'var(--gold)', borderTopColor: 'var(--gold)', textDecoration: 'none' }}>Admin</a>
             <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>
-              Results &amp; Leaderboard
+              Results <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>&amp; Leaderboard</em>
             </h1>
             <p className="section-lead" style={{ color: 'rgba(245,240,232,.65)' }}>
               Enter match results, register pair teams, and manage the season leaderboard.

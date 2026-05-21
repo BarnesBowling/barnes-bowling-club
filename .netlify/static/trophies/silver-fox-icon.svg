@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
+  <!-- Bushy tail (behind body) -->
+  <path d="M7,23 Q0,19 1,12 Q2,7 5,13 Q7,18 8,21 Z" fill="#C0C0C0"/>
+  <!-- Tail tip highlight (slightly lighter) -->
+  <path d="M2,11 Q3,8 5,12 Q4,10 3,12 Z" fill="#E0E0E0"/>
+  <!-- Body -->
+  <ellipse cx="15" cy="21" rx="8" ry="5" fill="#C0C0C0"/>
+  <!-- Neck -->
+  <path d="M21,16 Q22,19 19,20" fill="none" stroke="#C0C0C0" stroke-width="4" stroke-linecap="round"/>
+  <!-- Head -->
+  <ellipse cx="23" cy="12" rx="4.5" ry="4" fill="#C0C0C0"/>
+  <!-- Pointed left ear -->
+  <polygon points="20,10 21,4 23.5,9" fill="#C0C0C0"/>
+  <!-- Pointed right ear -->
+  <polygon points="23,9 26,3.5 27.5,8.5" fill="#C0C0C0"/>
+  <!-- Long tapered snout -->
+  <path d="M26,12 Q30.5,13 30,15 Q29,15.5 27,15 Q25,14.5 24,13 Z" fill="#C0C0C0"/>
+  <!-- Nose dot -->
+  <circle cx="29.5" cy="14" r="0.8" fill="#888"/>
+  <!-- Front legs -->
+  <rect x="19" y="24" width="2.5" height="6.5" rx="1.25" fill="#C0C0C0"/>
+  <rect x="22.5" y="23.5" width="2.5" height="6.5" rx="1.25" fill="#C0C0C0"/>
+  <!-- Back legs -->
+  <rect x="10" y="24" width="2.5" height="6.5" rx="1.25" fill="#C0C0C0"/>
+  <rect x="13.5" y="25" width="2.5" height="6.5" rx="1.25" fill="#C0C0C0"/>
+</svg>

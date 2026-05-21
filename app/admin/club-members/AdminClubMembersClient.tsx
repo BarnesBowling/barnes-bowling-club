@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { addClubMember, updateClubMember, deleteClubMember } from './actions';
+import { addClubMember, updateClubMember, deleteClubMember, inviteClubMember } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -15,6 +15,7 @@ export type ClubMember = {
   joined_date: string | null;
   notes: string | null;
   created_at: string;
+  auth_user_id: string | null;
 };
 
 type MemberPayload = {
@@ -137,23 +138,26 @@ const btnDanger: React.CSSProperties = {
 
 // ── StatusBadge ───────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, invited, hasAuth }: { status: string; invited?: boolean; hasAuth?: boolean }) {
+  if (hasAuth) return (
+    <span style={{ display: 'inline-flex', gap: '4px', flexWrap: 'wrap' }}>
+      <span style={{ display: 'inline-block', padding: '3px 10px', fontSize: '10px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: "'DM Sans', sans-serif", background: 'rgba(27,94,32,.15)', color: '#1b5e20' }}>joined</span>
+      <span style={{ display: 'inline-block', padding: '3px 10px', fontSize: '10px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: "'DM Sans', sans-serif", ...(status === 'active' ? { background: 'rgba(45,90,61,.1)', color: '#2d5a3d' } : status === 'probationary' ? { background: 'rgba(201,168,76,.15)', color: '#7a6040' } : { background: 'rgba(0,0,0,.06)', color: '#666' }) }}>{status}</span>
+    </span>
+  );
+  if (invited) return (
+    <span style={{ display: 'inline-flex', gap: '4px', flexWrap: 'wrap' }}>
+      <span style={{ display: 'inline-block', padding: '3px 10px', fontSize: '10px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: "'DM Sans', sans-serif", background: 'rgba(2,119,189,.12)', color: '#0277bd' }}>invited</span>
+      <span style={{ display: 'inline-block', padding: '3px 10px', fontSize: '10px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: "'DM Sans', sans-serif", ...(status === 'active' ? { background: 'rgba(45,90,61,.1)', color: '#2d5a3d' } : status === 'probationary' ? { background: 'rgba(201,168,76,.15)', color: '#7a6040' } : { background: 'rgba(0,0,0,.06)', color: '#666' }) }}>{status}</span>
+    </span>
+  );
   const s: Record<string, React.CSSProperties> = {
-    active:       { background: 'rgba(45,90,61,.1)',   color: '#2d5a3d' },
-    inactive:     { background: 'rgba(0,0,0,.06)',     color: '#666' },
+    active:       { background: 'rgba(45,90,61,.1)',    color: '#2d5a3d' },
+    inactive:     { background: 'rgba(0,0,0,.06)',      color: '#666' },
     probationary: { background: 'rgba(201,168,76,.15)', color: '#7a6040' },
   };
   return (
-    <span style={{
-      display: 'inline-block',
-      padding: '3px 10px',
-      fontSize: '10px',
-      fontWeight: 700,
-      letterSpacing: '.08em',
-      textTransform: 'uppercase',
-      fontFamily: "'DM Sans', sans-serif",
-      ...(s[status] ?? s.active),
-    }}>
+    <span style={{ display: 'inline-block', padding: '3px 10px', fontSize: '10px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: "'DM Sans', sans-serif", ...(s[status] ?? s.active) }}>
       {status}
     </span>
   );
@@ -174,17 +178,22 @@ function SectionHeader({ title }: { title: string }) {
 
 // ── Inline text input for edit rows ──────────────────────────────────────────
 
-function CellInput({ value, onChange, type = 'text', style }: {
+function CellInput({ value, onChange, type = 'text', style, autoComplete = 'off' }: {
   value: string | number;
   onChange: (v: string) => void;
   type?: string;
   style?: React.CSSProperties;
+  autoComplete?: string;
 }) {
   return (
     <input
       type={type}
       value={value}
       onChange={e => onChange(e.target.value)}
+      autoComplete={autoComplete}
+      autoCorrect="off"
+      autoCapitalize="off"
+      spellCheck={false}
       style={{ ...inputStyle, height: '34px', fontSize: '13px', ...style }}
     />
   );
@@ -202,6 +211,10 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
   const [addPending, startAddTransition] = useTransition();
   const [editPending, startEditTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
+  const [invitePending, setInvitePending] = useState<string | null>(null); // holds id of member being invited
+  const [invitedIds, setInvitedIds] = useState<Set<string>>(
+    new Set(initialMembers.filter(m => m.auth_user_id).map(m => m.id))
+  );
 
   useEffect(() => {
     if (msg?.ok) {
@@ -255,6 +268,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
           joined_date: addForm.joined_date || null,
           notes: addForm.notes.trim() || null,
           created_at: new Date().toISOString(),
+          auth_user_id: null,
         };
         setMembers(prev => sortByName([...prev, newMember]));
         setAddForm(EMPTY);
@@ -307,6 +321,26 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
     });
   }
 
+  // ── Invite ────────────────────────────────────────────────────────────────
+
+  async function handleInvite(m: ClubMember) {
+    if (!m.email) {
+      setMsg({ ok: false, text: `${m.full_name} has no email address. Add one before inviting.` });
+      return;
+    }
+    if (!confirm(`Send a magic link invite to ${m.email}?`)) return;
+    setInvitePending(m.id);
+    try {
+      await inviteClubMember(m.id, m.email);
+      setInvitedIds(prev => new Set([...prev, m.id]));
+      setMsg({ ok: true, text: `Invite sent to ${m.email}.` });
+    } catch (err: unknown) {
+      setMsg({ ok: false, text: err instanceof Error ? err.message : 'Failed to send invite.' });
+    } finally {
+      setInvitePending(null);
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div>
@@ -329,7 +363,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
       {/* ── Add New Member ──────────────────────────────────────────────── */}
       <section style={card}>
         <SectionHeader title="Add New Member" />
-        <form onSubmit={handleAdd}>
+        <form onSubmit={handleAdd} autoComplete="off">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
             <div style={{ gridColumn: 'span 2' }}>
               <label style={labelStyle}>Full Name *</label>
@@ -340,6 +374,10 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                 onChange={e => setAddForm(f => ({ ...f, full_name: e.target.value }))}
                 style={inputStyle}
                 placeholder="e.g. Jane Smith"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
               />
             </div>
             <div>
@@ -350,6 +388,10 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                 onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))}
                 style={inputStyle}
                 placeholder="jane@example.com"
+                autoComplete="new-email"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
               />
             </div>
             <div>
@@ -360,6 +402,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                 onChange={e => setAddForm(f => ({ ...f, membership_number: e.target.value }))}
                 style={inputStyle}
                 placeholder="e.g. 247"
+                autoComplete="off"
               />
             </div>
             <div>
@@ -371,6 +414,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                 value={addForm.handicap}
                 onChange={e => setAddForm(f => ({ ...f, handicap: Number(e.target.value) }))}
                 style={inputStyle}
+                autoComplete="off"
               />
             </div>
             <div>
@@ -392,6 +436,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                 value={addForm.joined_date}
                 onChange={e => setAddForm(f => ({ ...f, joined_date: e.target.value }))}
                 style={inputStyle}
+                autoComplete="off"
               />
             </div>
             <div style={{ gridColumn: 'span 2' }}>
@@ -401,6 +446,9 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                 onChange={e => setAddForm(f => ({ ...f, notes: e.target.value }))}
                 style={{ ...inputStyle, height: '72px', padding: '8px 10px' }}
                 placeholder="Any relevant notes about this member"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </div>
           </div>
@@ -422,7 +470,13 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
         {/* Search */}
         <div style={{ marginBottom: '1.25rem', maxWidth: '360px' }}>
           <input
-            type="search"
+            type="text"
+            name="club_member_lookup"
+            inputMode="search"
+            autoComplete="new-password"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
             placeholder="Search by name, email, or membership number…"
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -484,7 +538,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                           </select>
                         </td>
                         <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
-                          <CellInput type="email" value={editForm.email} onChange={v => setEditForm(f => ({ ...f, email: v }))} />
+                          <CellInput type="email" value={editForm.email} onChange={v => setEditForm(f => ({ ...f, email: v }))} autoComplete="new-email" />
                         </td>
                         <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
                           <CellInput type="date" value={editForm.joined_date} onChange={v => setEditForm(f => ({ ...f, joined_date: v }))} style={{ width: '140px' }} />
@@ -519,7 +573,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                         {fmtHcp(m.handicap)}
                       </td>
                       <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
-                        <StatusBadge status={m.status} />
+                        <StatusBadge status={m.status} invited={invitedIds.has(m.id)} hasAuth={!!m.auth_user_id} />
                       </td>
                       <td style={{ padding: '11px 12px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
                         {m.email || '—'}
@@ -529,6 +583,24 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                       </td>
                       <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)', whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          {!m.auth_user_id && (
+                            <button
+                              onClick={() => handleInvite(m)}
+                              disabled={invitePending === m.id || !m.email}
+                              title={m.email ? `Invite ${m.email}` : 'Add email first'}
+                              style={{
+                                display: 'inline-flex', alignItems: 'center', padding: '0 12px', height: '32px',
+                                background: invitedIds.has(m.id) ? 'rgba(2,119,189,.08)' : 'rgba(2,119,189,.9)',
+                                color: invitedIds.has(m.id) ? '#0277bd' : '#fff',
+                                border: invitedIds.has(m.id) ? '1.5px solid #0277bd' : 'none',
+                                fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 600,
+                                letterSpacing: '.07em', textTransform: 'uppercase', cursor: m.email ? 'pointer' : 'not-allowed',
+                                opacity: (!m.email || invitePending === m.id) ? .5 : 1,
+                              }}
+                            >
+                              {invitePending === m.id ? 'Sending…' : invitedIds.has(m.id) ? 'Re-invite' : 'Invite'}
+                            </button>
+                          )}
                           <button onClick={() => startEdit(m)} style={btnSecondary}>
                             Edit
                           </button>

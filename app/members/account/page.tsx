@@ -4,7 +4,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { verifyMemberSession, SESSION_COOKIE } from '@/lib/memberSession';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { getMemberNumber } from '@/lib/memberNumber';
 import { AccountClient } from './AccountClient';
 
 export default async function AccountPage() {
@@ -15,27 +14,38 @@ export default async function AccountPage() {
 
   const email = session.email;
 
-  const [{ data: transactions }, { data: profile }] = await Promise.all([
-    supabaseAdmin
-      .from('member_transactions')
-      .select('*')
-      .eq('member_email', email)
-      .order('date', { ascending: true })
-      .order('created_at', { ascending: true }),
-    supabaseAdmin
-      .from('member_profiles')
-      .select('first_name, last_name')
-      .eq('member_email', email)
-      .maybeSingle(),
-  ]);
+  // Look up club_members record — try by email first, then by auth_user_id via Supabase auth lookup
+  const { data: clubMember } = await supabaseAdmin
+    .from('club_members')
+    .select('id, full_name, membership_number, auth_user_id')
+    .eq('email', email)
+    .maybeSingle();
 
-  const memberName = profile?.first_name && profile?.last_name
-    ? `${profile.first_name} ${profile.last_name}`
-    : null;
+  const memberId   = clubMember?.membership_number ?? `BBC${email.slice(0, 6).toUpperCase().replace(/[^A-Z]/g, '')}`;
+  const memberName = clubMember?.full_name ?? null;
 
-  const memberId =
-    getMemberNumber(profile?.first_name ?? '', profile?.last_name ?? '') ??
-    `BBC${email.slice(0, 6).toUpperCase().replace(/[^A-Z]/g, '')}`;
+  // Fetch transactions from member_ledger
+  const rawTransactions = clubMember
+    ? (await supabaseAdmin
+        .from('member_ledger')
+        .select('*')
+        .eq('member_id', clubMember.id)
+        .order('date', { ascending: true })
+        .order('created_at', { ascending: true })
+      ).data ?? []
+    : [];
+
+  // Convert to signed amounts for AccountClient (debit=positive, credit=negative)
+  const transactions = rawTransactions.map(t => ({
+    id:           t.id,
+    member_email: email,
+    date:         t.date,
+    description:  t.description,
+    category:     t.category,
+    amount:       t.type === 'credit' ? -Math.abs(Number(t.amount)) : Math.abs(Number(t.amount)),
+    created_at:   t.created_at,
+    metadata:     t.metadata ?? null,
+  }));
 
   return (
     <>
@@ -56,11 +66,8 @@ export default async function AccountPage() {
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
           <div style={{ marginBottom: '2.5rem' }}>
             <a href="/members/dashboard" style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: '12px',
-              color: 'var(--green-deep)',
-              textDecoration: 'none',
-              letterSpacing: '.04em',
+              fontFamily: "'DM Sans', sans-serif", fontSize: '12px',
+              color: 'var(--green-deep)', textDecoration: 'none', letterSpacing: '.04em',
             }}>
               ← Back to Dashboard
             </a>
@@ -69,7 +76,7 @@ export default async function AccountPage() {
             email={email}
             memberName={memberName}
             memberId={memberId}
-            transactions={transactions ?? []}
+            transactions={transactions}
           />
         </div>
       </main>

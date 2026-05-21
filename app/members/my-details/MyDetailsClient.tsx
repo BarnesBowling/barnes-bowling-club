@@ -30,6 +30,7 @@ function cancelBooking(date: string, time: string): void {
 
 const DEFAULT_PREFS = { newsletters: true, events: true, bookings: true };
 import { savePersonalDetails, saveEmergencyContact } from './actions';
+import { createClient } from '@/lib/supabase/client';
 
 const GOLD = '#A89560';
 
@@ -195,6 +196,12 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance 
   const [detailsState, detailsAction] = useActionState(savePersonalDetails, null);
   const [ecState,      ecAction]      = useActionState(saveEmergencyContact, null);
 
+  const [pwCurrent,   setPwCurrent]   = useState('');
+  const [pwNew,       setPwNew]       = useState('');
+  const [pwConfirm,   setPwConfirm]   = useState('');
+  const [pwMsg,       setPwMsg]       = useState<{ ok: boolean; text: string } | null>(null);
+  const [pwPending,   setPwPending]   = useState(false);
+
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
   const [prefsSaved, setPrefsSaved] = useState(false);
   const [bookings, setBookings] = useState<BookedMatch[]>([]);
@@ -215,6 +222,30 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance 
 
   function toggle(key: string) {
     setOpenSection(o => o === key ? null : key);
+  }
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPwMsg(null);
+    if (pwNew.length < 8) { setPwMsg({ ok: false, text: 'New password must be at least 8 characters.' }); return; }
+    if (pwNew !== pwConfirm) { setPwMsg({ ok: false, text: 'Passwords do not match.' }); return; }
+    setPwPending(true);
+    try {
+      const supabase = createClient();
+      // Re-authenticate with current password first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error('No authenticated session found. Please log in again.');
+      const { error: signInErr } = await supabase.auth.signInWithPassword({ email: user.email, password: pwCurrent });
+      if (signInErr) throw new Error('Current password is incorrect.');
+      const { error: updateErr } = await supabase.auth.updateUser({ password: pwNew });
+      if (updateErr) throw new Error(updateErr.message);
+      setPwMsg({ ok: true, text: 'Password changed successfully.' });
+      setPwCurrent(''); setPwNew(''); setPwConfirm('');
+    } catch (err: unknown) {
+      setPwMsg({ ok: false, text: err instanceof Error ? err.message : 'Failed to change password.' });
+    } finally {
+      setPwPending(false);
+    }
   }
 
   const total = balance
@@ -497,6 +528,37 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance 
           </div>
         )}
       </AccordionRow>
+
+      {/* ── Change Password ─────────────────────────────────────────────── */}
+      <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(45,90,61,.12)' }}>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '18px', fontWeight: 500, color: '#1a2e1f', margin: '0 0 1.5rem' }}>
+          Change Password
+        </h2>
+        <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '400px' }}>
+          <div>
+            <label style={labelStyle}>Current Password</label>
+            <input type="password" required value={pwCurrent} onChange={e => setPwCurrent(e.target.value)} style={inputStyle} placeholder="Your current password" />
+          </div>
+          <div>
+            <label style={labelStyle}>New Password</label>
+            <input type="password" required value={pwNew} onChange={e => setPwNew(e.target.value)} style={inputStyle} placeholder="Minimum 8 characters" />
+          </div>
+          <div>
+            <label style={labelStyle}>Confirm New Password</label>
+            <input type="password" required value={pwConfirm} onChange={e => setPwConfirm(e.target.value)} style={inputStyle} placeholder="Repeat new password" />
+          </div>
+          {pwMsg && (
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: pwMsg.ok ? '#2e7d32' : '#c0392b', padding: '10px 14px', background: pwMsg.ok ? 'rgba(46,125,50,.06)' : 'rgba(192,57,43,.06)', borderLeft: `3px solid ${pwMsg.ok ? '#2e7d32' : '#c0392b'}` }}>
+              {pwMsg.text}
+            </div>
+          )}
+          <div>
+            <button type="submit" disabled={pwPending} style={{ ...saveBtn, opacity: pwPending ? .7 : 1, cursor: pwPending ? 'default' : 'pointer' }}>
+              {pwPending ? 'Changing…' : 'Change Password'}
+            </button>
+          </div>
+        </form>
+      </div>
 
       {/* ── Sign out ── */}
       <div style={{ paddingTop: '2rem', borderTop: '1px solid #e0e0e0', marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>

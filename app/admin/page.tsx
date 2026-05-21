@@ -43,6 +43,16 @@ async function updateHowToPlay(formData: FormData) {
   }).eq('id', id);
 }
 
+async function updateTimelineEntry(formData: FormData) {
+  'use server';
+  await requireAdminSession();
+  await supabaseAdmin.from('history_timeline').update({
+    title: String(formData.get('title')),
+    description: String(formData.get('description')),
+    updated_at: new Date().toISOString(),
+  }).eq('id', String(formData.get('id')));
+}
+
 async function deleteNotice(formData: FormData) {
   'use server';
   await requireAdminSession();
@@ -72,12 +82,13 @@ async function updateMembershipAppClubUse(formData: FormData) {
 export default async function Admin() {
   try { await requireAdminSession(); } catch { redirect('/login?redirect=/admin'); }
 
-  const [{ data: apps }, { data: membershipApps }, { data: notices }, { data: sections }, { data: historySections }] = await Promise.all([
+  const [{ data: apps }, { data: membershipApps }, { data: notices }, { data: sections }, { data: historySections }, { data: timelineEntries }] = await Promise.all([
     supabaseAdmin.from('applications').select('*').order('created_at', { ascending: false }).limit(20),
     supabaseAdmin.from('membership_applications').select('*').order('created_at', { ascending: false }).limit(50),
     supabaseAdmin.from('notices').select('*').order('published_at', { ascending: false }),
     supabaseAdmin.from('how_to_play').select('*').order('sort_order'),
     supabaseAdmin.from('history_sections').select('*').order('sort_order'),
+    supabaseAdmin.from('history_timeline').select('*').order('year'),
   ]);
 
   const inputStyle = { padding: '.7rem', border: '1px solid rgba(45,90,61,.2)', fontFamily: 'inherit', fontSize: '14px', width: '100%' };
@@ -200,6 +211,48 @@ export default async function Admin() {
                     <div><label style={labelStyle}>Title</label><input name="title" defaultValue={s.title} required style={inputStyle} /></div>
                     <div><label style={labelStyle}>Body text</label><textarea name="body" defaultValue={s.body} required style={{ ...inputStyle, minHeight: '140px', resize: 'vertical' }} /></div>
                     <button className="btn" style={{ alignSelf: 'flex-start' }}>Save section</button>
+                  </form>
+                </details>
+              ))}
+            </div>
+          </section>
+
+          {/* HISTORY TIMELINE */}
+          <section>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', marginBottom: '.5rem' }}>History Timeline — edit milestones</h2>
+            <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.5rem' }}>
+              Years cannot be changed. Edit title and description, then save each row individually.
+            </p>
+            {(!timelineEntries || timelineEntries.length === 0) && (
+              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '14px' }}>
+                No timeline entries found — run the <code>20260521_history_timeline.sql</code> migration in the Supabase dashboard first.
+              </p>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {timelineEntries?.map((entry) => (
+                <details key={entry.id} style={{ background: 'white', border: '1px solid rgba(45,90,61,.12)' }}>
+                  <summary style={{ padding: '1rem 1.25rem', cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>
+                      <span style={{ fontFamily: "'Playfair Display', serif", color: 'var(--gold)', fontWeight: 500, marginRight: '.75rem' }}>{entry.year}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--green-deep)' }}>{entry.title}</span>
+                    </span>
+                    <span style={{ fontSize: '11px', color: 'var(--gold)', fontWeight: 400, flexShrink: 0 }}>click to edit</span>
+                  </summary>
+                  <form action={updateTimelineEntry} style={{ padding: '1.25rem', borderTop: '1px solid rgba(45,90,61,.08)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <input type="hidden" name="id" value={entry.id} />
+                    <div>
+                      <label style={labelStyle}>Year (read-only)</label>
+                      <input value={entry.year} readOnly style={{ ...inputStyle, background: 'rgba(45,90,61,.04)', color: 'var(--text-muted)', cursor: 'default' }} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Title</label>
+                      <input name="title" defaultValue={entry.title} required style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Description</label>
+                      <textarea name="description" defaultValue={entry.description} required style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} />
+                    </div>
+                    <button className="btn" style={{ alignSelf: 'flex-start' }}>Save milestone</button>
                   </form>
                 </details>
               ))}

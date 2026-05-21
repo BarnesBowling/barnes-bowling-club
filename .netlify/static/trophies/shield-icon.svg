@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
+  <!-- Outer shield body (dark oak brown) -->
+  <path d="M3,4 H29 L29,19 Q29,28 16,31 Q3,28 3,19 Z" fill="#5C3317"/>
+  <!-- Silver decorative border (inset outline) -->
+  <path d="M5,5.5 H27 L27,19 Q27,26.5 16,29.5 Q5,26.5 5,19 Z" fill="none" stroke="#C0C0C0" stroke-width="1.2"/>
+  <!-- Inner field (deeper brown) -->
+  <path d="M7,7 H25 L25,19 Q25,25.5 16,28 Q7,25.5 7,19 Z" fill="#3D1F0E"/>
+  <!-- Central medallion: silver ring -->
+  <circle cx="16" cy="17" r="6.5" fill="#C0C0C0"/>
+  <!-- Green inner circle (club colours) -->
+  <circle cx="16" cy="17" r="5" fill="#2D5A3D"/>
+  <!-- Brown centre pip -->
+  <circle cx="16" cy="17" r="2.5" fill="#5C3317"/>
+  <!-- Small silver emblem dots at upper corners -->
+  <circle cx="10.5" cy="10.5" r="1.5" fill="#C0C0C0" opacity="0.85"/>
+  <circle cx="21.5" cy="10.5" r="1.5" fill="#C0C0C0" opacity="0.85"/>
+  <!-- Small shield device at bottom of field -->
+  <path d="M14,21.5 H18 L18,23.5 Q18,25 16,25.5 Q14,25 14,23.5 Z" fill="#C0C0C0" opacity="0.6"/>
+</svg>

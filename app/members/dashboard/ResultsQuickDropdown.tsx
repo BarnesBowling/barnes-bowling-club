@@ -66,6 +66,20 @@ export function ResultsQuickDropdown() {
           flexDirection: 'column',
         }}>
           <a
+            href="/members/results"
+            onClick={() => setOpen(false)}
+            style={{ ...linkStyle, border: 'none', borderBottom: '1px solid rgba(45,90,61,.08)', padding: '10px 14px' }}
+          >
+            Results &amp; Leaderboard
+          </a>
+          <a
+            href="/members/competitions"
+            onClick={() => setOpen(false)}
+            style={{ ...linkStyle, border: 'none', borderBottom: '1px solid rgba(45,90,61,.08)', padding: '10px 14px' }}
+          >
+            Competition Dates
+          </a>
+          <a
             href="/members/competition-sheets"
             onClick={() => setOpen(false)}
             style={{ ...linkStyle, border: 'none', padding: '10px 14px' }}

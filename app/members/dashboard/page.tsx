@@ -8,7 +8,7 @@ import { verifyMemberSession, SESSION_COOKIE } from '@/lib/memberSession';
 import { MyDetailsDropdown } from './MyDetailsDropdown';
 import { CompDatesCard } from './CompDatesCard';
 import { ResultsDropdown } from './ResultsDropdown';
-import { ResultsQuickDropdown } from './ResultsQuickDropdown';
+import { ResultsNavDropdown } from './ResultsNavDropdown';
 
 const TOP_HANDICAPS = [...MEMBERS]
   .filter(m => m.h[2026] !== undefined)
@@ -143,8 +143,7 @@ export default async function Dashboard() {
                 {label}
               </a>
             ))}
-            {/* Results quick-link replaced with dropdown so Competition Sheets is accessible */}
-            <ResultsQuickDropdown />
+            <ResultsNavDropdown />
             {[
               { label: 'Notices', href: '/notices' },
               { label: 'Make a Payment', href: '/members/payment' },

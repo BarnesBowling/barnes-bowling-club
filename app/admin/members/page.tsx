@@ -11,7 +11,7 @@ async function inviteMember(formData: FormData) {
 
   const firstName = String(formData.get('first_name')).trim();
   const lastName  = String(formData.get('last_name')).trim();
-  const email     = String(formData.get('email')).trim().toLowerCase();
+  const email     = String(formData.get('invite_email')).trim().toLowerCase();
 
   if (!firstName || !lastName || !email) {
     redirect('/admin/members?error=Please+fill+in+all+fields');
@@ -175,6 +175,7 @@ export default async function MembersAdmin({
             </h2>
             <form
               action={inviteMember}
+              autoComplete="off"
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -188,16 +189,16 @@ export default async function MembersAdmin({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={labelStyle}>First name</label>
-                  <input name="first_name" required style={inputStyle} autoComplete="off" />
+                  <input name="first_name" required style={inputStyle} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} />
                 </div>
                 <div>
                   <label style={labelStyle}>Last name</label>
-                  <input name="last_name" required style={inputStyle} autoComplete="off" />
+                  <input name="last_name" required style={inputStyle} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} />
                 </div>
               </div>
               <div>
                 <label style={labelStyle}>Email address</label>
-                <input name="email" type="email" required style={inputStyle} autoComplete="off" />
+                <input name="invite_email" type="email" required style={inputStyle} autoComplete="new-email" autoCorrect="off" autoCapitalize="off" spellCheck={false} />
               </div>
               <div style={{ paddingTop: '.25rem' }}>
                 <button

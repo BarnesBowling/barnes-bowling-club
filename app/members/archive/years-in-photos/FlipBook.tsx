@@ -31,7 +31,7 @@ function addCornerTabs(mount: HTMLElement): void {
   });
 }
 
-// One photo per page. Even index = left page (shift down), odd = right page (shift up).
+// One photo per page. Even index = left page, odd = right page (used for spine shadow direction).
 function buildAlbumPage(src: string, index: number): HTMLDivElement {
   const isLeft = index % 2 === 0;
 
@@ -66,30 +66,30 @@ function buildAlbumPage(src: string, index: number): HTMLDivElement {
   });
   page.appendChild(spineShade);
 
-  // Photo mount — position: relative so tabs are placed relative to the photo area
-  const mount = document.createElement('div');
-  Object.assign(mount.style, {
+  // photoWrapper — inline-flex shrinks to the rendered image size so tabs land on photo corners
+  const photoWrapper = document.createElement('div');
+  Object.assign(photoWrapper.style, {
     position: 'relative',
-    width: '100%',
-    height: '100%',
+    display: 'inline-flex',
     overflow: 'visible',
-    // Stagger near the centre fold: left page shifts down, right page shifts up
-    transform: isLeft ? 'translateY(10%)' : 'translateY(-10%)',
+    maxWidth: '100%',
+    maxHeight: '100%',
+    transform: 'translateY(0)',
   });
 
-  addCornerTabs(mount);
+  addCornerTabs(photoWrapper);
 
   const img = document.createElement('img');
   img.src = src;
   img.alt = '';
   Object.assign(img.style, {
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain',
     display: 'block',
+    maxWidth: '100%',
+    maxHeight: '100%',
+    objectFit: 'contain',
   });
-  mount.appendChild(img);
-  page.appendChild(mount);
+  photoWrapper.appendChild(img);
+  page.appendChild(photoWrapper);
   return page;
 }
 

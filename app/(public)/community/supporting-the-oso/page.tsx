@@ -183,7 +183,7 @@ export default function SupportingTheOso() {
 
             {/* External link */}
             <a
-              href="https://www.oso.org.uk"
+              href="https://www.osoarts.org.uk"
               target="_blank"
               rel="noopener noreferrer"
               style={{

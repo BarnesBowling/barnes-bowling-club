@@ -4,6 +4,13 @@ import { NewsletterGrid } from './NewsletterGrid';
 
 const ISSUES = [
   {
+    title: 'Newsletter — Vol. 2',
+    date: '19 May 2026',
+    issue: 'Vol. 2',
+    src: '/newsletters/newsletter-vol2-may2026.pdf',
+    type: 'pdf' as const,
+  },
+  {
     title: 'Newsletter — May 2026',
     date: '3 May 2026',
     issue: 'Vol. 1',
@@ -35,9 +42,21 @@ export default function Newsletter() {
         </div>
 
         {/* ── Content ── */}
-        <div style={{ background: '#ffffff' }}>
-          <div className="section-inner" style={{ padding: '4rem 2rem 5rem' }}>
-            <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', color: 'var(--green-deep)', lineHeight: 1.8, margin: '0 0 2.5rem' }}>
+        <div style={{ background: 'var(--cream)', padding: '3rem 2rem' }}>
+          <div style={{
+            maxWidth: '1100px',
+            margin: '0 auto',
+            backgroundColor: 'var(--green-deep)',
+            backgroundImage: [
+              'repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 8px)',
+              'repeating-linear-gradient(-45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 8px)',
+            ].join(', '),
+            border: '18px solid #8B5E3C',
+            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)',
+            borderRadius: '4px',
+            padding: '3.5rem 2rem 4.5rem',
+          }}>
+            <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', color: 'rgba(245,240,232,0.85)', lineHeight: 1.8, margin: '0 0 2.5rem' }}>
               Catch up on past editions of <em>On the Green</em> — the Barnes Bowling Club newsletter.
             </p>
             <NewsletterGrid issues={ISSUES} />

@@ -28,7 +28,7 @@ export default async function ResultsPage() {
               Members Area
             </a>
             <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>
-              Results <em style={{ color: '#c9a84c', fontStyle: 'italic' }}>&amp; Leaderboard</em>
+              Results <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>&amp; Leaderboard</em>
             </h1>
             <p className="section-lead" style={{ color: 'rgba(245,240,232,.65)' }}>
               Match results and Manser standings for the 2026 season.

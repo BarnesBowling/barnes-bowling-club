@@ -4,9 +4,12 @@ import { Footer } from '@/components/Footer';
 import { GreenBanner } from '@/components/GreenBanner';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { createClient } from '@/lib/supabase/server';
+import { getHeroImages } from '@/lib/images';
 
 export default async function Home() {
   const supabase = await createClient();
+
+  const heroImages = await getHeroImages();
 
   const [{ data: events }, { data: officers }] = await Promise.all([
     supabase
@@ -36,7 +39,7 @@ export default async function Home() {
         <div className="whats-happening-cards" style={{ maxWidth: '1200px', margin: '12px auto 0' }}>
 
           <Link href="/login?redirect=/members/results" className="whats-happening-card">
-            <div className="whats-happening-card-bg" style={{ backgroundImage: "url('/images/gallery1.JPG')", backgroundPosition: 'center 60%' }} />
+            <div className="whats-happening-card-bg" style={{ backgroundImage: {`url('${heroImages['whats-happening-1'] ?? '/images/gallery1.JPG'}')`}, backgroundPosition: 'center 60%' }} />
             <div className="whats-happening-panel">
               <div className="whats-happening-panel-footer">View Competitions</div>
               <div className="whats-happening-panel-center">
@@ -47,7 +50,7 @@ export default async function Home() {
           </Link>
 
           <Link href="/login?redirect=/members/calendar" className="whats-happening-card">
-            <div className="whats-happening-card-bg" style={{ backgroundImage: "url('/images/gallery5.JPG')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }} />
+            <div className="whats-happening-card-bg" style={{ backgroundImage: {`url('${heroImages['whats-happening-2'] ?? '/images/gallery5.JPG'}')`}, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }} />
             <div className="whats-happening-panel">
               <div className="whats-happening-panel-footer">Log in to see calendar</div>
               <div className="whats-happening-panel-center">
@@ -58,7 +61,7 @@ export default async function Home() {
           </Link>
 
           <Link href="/newsletter" className="whats-happening-card">
-            <div className="whats-happening-card-bg" style={{ backgroundImage: "url('/images/gallery2.JPG')" }} />
+            <div className="whats-happening-card-bg" style={{ backgroundImage: {`url('${heroImages['whats-happening-3'] ?? '/images/gallery2.JPG'}')`} }} />
             <div className="whats-happening-panel">
               <div className="whats-happening-panel-footer">Club Notices</div>
               <div className="whats-happening-panel-center">
@@ -73,7 +76,7 @@ export default async function Home() {
 
       {/* ── 3. WIDE FEATURE BANNER ── */}
       <div className="featured-banner">
-        <div className="featured-banner-bg" style={{ backgroundImage: "url('/images/gallery4.JPG')" }} />
+        <div className="featured-banner-bg" style={{ backgroundImage: {`url('${heroImages['featured-banner'] ?? '/images/gallery4.JPG'}')`} }} />
         <div className="featured-banner-overlay" />
         <div className="featured-banner-inner" style={{ justifyContent: 'center' }}>
           <Link
@@ -135,7 +138,7 @@ export default async function Home() {
 
           <div className="activity-card">
             <div className="activity-card-img">
-              <div className="activity-card-img-inner" style={{ backgroundImage: "url('/images/IMG_9105.JPG')" }} />
+              <div className="activity-card-img-inner" style={{ backgroundImage: {`url('${heroImages['activity-1'] ?? '/images/IMG_9105.JPG'}')`} }} />
               <div className="activity-card-img-overlay" />
             </div>
             <div className="activity-card-body">
@@ -150,7 +153,7 @@ export default async function Home() {
 
           <div className="activity-card">
             <div className="activity-card-img">
-              <div className="activity-card-img-inner" style={{ backgroundImage: "url('/images/gallery6.JPG')" }} />
+              <div className="activity-card-img-inner" style={{ backgroundImage: {`url('${heroImages['activity-2'] ?? '/images/gallery6.JPG'}')`} }} />
               <div className="activity-card-img-overlay" />
             </div>
             <div className="activity-card-body">
@@ -165,7 +168,7 @@ export default async function Home() {
 
           <div className="activity-card">
             <div className="activity-card-img">
-              <div className="activity-card-img-inner" style={{ backgroundImage: "url('/images/gallery7.JPG')" }} />
+              <div className="activity-card-img-inner" style={{ backgroundImage: {`url('${heroImages['activity-3'] ?? '/images/gallery7.JPG'}')`} }} />
               <div className="activity-card-img-overlay" />
             </div>
             <div className="activity-card-body">

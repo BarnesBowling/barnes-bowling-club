@@ -96,3 +96,27 @@ export async function reorderImages(orderedIds: string[]): Promise<void> {
     )
   );
 }
+
+export async function getImageByLabel(label: string): Promise<SiteImage | null> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from('site_images')
+    .select('*')
+    .eq('context', 'hero')
+    .eq('alt_text', label)
+    .single();
+  return data ?? null;
+}
+
+export async function getHeroImages(): Promise<Record<string, string>> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from('site_images')
+    .select('*')
+    .eq('context', 'hero');
+  const map: Record<string, string> = {};
+  for (const img of data ?? []) {
+    if (img.alt_text) map[img.alt_text] = img.public_url;
+  }
+  return map;
+}

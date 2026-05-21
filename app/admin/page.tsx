@@ -124,6 +124,11 @@ export default async function Admin() {
                 description="Enter match results and manage the Manser leaderboard"
               />
               <AdminLinkCard
+                href="/admin/gallery"
+                title="Gallery"
+                description="Upload and manage public gallery photos"
+              />
+              <AdminLinkCard
                 href="/admin/accounts"
                 title="Member Accounts"
                 description="Post charges and payments to member account statements"

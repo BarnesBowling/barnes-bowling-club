@@ -1,11 +1,14 @@
-const HERO_IMAGE = '/images/Barnes_Bowling_Club_Sep_1_SV_2.JPG';
+import { getHeroImages } from '@/lib/images';
 
-export function HeroCarousel() {
+export async function HeroCarousel() {
+  const heroImages = await getHeroImages();
+  const src = heroImages['hero-carousel'] ?? '/images/Barnes_Bowling_Club_Sep_1_SV_2.JPG';
+
   return (
     <section
       className="hero-full hero-carousel"
       style={{
-        backgroundImage: `url('${HERO_IMAGE}')`,
+        backgroundImage: `url('${src}')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}

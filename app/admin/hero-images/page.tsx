@@ -16,7 +16,7 @@ const SLOTS = [
 
 export default function AdminHeroImagesPage() {
   const [uploading, setUploading] = useState(null);
-  const [uploaded, setUploaded] = useState({});
+  const [uploading, setUploading] = useState<string | null>(null);
 
   async function handleUpload(label: string, file: File) {
     setUploading(label);

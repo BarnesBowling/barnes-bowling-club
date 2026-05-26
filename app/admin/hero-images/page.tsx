@@ -18,7 +18,7 @@ export default function AdminHeroImagesPage() {
   const [uploading, setUploading] = useState(null);
   const [uploaded, setUploaded] = useState({});
 
-  async function handleUpload(label, file) {
+  async function handleUpload(label: string, file: File) {
     setUploading(label);
     try {
       const img = await uploadImage(file, 'hero', undefined, label);

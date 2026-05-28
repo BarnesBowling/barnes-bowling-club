@@ -102,6 +102,9 @@ const SECTIONS: Section[] = [
       { kind: 'sub', num: '5.1', blocks: [{ kind: 'para', text: 'Every member (Full/Honorary) shall have the right to speak, but only Full Members shall have the right to vote.' }] },
       { kind: 'sub', num: '5.2', blocks: [{ kind: 'para', text: 'Each Full Member shall have one vote.' }] },
       { kind: 'sub', num: '5.3', blocks: [{ kind: 'para', text: 'Any resolution, including but not limited to a resolution for the dissolution of the Club under Section 11 below, put to the vote of the meeting shall be decided by a show of hands by the Full Members present at the meeting. Full Members who are unable to attend the AGM may vote by proxy.' }] },
+      { kind: 'sub', num: '5.4', blocks: [{ kind: 'para', text: 'Any resolution concerning interpretation or amendment of the Club Constitution shall be decided on by a majority of no less than two thirds of those full members present and voting unless, either before or on the declaration of the result of the show of hands, a poll is demanded by either the Chair or two full members.' }] },
+      { kind: 'sub', num: '5.5', blocks: [{ kind: 'para', text: 'If a poll is demanded it should be taken within fourteen days after the meeting at which the poll was demanded.' }] },
+      { kind: 'sub', num: '5.6', blocks: [{ kind: 'para', text: 'The Chair of the Club shall conduct meetings.' }] },
     ],
   },
 

@@ -49,7 +49,7 @@ export default function OpeningHours() {
                     Season
                   </h2>
                   <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', color: 'var(--green-deep)', lineHeight: 1.8, margin: 0 }}>
-                    The bowling season runs from <strong>25th April</strong> to <strong>mid October</strong>.
+                    The bowling season runs from <strong>25th April</strong> to <strong>early October</strong>.
                   </p>
                 </section>
 

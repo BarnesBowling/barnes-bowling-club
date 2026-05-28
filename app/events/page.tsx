@@ -69,7 +69,7 @@ export default function EventsPage() {
             }}>
               {[
                 { label: 'Season Opens',  value: '25th April 2026',       sub: 'First play of the year' },
-                { label: 'Season Closes', value: 'Mid October 2026',      sub: 'Last roll-up of the year' },
+                { label: 'Season Closes', value: 'Early October 2026',    sub: 'Last roll-up of the year' },
                 { label: 'Roll-Ups',      value: 'Every Wednesday',       sub: '6 pm throughout the season' },
                 { label: 'Venue',         value: 'The Sun Inn, Barnes',   sub: 'Barnes High Street, SW13 9LB' },
               ].map(({ label, value, sub }) => (

@@ -92,6 +92,7 @@ const SECTIONS: Section[] = [
         { kind: 'para', text: 'The Committee may introduce and operate an anonymous voting system for remote voting. This system may be run alongside, or may replace, the existing non-anonymous email-based proxy process where it is determined that the new method provides a fairer, more secure, and more transparent voting process.' },
         { kind: 'para', text: 'Any transition to a revised voting method will not prejudice the rights of Full Members who attend the AGM in person, whose votes shall be counted equally alongside proxy votes.' },
       ]},
+      { kind: 'sub', num: '4.6', blocks: [{ kind: 'para', text: 'It is the gift of the outgoing President to nominate the President for the new season. Should the outgoing President be unable for any reason to nominate the new President, the membership should be asked in advance for nominations. If there is more than one nomination, the President would be decided by a vote at the AGM.' }] },
     ],
   },
 

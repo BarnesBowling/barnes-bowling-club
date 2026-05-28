@@ -54,7 +54,7 @@ const SECTIONS: SitemapSection[] = [
       { label: 'Community',                        href: '/community',                                        desc: 'Barnes Bowling Club in the community' },
       { label: 'Fish Open Gardens',                href: '/community/fish-open-gardens',                      desc: 'Supporting the Fish Open Gardens' },
       { label: 'Darwin 200',                       href: '/community/official-sport-of-darwin-200',           desc: 'Official sport of Darwin 200' },
-      { label: 'Supporting Barnes Artists',        href: '/community/supporting-barnes-artists',              desc: 'Our support for local artists' },
+      { label: 'Collaborating with Barnes Artists', href: '/community/collaborating-with-barnes-artists',      desc: 'A creative partnership with local artists' },
       { label: 'Supporting the OSO',               href: '/community/supporting-the-oso',                     desc: 'The Old Sorting Office partnership' },
     ],
   },

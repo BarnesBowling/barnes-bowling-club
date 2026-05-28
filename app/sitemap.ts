@@ -23,7 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/community`,                                           priority: 0.6,  changeFrequency: 'monthly'  },
     { url: `${BASE_URL}/community/fish-open-gardens`,                         priority: 0.5,  changeFrequency: 'yearly'   },
     { url: `${BASE_URL}/community/official-sport-of-darwin-200`,              priority: 0.5,  changeFrequency: 'yearly'   },
-    { url: `${BASE_URL}/community/supporting-barnes-artists`,                 priority: 0.5,  changeFrequency: 'yearly'   },
+    { url: `${BASE_URL}/community/collaborating-with-barnes-artists`,          priority: 0.5,  changeFrequency: 'yearly'   },
     { url: `${BASE_URL}/community/supporting-the-oso`,                        priority: 0.5,  changeFrequency: 'yearly'   },
     { url: `${BASE_URL}/general-committee`,                                   priority: 0.5,  changeFrequency: 'yearly'   },
     { url: `${BASE_URL}/handicap-committee`,                                  priority: 0.5,  changeFrequency: 'yearly'   },

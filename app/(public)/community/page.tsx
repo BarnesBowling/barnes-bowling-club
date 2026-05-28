@@ -3,11 +3,11 @@ import { Footer } from '@/components/Footer';
 
 const CARDS = [
   {
-    href: '/community/supporting-barnes-artists',
-    title: 'Supporting Barnes Artists',
-    desc: 'How Barnes Bowling Club champions local creativity and the arts in the community.',
+    href: '/community/collaborating-with-barnes-artists',
+    title: 'Collaborating with Barnes Artists',
+    desc: 'A creative partnership born from our Tricentenary celebrations — artists inspired by the green.',
     img: '/images/community/supporting-barnes-artists.png',
-    alt: 'Supporting Barnes Artists',
+    alt: 'Collaborating with Barnes Artists',
   },
   {
     href: '/community/official-sport-of-darwin-200',

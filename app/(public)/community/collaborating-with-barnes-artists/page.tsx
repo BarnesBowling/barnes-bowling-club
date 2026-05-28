@@ -2,10 +2,10 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 
 export const metadata = {
-  title: 'Supporting Barnes Artists — Barnes Bowling Club',
+  title: 'Collaborating with Barnes Artists — Barnes Bowling Club',
 };
 
-export default function SupportingBarnesArtists() {
+export default function CollaboratingWithBarnesArtists() {
   return (
     <>
       <Navbar />
@@ -20,10 +20,10 @@ export default function SupportingBarnesArtists() {
               Community
             </a>
             <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(2rem,5vw,3.5rem)' }}>
-              Supporting <em style={{ color: 'var(--gold-light)' }}>Barnes Artists</em>
+              Collaborating with <em style={{ color: 'var(--gold-light)' }}>Barnes Artists</em>
             </h1>
             <p className="section-lead" style={{ color: 'rgba(245,240,232,.65)' }}>
-              How Barnes Bowling Club champions local creativity and the arts in the community.
+              A creative partnership born from our Tricentenary celebrations.
             </p>
           </div>
         </div>
@@ -55,18 +55,17 @@ export default function SupportingBarnesArtists() {
             }}>
 
               <p style={{ marginBottom: '1.5rem' }}>
-                What a year it was! Back in spring 2025, the Club teamed up with Barnes Artists for the fourth OSO
-                Easter Art Fair — held from 17 to 21 April at the Arts Centre — and it turned out to be a brilliant
-                celebration of everything that makes this corner of south-west London so special. Around 30 artists
-                exhibited a wonderful mix of work across different genres and media, and the buzz in the room was
-                wonderful to be part of.
+                In spring 2025, Barnes Bowling Club and Barnes Artists came together for the fourth OSO Easter Art
+                Fair — held from 17 to 21 April at the Arts Centre. Around 30 artists exhibited a wonderful mix of
+                work across different genres and media, and the Club was proud to be part of it.
               </p>
 
               <p style={{ marginBottom: '1.5rem' }}>
-                This year was extra special because the fair featured a panel sponsored by Barnes Bowling Club,
-                showcasing works that celebrated the Club itself. Michelle Hawes' beautiful piece{' '}
-                <em>"Celebrating History"</em> was even chosen for the OSO's advance publicity — what an honour for
-                a local artist, and what a lovely reflection on the Club!
+                The fair featured a dedicated panel of works inspired by the Club, with Barnes Artists generously
+                donating one of the paintings as a raffle prize for the Club — a gesture that spoke volumes about the
+                warmth of the partnership. Michelle Hawes' piece{' '}
+                <em>"Celebrating History"</em> was selected for the OSO's advance publicity, a fitting tribute to the
+                subject matter.
               </p>
 
               {/* Inline photo 1 — Katie James */}
@@ -95,11 +94,11 @@ export default function SupportingBarnesArtists() {
               </figure>
 
               <p style={{ marginBottom: '1.5rem' }}>
-                The collaboration started back in 2023, when the Club was thinking about how to mark its tricentenary
-                in 2025. We invited local artists down to see if our 300-year-old green might spark some creativity —
+                The partnership began in 2023, when the Club was planning how to mark its Tricentenary in 2025. We
+                invited local artists down to the green to see if 300 years of history might spark some creativity —
                 and it absolutely did. The 2024 season saw a real flurry of artistic activity, with David Pearce's
-                wonderful painting of the coats and hats in the Clubhouse becoming the headline image of the November
-                2024 Barnes Art Fair. It found a buyer almost immediately.
+                painting of the coats and hats in the Clubhouse becoming the headline image of the November 2024
+                Barnes Art Fair, where it sold almost immediately.
               </p>
 
               {/* Inline photo 2 — Fran Howard */}
@@ -128,10 +127,10 @@ export default function SupportingBarnesArtists() {
               </figure>
 
               <p style={{ marginBottom: '1.5rem' }}>
-                The OSO usually groups works by individual artists, but they loved the idea of a joint BBC and Barnes
-                Artists panel with a shared theme around the Club. We were delighted to sponsor the panel as part of
-                our Tricentenary celebrations — it felt like the perfect way to highlight our green as the community
-                treasure it truly is.
+                The OSO kindly agreed to group the works together as a joint panel — something they don't usually
+                do — and the Club contributed £100 towards the cost of the display as part of its Tricentenary
+                celebrations. It felt like the right way to honour both the green and the artists who had found
+                inspiration in it.
               </p>
 
               {/* Inline photo 3 — artist at easel */}
@@ -160,9 +159,9 @@ export default function SupportingBarnesArtists() {
               </figure>
 
               <p style={{ marginBottom: '2rem' }}>
-                The icing on the cake? Many of the images of the Club — including Michelle and David's work — also
-                featured in a book of Barnes Artists' works published during 2025. It's a beautiful memento of a
-                very special year, and a reminder of just how much creativity lives on this little green in Barnes.
+                Many of the works — including pieces by Michelle Hawes and David Pearce — also featured in a book of
+                Barnes Artists' works published in 2025. It is a lasting memento of a genuinely mutual collaboration,
+                and a reminder that a 300-year-old bowling green can still inspire something new.
               </p>
 
             </div>

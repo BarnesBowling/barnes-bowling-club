@@ -140,10 +140,7 @@ export default function SupportingTheOso() {
                     color: 'var(--text-mid)',
                     margin: 0,
                   }}>
-                    What we particularly love about the scheme is how it's handled. The OSO processes
-                    requests and provides tickets discreetly, so recipients are indistinguishable from
-                    other attendees — preserving the joy and dignity of everyone who walks through
-                    their doors.
+                    The OSO handles requests quietly and carefully, so recipients are indistinguishable from any other member of the audience — preserving the dignity and joy of the experience for everyone.
                   </p>
                 </div>
               </div>
@@ -162,13 +159,11 @@ export default function SupportingTheOso() {
               </h2>
 
               <p style={{ marginBottom: '2.5rem' }}>
-                The OSO is a treasured part of Barnes life — a fully accessible, welcoming venue that
-                goes out of its way to ensure everyone can participate. What makes the Ticket Subsidy
-                Scheme particularly special is the way it is handled: requests are processed
-                discreetly, so recipients are indistinguishable from any other member of the
-                audience. For us, contributing to this scheme as part of our Tricentenary felt like
-                exactly the right thing to do — connecting 300 years of community life on our green
-                with the next generation of arts-goers just around the corner on Barnes Pond.
+                The OSO is a treasured part of Barnes life — a fully accessible, welcoming venue on
+                Barnes Pond that genuinely goes out of its way to make everyone feel at home. For us,
+                contributing to the Ticket Subsidy Scheme as part of our Tricentenary felt like
+                exactly the right thing to do. Three hundred years of community life on our green,
+                helping to open the doors of the theatre just around the corner.
               </p>
 
             </div>

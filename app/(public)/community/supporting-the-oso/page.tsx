@@ -54,11 +54,9 @@ export default function SupportingTheOso() {
             }}>
 
               <p style={{ marginBottom: '1.5rem' }}>
-                We're proud to be a long-standing supporter of the{' '}
-                <strong>OSO Arts Centre</strong> — our wonderful local theatre on Barnes Pond.
-                Specifically, we sponsor the OSO's{' '}
-                <strong>Ticket Subsidy Scheme</strong>, helping to make theatre, music, and the arts
-                accessible to everyone in our community.
+                As part of our Tricentenary celebrations in 2025, Barnes Bowling Club was proud to make a funding contribution to the{' '}
+                <strong>OSO Arts Centre</strong> — our wonderful local theatre on Barnes Pond — specifically to support their{' '}
+                <strong>Ticket Subsidy Scheme</strong>, which helps make theatre and the arts accessible to local residents who could not otherwise afford to attend.
               </p>
 
               {/* About the Scheme */}
@@ -87,10 +85,7 @@ export default function SupportingTheOso() {
                   color: 'var(--green-deep)',
                   margin: 0,
                 }}>
-                  The OSO offers either a <strong>50% or 100% subsidy</strong> on the ticket cost of
-                  activities, events and shows — ranging from participation in their Youth Theatre,
-                  classes and workshops, right through to tickets for performances, including the
-                  much-loved annual pantomime.
+                  The OSO is a registered charity whose aim is to provide access to the arts for everyone in the community, regardless of financial circumstances. Working with local partners including the Castelnau Community Project, the Power Station Youth Club and local primary schools, the scheme offers <strong>50% or 100% subsidies</strong> on ticket costs — covering Youth Theatre, classes, workshops and performances including the much-loved annual pantomime. The scheme supports around 300 local residents a year and costs £3,000 per year to run.
                 </p>
               </div>
 
@@ -166,17 +161,14 @@ export default function SupportingTheOso() {
                 Why We Support It
               </h2>
 
-              <p style={{ marginBottom: '1.5rem' }}>
-                The OSO is a treasured part of Barnes life — a fully accessible venue with trained,
-                helpful staff who go out of their way to make everyone feel welcome. With ramps,
-                automatic doors, an accommodating theatre space, and even Braille menus available in
-                the café, they have made huge strides to ensure their doors really are open to all.
-              </p>
-
               <p style={{ marginBottom: '2.5rem' }}>
-                By supporting their Ticket Subsidy Scheme, we hope to play a small part in keeping
-                those doors open and the seats filled — bringing the arts to families who might
-                otherwise miss out. It's one of the things we're most proud of as a club.
+                The OSO is a treasured part of Barnes life — a fully accessible, welcoming venue that
+                goes out of its way to ensure everyone can participate. What makes the Ticket Subsidy
+                Scheme particularly special is the way it is handled: requests are processed
+                discreetly, so recipients are indistinguishable from any other member of the
+                audience. For us, contributing to this scheme as part of our Tricentenary felt like
+                exactly the right thing to do — connecting 300 years of community life on our green
+                with the next generation of arts-goers just around the corner on Barnes Pond.
               </p>
 
             </div>

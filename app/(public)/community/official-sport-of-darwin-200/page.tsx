@@ -144,8 +144,8 @@ export default function OfficialSportOfDarwin200() {
               <figure style={{ margin: '2rem 0', padding: 0 }}>
                 <div style={{ width: '100%', overflow: 'hidden', background: 'var(--green-deep)' }}>
                   <img
-                    src="/images/community/darwin-200/rio-2.jpg"
-                    alt="Players at the Botanical Gardens, Rio de Janeiro"
+                    src="/images/green_summer.webp"
+                    alt="The Barnes Bowling Club green — home of the game since 1725"
                     style={{ width: '100%', display: 'block', objectFit: 'cover' }}
                   />
                 </div>
@@ -156,7 +156,7 @@ export default function OfficialSportOfDarwin200() {
                   color: 'rgba(45,90,61,.55)',
                   letterSpacing: '.03em',
                 }}>
-                  Sarah Darwin, great-great-granddaughter of Charles Darwin, joins the game in Rio
+                  The Barnes Bowling Club green — where it all began
                 </figcaption>
               </figure>
 

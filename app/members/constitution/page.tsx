@@ -180,6 +180,10 @@ const SECTIONS: Section[] = [
       { kind: 'sub', num: '10.1', blocks: [{ kind: 'para', text: 'Annual subscriptions, guest playing fees and joining fees shall be decided upon by the Committee in the context of the financial position of the Club and subject to ratification at the AGM.' }] },
       { kind: 'sub', num: '10.2', blocks: [{ kind: 'para', text: 'Membership fees fall due for payment when ratified by the AGM and, if not paid by 31 March, membership will automatically lapse, unless prior arrangements have been made through the Treasurer (see Clause 10.3 below).' }] },
       { kind: 'sub', num: '10.3', blocks: [{ kind: 'para', text: 'If a member is unable to meet full subscription requirements by 31 March, then he/she should submit a request, in writing, by 14 March, and the Treasurer will invite the Committee to assess the acceptability of a deferred payment.' }] },
+      { kind: 'sub', num: '10.4', blocks: [{ kind: 'para', text: 'Green fees should be paid directly to a member of the Committee, on the date of guest play, wherever possible.' }] },
+      { kind: 'sub', num: '10.5', blocks: [{ kind: 'para', text: 'Any item bought at an auction or social event must be paid for at the end of the event.' }] },
+      { kind: 'sub', num: '10.6', blocks: [{ kind: 'para', text: 'All fees other than those referred to in this section which become payable during the season must be paid by 31 October.' }] },
+      { kind: 'sub', num: '10.7', blocks: [{ kind: 'para', text: 'All new members will pay a joining fee.' }] },
     ],
   },
 

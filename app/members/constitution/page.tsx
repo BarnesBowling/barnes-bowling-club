@@ -149,6 +149,13 @@ const SECTIONS: Section[] = [
         { kind: 'para', text: 'The Club Committee must ratify the membership of the Handicap Committee in advance.' },
         { kind: 'para', text: 'After the Handicap Committee has met and assigned handicaps, the proposed handicaps must be submitted to the Club Committee for approval before being published.' },
       ]},
+      { kind: 'sub', num: '8.3', blocks: [{ kind: 'para', text: 'To appoint a green-keeper who will serve as an Ex-Officio member of the Committee.' }] },
+      { kind: 'sub', num: '8.4', blocks: [{ kind: 'para', text: 'To co-opt Ex-Officio members as required.' }] },
+      { kind: 'sub', num: '8.5', blocks: [{ kind: 'para', text: 'To call a General Meeting (EGM) of the Club at such times as it shall think fit.' }] },
+      { kind: 'sub', num: '8.6', blocks: [{ kind: 'para', text: 'To keep Minutes of the Committee Meetings and the AGM. These will be held electronically as a permanent record of the Club’s affairs.' }] },
+      { kind: 'sub', num: '8.7', blocks: [{ kind: 'para', text: 'To keep a record of the Club’s Officers’ duties.' }] },
+      { kind: 'sub', num: '8.8', blocks: [{ kind: 'para', text: 'To determine the level of membership and guest fees annually in the light of the general financial requirements of the Club.' }] },
+      { kind: 'sub', num: '8.9', blocks: [{ kind: 'para', text: 'The Treasurer shall present to the Committee, at each meeting, a statement of the Club’s financial position, which will be noted for approval by the Chair of the meeting. The Treasurer will further render to the AGM a detailed statement of the Club’s accounts.' }] },
     ],
   },
 

@@ -142,11 +142,11 @@ export default function OfficialSportOfDarwin200() {
 
               {/* Photo 2 */}
               <figure style={{ margin: '2rem 0', padding: 0 }}>
-                <div style={{ width: '100%', overflow: 'hidden', position: 'relative', background: 'var(--green-deep)', maxHeight: '290px' }}>
+                <div style={{ width: '100%', overflow: 'hidden', background: 'var(--green-deep)', height: '420px' }}>
                   <img
                     src="/images/green_summer.webp"
                     alt="The Barnes Bowling Club green — home of the game since 1725"
-                    style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover', objectPosition: 'center bottom' }}
+                    style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover', objectPosition: 'center 75%' }}
                   />
                 </div>
                 <figcaption style={{

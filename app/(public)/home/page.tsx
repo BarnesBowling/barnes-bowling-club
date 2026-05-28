@@ -168,7 +168,7 @@ export default async function Home() {
 
           <div className="activity-card">
             <div className="activity-card-img">
-              <div className="activity-card-img-inner" style={{ backgroundImage: `url('${heroImages['activity-3'] ?? '/images/gallery7.JPG'}')` }} />
+              <div className="activity-card-img-inner" style={{ backgroundImage: `url('${heroImages['activity-3'] ?? '/images/green_summer.webp'}')`, backgroundPosition: 'center center' }} />
               <div className="activity-card-img-overlay" />
             </div>
             <div className="activity-card-body">

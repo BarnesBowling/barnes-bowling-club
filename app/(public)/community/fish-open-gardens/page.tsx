@@ -2,7 +2,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 
 export const metadata = {
-  title: 'FISH Open Gardens — Barnes Bowling Club',
+  title: 'FiSH Barnes Open Gardens 2026 — Barnes Bowling Club',
 };
 
 export default function FishOpenGardens() {
@@ -23,7 +23,7 @@ export default function FishOpenGardens() {
               We Are Opening <em style={{ color: 'var(--gold-light)' }}>Our Garden</em>
             </h1>
             <p className="section-lead" style={{ color: 'rgba(245,240,232,.65)' }}>
-              Barnes Bowling Club joins the FiSH Barnes Open Gardens 2026.
+              Barnes Bowling Club opens its historic green for the FiSH Barnes Open Gardens — raising money for older people in Barnes, Mortlake and East Sheen.
             </p>
           </div>
         </div>
@@ -228,9 +228,7 @@ export default function FishOpenGardens() {
                     color: 'var(--text-mid)',
                     marginBottom: '1rem',
                   }}>
-                    FiSH Neighbourhood Care provides volunteer friendship, help and support for older
-                    people in Barnes, Mortlake and East Sheen. Every penny raised from Open Gardens
-                    goes directly to keeping their vital work going.
+                    FiSH Neighbourhood Care is a local charity providing volunteer friendship, help and support to help maintain the independence of older residents in Barnes, Mortlake and East Sheen. Services include lifts to medical appointments, shopping help, befriending visits, lunchtime concerts, a dementia café and much more. Every penny raised from Open Gardens goes directly to keeping this vital work going.
                   </p>
                   <p style={{
                     fontFamily: "'Libre Baskerville', serif",
@@ -256,7 +254,7 @@ export default function FishOpenGardens() {
             {/* CTA links */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2.5rem' }}>
               <a
-                href="https://www.fishhelp.org.uk/"
+                href="https://www.fishhelp.org.uk/barnes-open-gardens-2026-details/"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{

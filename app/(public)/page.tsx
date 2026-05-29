@@ -197,7 +197,7 @@ export default function LandingPage() {
               fontSize: '11px',
               fontWeight: 400,
               letterSpacing: '0.12em',
-              color: 'rgba(181,146,74,0.75)',
+              color: '#ffffff',
               textTransform: 'uppercase',
             }}
           >

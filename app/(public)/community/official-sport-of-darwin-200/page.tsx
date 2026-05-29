@@ -191,8 +191,8 @@ export default function OfficialSportOfDarwin200() {
               <figure style={{ margin: '2rem 0 2.5rem', padding: 0 }}>
                 <div style={{ width: '100%', overflow: 'hidden', background: 'var(--green-deep)' }}>
                   <img
-                    src="/images/community/darwin-200/rio-4.jpg"
-                    alt="Barnes Bowls — the game goes global"
+                    src="/images/front_garden.jpg"
+                    alt="The entrance to Barnes Bowling Club"
                     style={{ width: '100%', display: 'block', objectFit: 'cover' }}
                   />
                 </div>
@@ -203,7 +203,7 @@ export default function OfficialSportOfDarwin200() {
                   color: 'rgba(45,90,61,.55)',
                   letterSpacing: '.03em',
                 }}>
-                  The game continues — Barnes Bowls on the Darwin 200 voyage
+                  The entrance to Barnes Bowling Club — where the game has been played since 1725
                 </figcaption>
               </figure>
 

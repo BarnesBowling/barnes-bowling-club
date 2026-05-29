@@ -142,7 +142,7 @@ export default function CollaboratingWithBarnesArtists() {
                 }}>
                   <img
                     src="/images/community/barnes-artists/artist-at-easel.jpg"
-                    alt="Artist painting on the bowling green"
+                    alt="Barnes Artist Sarah Dickinson at work in the Club"
                     style={{ width: '100%', display: 'block', objectFit: 'cover' }}
                   />
                 </div>
@@ -154,7 +154,7 @@ export default function CollaboratingWithBarnesArtists() {
                   fontStyle: 'normal',
                   letterSpacing: '.03em',
                 }}>
-                  An artist at work on the bowling green
+                  Barnes Artist Sarah Dickinson at work in the Club
                 </figcaption>
               </figure>
 

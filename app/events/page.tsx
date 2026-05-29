@@ -89,7 +89,24 @@ export default function EventsPage() {
                     fontWeight: 500,
                     color: 'var(--green-deep)',
                     marginBottom: '4px',
-                  }}>{value}</div>
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem',
+                  }}>
+                    {value}
+                    {label === 'Venue' && (
+                      <iframe
+                        src="https://www.google.com/maps?q=The+Sun+Inn,+Church+Road,+Barnes,+London+SW13+9HE&output=embed"
+                        width="120"
+                        height="80"
+                        style={{ border: 0, borderRadius: '4px', display: 'inline-block', verticalAlign: 'middle', marginLeft: '0.75rem' }}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Sun Inn location"
+                      />
+                    )}
+                  </div>
                   <div style={{
                     fontFamily: "'Libre Baskerville', serif",
                     fontSize: '12px',

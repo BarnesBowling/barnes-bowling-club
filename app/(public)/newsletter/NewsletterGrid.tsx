@@ -62,11 +62,13 @@ export function NewsletterGrid({ issues }: { issues: Issue[] }) {
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(issue); }}
             aria-label={`Open ${issue.title}`}
           >
-            <img
-              src={issue.src}
-              alt={issue.title}
-              style={{ width: '100%', height: 'auto', display: 'block' }}
-            />
+            <div style={{ width: '100%', aspectRatio: '3/4', overflow: 'hidden', background: '#e8e4dc' }}>
+              <img
+                src={issue.src}
+                alt={issue.title}
+                style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover', objectPosition: 'top center' }}
+              />
+            </div>
             <div style={{ padding: '0.75rem 1rem 1rem' }}>
               <div style={{
                 fontFamily: "'Playfair Display', serif",

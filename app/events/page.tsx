@@ -74,43 +74,39 @@ export default function EventsPage() {
                 { label: 'Venue',         value: 'The Sun Inn, Barnes',   sub: 'Barnes High Street, SW13 9LB' },
               ].map(({ label, value, sub }) => (
                 <div key={label} style={{ backgroundColor: '#f9f7f4', backgroundImage: "url('/images/texture.png')", backgroundRepeat: 'repeat', backgroundSize: '43px 43px', padding: '2rem 1.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{
-                        fontFamily: "'DM Sans', sans-serif",
-                        fontSize: '9px',
-                        fontWeight: 600,
-                        letterSpacing: '.2em',
-                        textTransform: 'uppercase',
-                        color: 'var(--gold)',
-                        marginBottom: '8px',
-                      }}>{label}</div>
-                      <div style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: '17px',
-                        fontWeight: 500,
-                        color: 'var(--green-deep)',
-                        marginBottom: '4px',
-                      }}>{value}</div>
-                      <div style={{
-                        fontFamily: "'Libre Baskerville', serif",
-                        fontSize: '12px',
-                        color: 'var(--text-muted)',
-                        fontStyle: 'italic',
-                      }}>{sub}</div>
-                    </div>
-                    {label === 'Venue' && (
-                      <iframe
-                        src="https://www.google.com/maps?q=The+Sun+Inn,+Church+Road,+Barnes,+London+SW13+9HE&output=embed"
-                        width="160"
-                        height="120"
-                        style={{ border: 0, borderRadius: '4px', flexShrink: 0 }}
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        title="Sun Inn location"
-                      />
-                    )}
-                  </div>
+                  <div style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '9px',
+                    fontWeight: 600,
+                    letterSpacing: '.2em',
+                    textTransform: 'uppercase',
+                    color: 'var(--gold)',
+                    marginBottom: '8px',
+                  }}>{label}</div>
+                  <div style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: '17px',
+                    fontWeight: 500,
+                    color: 'var(--green-deep)',
+                    marginBottom: '4px',
+                  }}>{value}</div>
+                  <div style={{
+                    fontFamily: "'Libre Baskerville', serif",
+                    fontSize: '12px',
+                    color: 'var(--text-muted)',
+                    fontStyle: 'italic',
+                  }}>{sub}</div>
+                  {label === 'Venue' && (
+                    <iframe
+                      src="https://www.google.com/maps?q=The+Sun+Inn,+Church+Road,+Barnes,+London+SW13+9HE&output=embed"
+                      width="100%"
+                      height="120"
+                      style={{ border: 0, borderRadius: '4px', display: 'block', marginTop: '1rem' }}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Sun Inn location"
+                    />
+                  )}
                 </div>
               ))}
             </div>

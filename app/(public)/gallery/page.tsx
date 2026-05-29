@@ -39,7 +39,7 @@ export default function Gallery() {
                   <img
                     src={src}
                     alt={src === '/images/trophy_winner.jpg' ? 'Trophy presentation at Barnes Bowling Club' : `Club photo ${i + 1}`}
-                    style={{ width: '100%', height: '100%', objectFit: contain ? 'contain' : 'cover', display: 'block' }}
+                    style={{ width: '100%', height: '100%', objectFit: contain ? 'contain' : 'cover', display: 'block', objectPosition: src === '/images/trophy_winner.jpg' ? 'center top' : undefined }}
                   />
                 </div>
               );

@@ -4,6 +4,13 @@ import { NewsletterGrid } from './NewsletterGrid';
 
 const ISSUES = [
   {
+    title: 'Newsletter — Vol. 3',
+    date: '30 May 2026',
+    issue: 'Vol. 3',
+    src: '/newsletters/newsletter-vol3.jpg',
+    type: 'image' as const,
+  },
+  {
     title: 'Newsletter — Vol. 2',
     date: '19 May 2026',
     issue: 'Vol. 2',

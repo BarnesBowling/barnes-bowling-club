@@ -68,7 +68,6 @@ const MEMBERSHIP_LINKS = [
 const ABOUT_US_LINKS = [
   { href: '/history',           label: 'History' },
   { href: '/general-committee', label: 'General Committee' },
-  { href: '/handicap-committee', label: 'Handicap Committee' },
   { href: '/opening-hours',     label: 'Opening Hours' },
   { href: '/contact',           label: 'Contact Us' },
 ];
@@ -224,7 +223,7 @@ export function Navbar() {
               </div>
             </div>
             <div className="nav-has-dropdown">
-              <Link href="/apply">Membership</Link>
+              <a href="/membership">Membership</a>
               <div className="nav-dropdown-menu">
                 {MEMBERSHIP_LINKS.map(l => (
                   <a key={l.href + l.label} href={l.href}>{l.label}</a>

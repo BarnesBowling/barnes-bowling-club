@@ -174,7 +174,7 @@ export default async function Home() {
             <div className="activity-card-body">
               <div className="activity-card-title">Club History</div>
               <p className="activity-card-desc">
-                Established in 1725, Barnes Bowling Club is London&apos;s oldest surviving pub green.
+                First recorded in 1746, Barnes Bowling Club is London&apos;s oldest surviving pub bowling green.
                 Discover our heritage and the rules we still play by today.
               </p>
               <Link href="/history" className="activity-card-link">More Details →</Link>

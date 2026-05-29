@@ -29,7 +29,7 @@
         "npm:react-dom@latest",
         "npm:react@latest",
         "npm:resend@latest",
-        "npm:stripe@latest",
+        "npm:stripe@^22.1.1",
         "npm:tailwindcss@latest",
         "npm:typescript@latest",
         "npm:zod@latest"

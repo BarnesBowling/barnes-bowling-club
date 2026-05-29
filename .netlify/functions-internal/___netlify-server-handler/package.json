@@ -18,7 +18,7 @@
     "react": "latest",
     "react-dom": "latest",
     "resend": "latest",
-    "stripe": "latest",
+    "stripe": "^22.1.1",
     "zod": "latest"
   },
   "devDependencies": {

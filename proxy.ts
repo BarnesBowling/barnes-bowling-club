@@ -5,7 +5,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
-    pathname.startsWith('/members') &&
+    pathname.startsWith('/members/') &&
     !pathname.startsWith('/members/logout')
   ) {
     const cookie = request.cookies.get(SESSION_COOKIE);

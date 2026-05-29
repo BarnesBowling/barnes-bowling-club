@@ -166,7 +166,7 @@ export const competitionSheets: CompetitionSheet[] = [
       'Andrew Fox', 'Mark Hunter', 'Tracy', 'Gerry the Jeweller',
       'Alaric', 'Brian Coles', 'David Priestley', 'Ginnette Grimes',
       "Jim O'Neill", 'Judith Heaton', 'Rhona', 'Venina',
-      'Andrew', 'Bernard O', 'Catherine M', "Noel O'Hara",
+      'Andrew Cleven', 'Bernard O', 'Catherine M', "Noel O'Hara",
       'Fee Power', 'Lucas Papa',
     ],
     initialScores: {

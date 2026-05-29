@@ -98,6 +98,17 @@ export default function EventsPage() {
                   }}>{sub}</div>
                 </div>
               ))}
+              <div style={{ backgroundColor: '#f9f7f4', overflow: 'hidden' }}>
+                <iframe
+                  src="https://www.google.com/maps?q=The+Sun+Inn,+Church+Road,+Barnes,+London+SW13+9HE&output=embed"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, display: 'block', minHeight: '160px' }}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Sun Inn location"
+                />
+              </div>
             </div>
           </div>
         </div>

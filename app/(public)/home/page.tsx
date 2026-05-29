@@ -160,7 +160,7 @@ export default async function Home() {
               <div className="activity-card-title">Photo Gallery</div>
               <p className="activity-card-desc">
                 Browse photographs from our season — club matches, competitions, social
-                evenings and the beautiful green that has been our home for three centuries.
+                evenings and the beautiful green that has been our home since the eighteenth century.
               </p>
               <Link href="/gallery" className="activity-card-link">More Details →</Link>
             </div>
@@ -204,7 +204,7 @@ export default async function Home() {
           <div className="history-facts">
             <div>
               <div className="history-fact-num">300<sup style={{ fontSize: '0.5em' }}>+</sup></div>
-              <div className="history-fact-label">Years of continuous play on the same green, behind the same pub</div>
+              <div className="history-fact-label">Years of bowling in the heart of Barnes — the Sun Inn first recorded 1746</div>
             </div>
             <div className="history-divider" />
             <div>

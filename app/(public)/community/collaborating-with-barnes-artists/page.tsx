@@ -95,7 +95,7 @@ export default function CollaboratingWithBarnesArtists() {
 
               <p style={{ marginBottom: '1.5rem' }}>
                 The partnership began in 2023, when the Club was planning how to mark its Tricentenary in 2025. We
-                invited local artists down to the green to see if 300 years of history might spark some creativity —
+                invited local artists down to the green to see if nearly 300 years of history might spark some creativity —
                 and it absolutely did. The 2024 season saw a real flurry of artistic activity, with David Pearce's
                 painting of the coats and hats in the Clubhouse becoming the headline image of the November 2024
                 Barnes Art Fair, where it sold almost immediately.

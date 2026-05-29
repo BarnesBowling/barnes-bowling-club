@@ -55,8 +55,8 @@ export default async function HistoryPage() {
               margin: 0,
               maxWidth: '560px',
             }}>
-              Three centuries of bowling on the same green, behind the same pub,
-              in the heart of Barnes.
+              Three centuries of bowling in the heart of Barnes.
+              The Sun Inn was first recorded in 1746, with its bowling green already established alongside it.
             </p>
 
             {/* Watch our story callout */}

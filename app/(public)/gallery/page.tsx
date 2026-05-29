@@ -7,7 +7,7 @@ const GALLERY_IMAGES = [
   '/images/gallery3.JPG',
   '/images/gallery4.JPG',
   '/images/gallery9.JPG',
-  '/images/gallery6.JPG',
+  '/images/bowlers_macmillan.jpg',
   '/images/gallery7.JPG',
   '/images/gallery8.JPG',
   '/images/trophy_winner.jpg',
@@ -38,7 +38,7 @@ export default function Gallery() {
                 <div key={src} style={{ aspectRatio: '4/3', overflow: 'hidden', background: 'var(--green-deep)' }}>
                   <img
                     src={src}
-                    alt={src === '/images/trophy_winner.jpg' ? 'Trophy presentation at Barnes Bowling Club' : `Club photo ${i + 1}`}
+                    alt={src === '/images/trophy_winner.jpg' ? 'Trophy presentation at Barnes Bowling Club' : src === '/images/bowlers_macmillan.jpg' ? 'Members bowling on the green' : `Club photo ${i + 1}`}
                     style={{ width: '100%', height: '100%', objectFit: contain ? 'contain' : 'cover', display: 'block', objectPosition: src === '/images/trophy_winner.jpg' ? 'center top' : undefined }}
                   />
                 </div>

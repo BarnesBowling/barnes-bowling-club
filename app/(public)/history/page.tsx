@@ -56,7 +56,7 @@ export default async function HistoryPage() {
               maxWidth: '560px',
             }}>
               Three centuries of bowling in the heart of Barnes.
-              The Sun Inn was first recorded in 1746, with its bowling green already established alongside it.
+              The Sun Inn was first recorded on a map of Barnes in 1746, with the nearby land associated with the historical bowling green.
             </p>
 
             {/* Watch our story callout */}

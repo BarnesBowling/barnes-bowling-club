@@ -70,7 +70,7 @@ export default function EventsPage() {
               {[
                 { label: 'Season Opens',  value: '25th April 2026',       sub: 'First play of the year' },
                 { label: 'Season Closes', value: 'Early October 2026',    sub: 'Last roll-up of the year' },
-                { label: 'Roll-Ups',      value: 'Every Wednesday',       sub: '6 pm throughout the season' },
+                { label: 'Roll-Ups',      value: 'Every Wednesday',       sub: '6-8pm throughout the season' },
                 { label: 'Venue',         value: 'The Sun Inn, Barnes',   sub: 'Barnes High Street, SW13 9LB' },
               ].map(({ label, value, sub }) => (
                 <div key={label} style={{ backgroundColor: '#f9f7f4', backgroundImage: "url('/images/texture.png')", backgroundRepeat: 'repeat', backgroundSize: '43px 43px', padding: '2rem 1.75rem' }}>
@@ -96,17 +96,6 @@ export default function EventsPage() {
                     color: 'var(--text-muted)',
                     fontStyle: 'italic',
                   }}>{sub}</div>
-                  {label === 'Venue' && (
-                    <iframe
-                      src="https://www.google.com/maps?q=The+Sun+Inn,+Church+Road,+Barnes,+London+SW13+9HE&output=embed"
-                      width="100%"
-                      height="120"
-                      style={{ border: 0, borderRadius: '4px', display: 'block', marginTop: '1rem' }}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      title="Sun Inn location"
-                    />
-                  )}
                 </div>
               ))}
             </div>

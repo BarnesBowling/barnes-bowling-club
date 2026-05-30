@@ -59,11 +59,14 @@ export default function LandingPage() {
 
       {/* ── Sketch section ── */}
       <div style={{
-        maxWidth: '95vw',
-        margin: '2rem auto',
-        height: '320px',
+        width: '90vw',
+        height: '300px',
+        margin: '0 auto',
         position: 'relative',
         overflow: 'hidden',
+        transform: 'perspective(800px) rotateY(8deg)',
+        transformOrigin: 'center center',
+        flexShrink: 0,
       }}>
         <div style={{
           position: 'absolute',

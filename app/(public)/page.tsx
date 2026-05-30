@@ -89,6 +89,20 @@ export default function LandingPage() {
               'radial-gradient(ellipse at center, rgba(27,59,42,0.25) 0%, rgba(27,59,42,0.80) 65%, #1b3b2a 100%)',
           }}
         />
+        {/* Sketch perspective — right side brighter */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(to left, rgba(27,59,42,0) 0%, rgba(27,59,42,0.35) 50%, rgba(27,59,42,0.7) 100%)',
+          pointerEvents: 'none',
+        }} />
+        {/* Lower darkening — buttons area */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(to top, rgba(8,24,15,0.75) 0%, rgba(8,24,15,0.4) 25%, transparent 55%)',
+          pointerEvents: 'none',
+        }} />
       </div>
 
       {/* ── Stage ── */}

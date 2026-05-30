@@ -74,7 +74,7 @@ export default function OpeningHours() {
                   </h2>
                   <ul style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', color: 'var(--green-deep)', lineHeight: 1.8, paddingLeft: '1.25rem', margin: 0 }}>
                     <li style={{ marginBottom: '0.5rem' }}>Check the website for current green playing conditions.</li>
-                    <li>Check green availability before arriving for competition matches.</li>
+                    <li>Before arriving to play, we suggest checking the website to confirm that no competition matches are scheduled on the green.</li>
                   </ul>
                 </section>
 

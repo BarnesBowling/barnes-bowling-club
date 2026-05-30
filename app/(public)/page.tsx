@@ -1,5 +1,5 @@
 const TICKER_TEXT =
-  'Season 2026 ·  25th April to early October  ✶  Playing Membership £215 · Joining Fee £100  ✶  Wednesday nights 6–8pm open to all  ✶  International Day 28 June · Guests Welcome  ';
+  'Season 2026 ·  25th April to early October  ✶  Playing Membership £215 · Joining Fee £100  ✶  Wednesday nights 6–8pm open to all  ✶  International Day 28 June · Guests Welcome  ';
 
 export default function LandingPage() {
   const doubled = TICKER_TEXT + TICKER_TEXT;
@@ -9,16 +9,14 @@ export default function LandingPage() {
       style={{
         position: 'fixed',
         inset: 0,
-        background: '#1e3a28',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        background: '#1b3b2a',
         overflow: 'hidden',
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Libre+Caslon+Display&display=swap');
+
         @keyframes bbc-ticker {
           from { transform: translateX(0); }
           to   { transform: translateX(-50%); }
@@ -30,45 +28,85 @@ export default function LandingPage() {
           will-change: transform;
         }
         .bbc-btn {
-          display: block;
-          width: 320px;
-          padding: 18px 60px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 18px 48px;
           background: transparent;
           color: #c9a84c;
-          font-family: 'Playfair Display', serif;
-          font-size: 13px;
-          letter-spacing: 0.2em;
+          font-family: 'Cinzel', 'Playfair Display', serif;
+          font-size: 24px;
+          font-weight: 400;
+          letter-spacing: 0.15em;
           text-transform: uppercase;
           text-decoration: none;
-          text-align: center;
-          border: 1px solid #c9a84c;
+          border: 1.5px solid #c9a84c;
           cursor: pointer;
-          transition: background 0.2s, color 0.2s;
+          transition: background 0.25s, color 0.25s;
+          white-space: nowrap;
           box-sizing: border-box;
         }
         .bbc-btn:hover {
-          background: rgba(201,168,76,0.12);
+          background: #c9a84c;
+          color: #1b3b2a;
         }
-        @media (max-width: 500px) {
-          .bbc-btn { width: 280px; padding: 16px 32px; }
-          .bbc-title {
-            font-size: clamp(1.6rem, 7vw, 2.6rem) !important;
+        @media (max-width: 600px) {
+          .bbc-btn {
+            font-size: 16px;
+            padding: 14px 24px;
           }
         }
       `}</style>
 
-      {/* ── Central panel ── */}
+      {/* ── Sketch backdrop ── */}
       <div
         style={{
+          position: 'fixed',
+          inset: 0,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+        }}
+      >
+        <img
+          src="/images/clubhouse_sketch.jpg"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) perspective(1200px) rotateY(-22deg)',
+            width: '200%',
+            opacity: 0.6,
+          }}
+        />
+        {/* Radial gradient wash */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'radial-gradient(ellipse at center, rgba(27,59,42,0.25) 0%, rgba(27,59,42,0.80) 65%, #1b3b2a 100%)',
+          }}
+        />
+      </div>
+
+      {/* ── Stage ── */}
+      <div
+        className="stage"
+        style={{
+          position: 'relative',
+          zIndex: 1,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           height: '100vh',
-          width: '100%',
+          textAlign: 'center',
+          padding: '0 24px 48px',
         }}
       >
-        {/* Monogram */}
+        {/* Crest */}
         <svg
           width="136"
           height="136"
@@ -77,11 +115,8 @@ export default function LandingPage() {
           aria-hidden="true"
           style={{ marginBottom: '2rem' }}
         >
-          {/* Outer ring */}
           <circle cx="68" cy="68" r="63" stroke="#b5924a" strokeWidth="1.5" />
-          {/* Inner ring */}
           <circle cx="68" cy="68" r="56" stroke="#b5924a" strokeOpacity="0.3" strokeWidth="0.75" />
-          {/* EST label */}
           <text
             x="68" y="46"
             textAnchor="middle"
@@ -94,7 +129,6 @@ export default function LandingPage() {
           >
             EST
           </text>
-          {/* Monogram */}
           <text
             x="68" y="80"
             textAnchor="middle"
@@ -106,7 +140,6 @@ export default function LandingPage() {
           >
             BBC
           </text>
-          {/* Year */}
           <text
             x="68" y="97"
             textAnchor="middle"
@@ -119,55 +152,63 @@ export default function LandingPage() {
           >
             c·1725
           </text>
-          {/* Small ornament lines flanking EST */}
           <line x1="30" y1="44" x2="46" y2="44" stroke="#b5924a" strokeOpacity="0.35" strokeWidth="0.75" />
           <line x1="90" y1="44" x2="106" y2="44" stroke="#b5924a" strokeOpacity="0.35" strokeWidth="0.75" />
         </svg>
 
         {/* Title */}
         <h1
-          className="bbc-title"
           style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: 'clamp(1.9rem, 5vw, 3rem)',
-            fontWeight: 500,
-            color: '#f9f6f1',
+            fontFamily: "'Libre Caslon Display', 'Playfair Display', serif",
+            fontSize: 'clamp(52px, 6.5vw, 75px)',
+            fontWeight: 400,
+            color: '#f5f0e8',
             letterSpacing: '0.04em',
-            lineHeight: 1.15,
+            lineHeight: 1.1,
             margin: 0,
           }}
         >
           Barnes Bowling Club
         </h1>
 
-        {/* Subtitle */}
+        {/* Tagline */}
         <p
           style={{
             fontFamily: "'DM Sans', sans-serif",
             fontSize: '12px',
             fontWeight: 400,
-            letterSpacing: '0.2em',
+            letterSpacing: '0.3em',
             textTransform: 'uppercase',
             color: '#b5924a',
-            margin: '14px 0 0',
+            margin: '16px 0 0',
           }}
         >
-          Est. c1725&nbsp;&nbsp;·&nbsp;&nbsp;Barnes SW13
+          SW13
         </p>
 
         {/* Gold rule */}
         <div
           style={{
-            width: '52px',
+            width: '64px',
             height: '1px',
             background: '#b5924a',
             opacity: 0.6,
-            margin: '28px auto',
+            margin: '28px auto 0',
           }}
         />
 
         {/* Buttons */}
-        <div style={{ display: 'flex', flexDirection: 'row', gap: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '1.5rem',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            marginTop: 'clamp(96px, 15vh, 168px)',
+          }}
+        >
           <a href="/home" className="bbc-btn">
             View Main Website
           </a>
@@ -184,6 +225,7 @@ export default function LandingPage() {
           bottom: 0,
           left: 0,
           right: 0,
+          zIndex: 2,
           borderTop: '1px solid rgba(181,146,74,0.2)',
           padding: '12px 0',
           overflow: 'hidden',

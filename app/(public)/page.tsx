@@ -63,9 +63,9 @@ export default function LandingPage() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          textAlign: 'center',
-          padding: '0 24px',
-          gap: 0,
+          justifyContent: 'center',
+          height: '100vh',
+          width: '100%',
         }}
       >
         {/* Monogram */}

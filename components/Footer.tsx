@@ -46,7 +46,7 @@ export function Footer() {
       <footer style={{
         background: '#f4f4f4',
       }}>
-        <div style={{
+        <div className="footer-main-grid" style={{
           maxWidth:   '1200px',
           margin:     '0 auto',
           padding:    '4rem 24px',
@@ -207,10 +207,10 @@ export function Footer() {
         justifyContent: 'center',
         padding:        '25px 40px',
       }}>
-        <div style={{ textAlign: 'center' }}>
+        <div className="footer-bottom-inner" style={{ textAlign: 'center' }}>
 
           {/* Privacy links — spaced, no separators */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '3rem', marginBottom: '14px', flexWrap: 'wrap' }}>
+          <div className="footer-privacy-links" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '3rem', marginBottom: '14px', flexWrap: 'wrap' }}>
             {PRIVACY_LINKS.map(l => (
               <Link
                 key={l.label}

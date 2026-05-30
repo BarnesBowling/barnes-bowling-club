@@ -56,6 +56,20 @@ export default function LandingPage() {
             padding: 14px 24px;
           }
         }
+        @keyframes bbc-sketch-draw {
+          from { clip-path: inset(0 100% 0 0); }
+          to   { clip-path: inset(0 0% 0 0); }
+        }
+        @keyframes bbc-fade-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        .bbc-sketch {
+          animation: bbc-sketch-draw 3s ease-in-out forwards;
+        }
+        .stage {
+          animation: bbc-fade-in 0.8s ease-in-out 2.5s both;
+        }
       `}</style>
 
       {/* ── Sketch backdrop ── */}
@@ -71,6 +85,7 @@ export default function LandingPage() {
           src="/images/clubhouse_sketch.jpg"
           alt=""
           aria-hidden="true"
+          className="bbc-sketch"
           style={{
             position: 'absolute',
             top: '50%',

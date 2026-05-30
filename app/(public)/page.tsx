@@ -57,32 +57,6 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* ── Sketch section ── */}
-      <div style={{
-        width: '90vw',
-        height: '300px',
-        margin: '0 auto',
-        position: 'relative',
-        overflow: 'hidden',
-        transform: 'perspective(800px) rotateY(8deg)',
-        transformOrigin: 'center center',
-        flexShrink: 0,
-      }}>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: "url('/images/clubhouse_sketch.jpg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-        }} />
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'var(--green-deep)',
-          opacity: 0.82,
-        }} />
-      </div>
-
       {/* ── Central panel ── */}
       <div
         style={{
@@ -201,6 +175,29 @@ export default function LandingPage() {
             Visit Members&rsquo; Area
           </a>
         </div>
+      </div>
+
+      {/* ── Sketch section ── */}
+      <div style={{
+        maxWidth: '95vw',
+        margin: '2rem auto',
+        height: '320px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: "url('/images/clubhouse_sketch.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }} />
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'var(--green-deep)',
+          opacity: 0.82,
+        }} />
       </div>
 
       {/* ── Ticker ── */}

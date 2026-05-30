@@ -76,7 +76,7 @@ export default function LandingPage() {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%) perspective(1200px) rotateY(-22deg)',
-            width: '170%',
+            width: '145%',
             opacity: 0.6,
           }}
         />

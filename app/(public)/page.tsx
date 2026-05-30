@@ -178,28 +178,26 @@ export default function LandingPage() {
       </div>
 
       {/* ── Sketch section ── */}
-      <div
-        style={{
-          width: '95vw',
-          maxWidth: '95vw',
-          height: '320px',
-          margin: '2rem auto 0',
-          position: 'relative',
-          overflow: 'hidden',
+      <div style={{
+        maxWidth: '95vw',
+        margin: '2rem auto',
+        height: '320px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
           backgroundImage: "url('/images/clubhouse_sketch.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'var(--green-deep)',
-            opacity: 0.85,
-          }}
-        />
+        }} />
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'var(--green-deep)',
+          opacity: 0.82,
+        }} />
       </div>
 
       {/* ── Ticker ── */}

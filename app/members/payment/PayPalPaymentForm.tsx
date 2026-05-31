@@ -208,7 +208,7 @@ function PayPalForm({ memberEmail }: Props) {
 export function PayPalPaymentForm({ memberEmail }: Props) {
   return (
     <PayPalScriptProvider options={{
-      clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? 'sb',
+      clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
       currency: 'GBP',
     }}>
       <PayPalForm memberEmail={memberEmail} />

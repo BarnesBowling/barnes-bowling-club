@@ -58,16 +58,7 @@ export default function LandingPage() {
             padding: 14px 24px;
           }
         }
-        @keyframes drawPath {
-          to { stroke-dashoffset: 0; }
-        }
-        @keyframes bbc-fade-in {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        .stage {
-          animation: bbc-fade-in 0.5s ease-in-out 1.2s both;
-        }
+
         .bbc-sketch path {
           fill: none;
           stroke: rgba(245,240,232,0.22);
@@ -187,7 +178,7 @@ export default function LandingPage() {
           backgroundSize: 'cover',
           backgroundPosition: 'center 46%',
           opacity: 0.35,
-          animation: 'bbc-fade-in 0.6s ease-in-out forwards',
+
           pointerEvents: 'none',
         }} />
         <div style={{
@@ -205,7 +196,7 @@ export default function LandingPage() {
 
         {/* ── Stage ── */}
       <div
-        className="stage"
+
         style={{
           position: 'relative',
           zIndex: 1,

@@ -3,12 +3,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { getImagesByContext, deleteImage, updateImageMeta, reorderImages, type SiteImage } from '@/lib/images';
 
+// Position is stored as a prefix on alt_text: "pos:30|actual alt text"
+function parsePosition(altText: string | null): { pos: number; cleanAlt: string | null } {
+  if (altText?.startsWith('pos:')) {
+    const pipe = altText.indexOf('|');
+    if (pipe !== -1) {
+      const n = parseInt(altText.slice(4, pipe), 10);
+      return { pos: isNaN(n) ? 50 : n, cleanAlt: altText.slice(pipe + 1) || null };
+    }
+  }
+  return { pos: 50, cleanAlt: altText };
+}
+
+function encodePosition(pos: number, cleanAlt: string | null): string {
+  return `pos:${pos}|${cleanAlt ?? ''}`;
+}
+
 export default function AdminGalleryPage() {
   const [images, setImages] = useState<SiteImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'done'>('idle');
+  const [positions, setPositions] = useState<Record<string, number>>({});
   const [dragId, setDragId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -18,7 +35,9 @@ export default function AdminGalleryPage() {
 
   async function load() {
     setLoading(true);
-    setImages(await getImagesByContext('gallery'));
+    const data = await getImagesByContext('gallery');
+    setImages(data);
+    setPositions(Object.fromEntries(data.map(img => [img.id, parsePosition(img.alt_text).pos])));
     setLoading(false);
   }
 
@@ -68,6 +87,14 @@ export default function AdminGalleryPage() {
   async function handleCaption(img: SiteImage, caption: string) {
     await updateImageMeta(img.id, { caption });
     setImages(prev => prev.map(i => i.id === img.id ? { ...i, caption } : i));
+  }
+
+  async function handlePosition(img: SiteImage, pos: number) {
+    setPositions(prev => ({ ...prev, [img.id]: pos }));
+    const { cleanAlt } = parsePosition(img.alt_text);
+    const newAlt = encodePosition(pos, cleanAlt);
+    await updateImageMeta(img.id, { alt_text: newAlt });
+    setImages(prev => prev.map(i => i.id === img.id ? { ...i, alt_text: newAlt } : i));
   }
 
   function onDragStart(id: string) {
@@ -223,7 +250,26 @@ export default function AdminGalleryPage() {
                 <img
                   src={img.public_url}
                   alt={img.caption ?? 'Gallery image'}
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: `center ${positions[img.id] ?? 50}%` }}
+                />
+              </div>
+              <div style={{ padding: '0.5rem 0.85rem', borderBottom: '1px solid #f3f4f6' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#6b7280' }}>
+                    Vertical position
+                  </label>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#6b7280' }}>
+                    {positions[img.id] ?? 50}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={positions[img.id] ?? 50}
+                  onChange={e => handlePosition(img, Number(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer', accentColor: 'var(--green-deep)' }}
                 />
               </div>
               <div style={{ padding: '0.85rem 0.85rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

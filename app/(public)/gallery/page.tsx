@@ -2,6 +2,20 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { getImagesByContext } from '@/lib/images';
 
+function parsePosition(altText: string | null): { objectPosition: string; cleanAlt: string | null } {
+  if (altText?.startsWith('pos:')) {
+    const pipe = altText.indexOf('|');
+    if (pipe !== -1) {
+      const n = parseInt(altText.slice(4, pipe), 10);
+      return {
+        objectPosition: isNaN(n) ? 'center center' : `center ${n}%`,
+        cleanAlt: altText.slice(pipe + 1) || null,
+      };
+    }
+  }
+  return { objectPosition: 'center center', cleanAlt: altText };
+}
+
 const FALLBACK_IMAGES = [
   { src: '/images/gallery1.JPG',      alt: 'Club photo 1',                                    contain: true  },
   { src: '/images/gallery2.JPG',      alt: 'Club photo 2',                                    contain: false },
@@ -37,16 +51,19 @@ export default async function Gallery() {
         <div className="section-inner" style={{ padding: '4rem 2rem' }}>
           <div className="gallery-grid">
             {useDb
-              ? dbImages.map((img, i) => (
-                  <div key={img.id} style={{ aspectRatio: '4/3', overflow: 'hidden', background: 'var(--green-deep)' }}>
-                    <img
-                      src={img.public_url}
-                      alt={img.alt_text ?? img.caption ?? `Club photo ${i + 1}`}
-                      title={img.caption ?? undefined}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    />
-                  </div>
-                ))
+              ? dbImages.map((img, i) => {
+                  const { objectPosition, cleanAlt } = parsePosition(img.alt_text);
+                  return (
+                    <div key={img.id} style={{ aspectRatio: '4/3', overflow: 'hidden', background: 'var(--green-deep)' }}>
+                      <img
+                        src={img.public_url}
+                        alt={cleanAlt ?? img.caption ?? `Club photo ${i + 1}`}
+                        title={img.caption ?? undefined}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', objectPosition }}
+                      />
+                    </div>
+                  );
+                })
               : FALLBACK_IMAGES.map((img) => (
                   <div key={img.src} style={{ aspectRatio: '4/3', overflow: 'hidden', background: 'var(--green-deep)' }}>
                     <img

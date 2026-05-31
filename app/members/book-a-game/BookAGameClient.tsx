@@ -35,10 +35,12 @@ const COMP_COLORS: Record<string, { text: string; bg: string }> = {
   manser: { text: '#7a6040', bg: 'rgba(120,95,60,.12)' },
 };
 
-const TIME_SLOTS = [
-  '10:00', '11:00', '12:00', '13:00', '14:00',
-  '15:00', '16:00', '17:00', '18:00', '19:00', '20:00',
-];
+const TIME_SLOTS = Array.from({ length: 21 }, (_, i) => {
+  const totalMins = 10 * 60 + i * 30;
+  const h = Math.floor(totalMins / 60).toString().padStart(2, '0');
+  const m = (totalMins % 60).toString().padStart(2, '0');
+  return `${h}:${m}`;
+}); // 10:00, 10:30, 11:00 … 20:00
 
 function localDateStr(d: Date): string {
   const y = d.getFullYear();

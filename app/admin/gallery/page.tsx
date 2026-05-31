@@ -8,6 +8,7 @@ export default function AdminGalleryPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'done'>('idle');
   const [dragId, setDragId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -44,6 +45,17 @@ export default function AdminGalleryPage() {
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
+    }
+  }
+
+  async function handlePublish() {
+    setPublishState('publishing');
+    try {
+      await fetch('/api/admin/revalidate', { method: 'POST' });
+      setPublishState('done');
+      setTimeout(() => setPublishState('idle'), 3000);
+    } catch {
+      setPublishState('idle');
     }
   }
 
@@ -154,6 +166,23 @@ export default function AdminGalleryPage() {
           }}
         >
           {uploading ? 'Uploading…' : '+ Upload Photos'}
+        </button>
+        <button
+          onClick={handlePublish}
+          disabled={publishState !== 'idle'}
+          style={{
+            padding: '0.6rem 1.25rem',
+            background: publishState === 'done' ? '#16a34a' : '#A89560',
+            color: 'white',
+            border: 'none',
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: '14px',
+            cursor: publishState !== 'idle' ? 'default' : 'pointer',
+            opacity: publishState === 'publishing' ? 0.7 : 1,
+            transition: 'background 0.2s',
+          }}
+        >
+          {publishState === 'publishing' ? 'Publishing…' : publishState === 'done' ? 'Published ✓' : 'Publish to Website'}
         </button>
         <span
           style={{

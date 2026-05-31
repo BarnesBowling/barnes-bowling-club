@@ -7,6 +7,7 @@ export default function AdminGalleryPage() {
   const [images, setImages] = useState<SiteImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -24,15 +25,19 @@ export default function AdminGalleryPage() {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
     setUploading(true);
+    setUploadError(null);
 
-    for (const file of files) {
-      await uploadImage(file, 'gallery');
+    try {
+      for (const file of files) {
+        await uploadImage(file, 'gallery');
+      }
+      await load();
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
-
-    await load();
-    setUploading(false);
-
-    if (fileRef.current) fileRef.current.value = '';
   }
 
   async function handleDelete(img: SiteImage) {
@@ -109,6 +114,21 @@ export default function AdminGalleryPage() {
           Upload, reorder, and manage photos shown on the public Gallery page. Drag to reorder.
         </p>
       </div>
+
+      {uploadError && (
+        <div style={{
+          marginBottom: '1rem',
+          padding: '0.75rem 1rem',
+          background: '#fef2f2',
+          border: '1px solid #fca5a5',
+          borderRadius: '8px',
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '13px',
+          color: '#b91c1c',
+        }}>
+          <strong>Upload failed:</strong> {uploadError}
+        </div>
+      )}
 
       <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleUpload} style={{ display: 'none' }} />

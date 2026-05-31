@@ -1,19 +1,23 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { getImagesByContext } from '@/lib/images';
 
-const GALLERY_IMAGES = [
-  '/images/gallery1.JPG',
-  '/images/gallery2.JPG',
-  '/images/gallery3.JPG',
-  '/images/gallery4.JPG',
-  '/images/gallery9.JPG',
-  '/images/bowlers_macmillan.jpg',
-  '/images/gallery7.JPG',
-  '/images/gallery8.JPG',
-  '/images/trophy_winner.jpg',
+const FALLBACK_IMAGES = [
+  { src: '/images/gallery1.JPG',      alt: 'Club photo 1',                                    contain: true  },
+  { src: '/images/gallery2.JPG',      alt: 'Club photo 2',                                    contain: false },
+  { src: '/images/gallery3.JPG',      alt: 'Club photo 3',                                    contain: false },
+  { src: '/images/gallery4.JPG',      alt: 'Club photo 4',                                    contain: false },
+  { src: '/images/gallery9.JPG',      alt: 'Club photo 5',                                    contain: false },
+  { src: '/images/members_trio.jpg',  alt: 'Barnes Bowling Club members',                     contain: false },
+  { src: '/images/gallery7.JPG',      alt: 'Club photo 7',                                    contain: true  },
+  { src: '/images/gallery8.JPG',      alt: 'Club photo 8',                                    contain: true  },
+  { src: '/images/trophy_winner.jpg', alt: 'Trophy presentation at Barnes Bowling Club',      contain: false, objectPosition: 'center top' },
 ];
 
-export default function Gallery() {
+export default async function Gallery() {
+  const dbImages = await getImagesByContext('gallery').catch(() => []);
+  const useDb = dbImages.length > 0;
+
   return (
     <>
       <Navbar />
@@ -32,18 +36,27 @@ export default function Gallery() {
 
         <div className="section-inner" style={{ padding: '4rem 2rem' }}>
           <div className="gallery-grid">
-            {GALLERY_IMAGES.map((src, i) => {
-              const contain = src === '/images/gallery1.JPG' || src === '/images/gallery6.JPG' || src === '/images/gallery7.JPG' || src === '/images/gallery8.JPG';
-              return (
-                <div key={src} style={{ aspectRatio: '4/3', overflow: 'hidden', background: 'var(--green-deep)' }}>
-                  <img
-                    src={src}
-                    alt={src === '/images/trophy_winner.jpg' ? 'Trophy presentation at Barnes Bowling Club' : src === '/images/bowlers_macmillan.jpg' ? 'Members bowling on the green' : `Club photo ${i + 1}`}
-                    style={{ width: '100%', height: '100%', objectFit: contain ? 'contain' : 'cover', display: 'block', objectPosition: src === '/images/trophy_winner.jpg' ? 'center top' : undefined }}
-                  />
-                </div>
-              );
-            })}
+            {useDb
+              ? dbImages.map((img, i) => (
+                  <div key={img.id} style={{ aspectRatio: '4/3', overflow: 'hidden', background: 'var(--green-deep)' }}>
+                    <img
+                      src={img.public_url}
+                      alt={img.alt_text ?? img.caption ?? `Club photo ${i + 1}`}
+                      title={img.caption ?? undefined}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  </div>
+                ))
+              : FALLBACK_IMAGES.map((img) => (
+                  <div key={img.src} style={{ aspectRatio: '4/3', overflow: 'hidden', background: 'var(--green-deep)' }}>
+                    <img
+                      src={img.src}
+                      alt={img.alt}
+                      style={{ width: '100%', height: '100%', objectFit: img.contain ? 'contain' : 'cover', display: 'block', objectPosition: img.objectPosition }}
+                    />
+                  </div>
+                ))
+            }
           </div>
         </div>
       </main>

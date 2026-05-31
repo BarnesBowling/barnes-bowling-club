@@ -11,7 +11,7 @@ export async function HeroCarousel() {
         backgroundImage: `url('${src}')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        filter: 'saturate(0.75)',
+        filter: 'saturate(0.65)',
       }}
     />
   );

@@ -178,6 +178,7 @@ export default function LandingPage() {
           backgroundSize: 'cover',
           backgroundPosition: 'center 46%',
           opacity: 0.85,
+          filter: 'contrast(1.4) brightness(0.85)',
           pointerEvents: 'none',
         }} />
         <div style={{
@@ -209,7 +210,13 @@ export default function LandingPage() {
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'linear-gradient(to top, rgba(8,24,15,0.75) 0%, rgba(8,24,15,0.4) 25%, transparent 55%)',
+          background: 'linear-gradient(to top, rgba(8,24,15,0.85) 0%, rgba(8,24,15,0.55) 30%, rgba(8,24,15,0.2) 60%, transparent 75%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(8,24,15,0.6) 100%)',
           pointerEvents: 'none',
         }} />
 

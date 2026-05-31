@@ -10,6 +10,7 @@ export interface BracketMatch {
   player1: string;
   player2: string;
   winner?: string;
+  fromPrevRound?: number; // 0-based index into the previous round's matches
 }
 
 export interface BracketRound {
@@ -147,10 +148,10 @@ export const competitionSheets: CompetitionSheet[] = [
           { player1: 'Roger F & Maggie',     player2: '' },
           { player1: 'Annie & Rupert',       player2: '' },
           { player1: 'Simon C & Philippa',   player2: '' },
-          { player1: '',                     player2: '' },
-          { player1: '',                     player2: '' },
-          { player1: '',                     player2: '' },
-          { player1: '',                     player2: '' },
+          { player1: '', player2: '', fromPrevRound: 0 },
+          { player1: '', player2: '', fromPrevRound: 1 },
+          { player1: '', player2: '', fromPrevRound: 2 },
+          { player1: '', player2: '', fromPrevRound: 3 },
         ],
       },
       { name: 'Round 3',    deadline: 'By Aug 9th',   matches: blank(8) },

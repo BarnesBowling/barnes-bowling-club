@@ -14,8 +14,8 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
   const ROUND_GAP = 80;
   const STUB = 40; // horizontal arm length from match box right edge to vertical column
 
-  const firstRoundMatches = rounds[0]?.matches.length ?? 0;
-  const totalH = firstRoundMatches * (BOX_H + BOX_GAP) - BOX_GAP;
+  const maxRoundMatches = Math.max(...rounds.map(r => r.matches.length));
+  const totalH = maxRoundMatches * (BOX_H + BOX_GAP) - BOX_GAP;
   const svgW = rounds.length * (BOX_W + ROUND_GAP) - ROUND_GAP;
   const svgH = totalH + 60; // 60px for round labels
 
@@ -101,11 +101,44 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
         {rounds.slice(0, -1).map((round, ri) => {
           const x = ri * (BOX_W + ROUND_GAP);
           const matchCount = round.matches.length;
-          const rightX = x + BOX_W;       // right edge of boxes in this round
-          const vertX = rightX + STUB;    // x-position of the vertical connector column
-          const nextX = (ri + 1) * (BOX_W + ROUND_GAP); // left edge of next round boxes
+          const rightX = x + BOX_W;
+          const vertX = rightX + STUB;
+          const nextX = (ri + 1) * (BOX_W + ROUND_GAP);
+          const nextRound = rounds[ri + 1];
+          const nextMatchCount = nextRound.matches.length;
 
-          // Process matches in pairs: [0,1], [2,3], ...
+          // Explicit connections: next-round matches with fromPrevRound set bypass
+          // the standard pair logic and get individual bezier connectors instead.
+          const explicitTargets = nextRound.matches.reduce<{ mi: number; from: number }[]>(
+            (acc, m, mi) => {
+              if (m.fromPrevRound !== undefined) acc.push({ mi, from: m.fromPrevRound });
+              return acc;
+            },
+            [],
+          );
+
+          if (explicitTargets.length > 0) {
+            return (
+              <g key={`connectors-${ri}`}>
+                {explicitTargets.map(({ mi, from }) => {
+                  const srcY = boxY(ri, from, matchCount) + BOX_H / 2;
+                  const dstY = boxY(ri + 1, mi, nextMatchCount) + BOX_H / 2;
+                  const cpX = (rightX + nextX) / 2;
+                  return (
+                    <path
+                      key={`conn-${ri}-${mi}`}
+                      d={`M ${rightX} ${srcY} C ${cpX} ${srcY} ${cpX} ${dstY} ${nextX} ${dstY}`}
+                      stroke={GOLD}
+                      strokeWidth={LINE_W}
+                      fill="none"
+                    />
+                  );
+                })}
+              </g>
+            );
+          }
+
+          // Standard adjacent-pair connector logic (power-of-2 brackets)
           return (
             <g key={`connectors-${ri}`}>
               {Array.from({ length: Math.ceil(matchCount / 2) }, (_, pairIdx) => {
@@ -115,22 +148,16 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
 
                 const topMidY = boxY(ri, topMi, matchCount) + BOX_H / 2;
                 const botMidY = boxY(ri, botMi, matchCount) + BOX_H / 2;
-                // Junction is the geometric midpoint — equals the next round match's centre
-                // for any standard power-of-2 bracket.
                 const junctionY = (topMidY + botMidY) / 2;
 
                 return (
                   <g key={`pair-${ri}-${pairIdx}`}>
-                    {/* Horizontal stub: top match → vertical column */}
                     <line x1={rightX} y1={topMidY} x2={vertX} y2={topMidY}
                       stroke={GOLD} strokeWidth={LINE_W} />
-                    {/* Horizontal stub: bottom match → vertical column */}
                     <line x1={rightX} y1={botMidY} x2={vertX} y2={botMidY}
                       stroke={GOLD} strokeWidth={LINE_W} />
-                    {/* Vertical connector joining the two stubs */}
                     <line x1={vertX} y1={topMidY} x2={vertX} y2={botMidY}
                       stroke={GOLD} strokeWidth={LINE_W} />
-                    {/* Output horizontal from midpoint of vertical to next round box */}
                     <line x1={vertX} y1={junctionY} x2={nextX} y2={junctionY}
                       stroke={GOLD} strokeWidth={LINE_W} />
                   </g>

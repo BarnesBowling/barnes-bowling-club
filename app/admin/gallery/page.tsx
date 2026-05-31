@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getImagesByContext, deleteImage, updateImageMeta, reorderImages, type SiteImage } from '@/lib/images';
+import { getImagesByContext, updateImageMeta, reorderImages, type SiteImage } from '@/lib/images';
 
 // Position is stored as a prefix on alt_text: "pos:30|actual alt text"
 function parsePosition(altText: string | null): { pos: number; cleanAlt: string | null } {
@@ -28,6 +28,7 @@ export default function AdminGalleryPage() {
   const [positions, setPositions] = useState<Record<string, number>>({});
   const [dragId, setDragId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const posDebounce = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
     load();
@@ -80,8 +81,18 @@ export default function AdminGalleryPage() {
 
   async function handleDelete(img: SiteImage) {
     if (!confirm('Delete this image?')) return;
-    await deleteImage(img.id, img.storage_path);
+    const res = await fetch('/api/admin/gallery-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: img.id, storagePath: img.storage_path }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      alert(`Delete failed: ${body.error ?? res.status}`);
+      return;
+    }
     setImages(prev => prev.filter(i => i.id !== img.id));
+    setPositions(prev => { const n = { ...prev }; delete n[img.id]; return n; });
   }
 
   async function handleCaption(img: SiteImage, caption: string) {
@@ -89,12 +100,21 @@ export default function AdminGalleryPage() {
     setImages(prev => prev.map(i => i.id === img.id ? { ...i, caption } : i));
   }
 
-  async function handlePosition(img: SiteImage, pos: number) {
+  function handlePosition(img: SiteImage, pos: number) {
     setPositions(prev => ({ ...prev, [img.id]: pos }));
-    const { cleanAlt } = parsePosition(img.alt_text);
-    const newAlt = encodePosition(pos, cleanAlt);
-    await updateImageMeta(img.id, { alt_text: newAlt });
-    setImages(prev => prev.map(i => i.id === img.id ? { ...i, alt_text: newAlt } : i));
+    clearTimeout(posDebounce.current[img.id]);
+    posDebounce.current[img.id] = setTimeout(async () => {
+      const { cleanAlt } = parsePosition(img.alt_text);
+      const newAlt = encodePosition(pos, cleanAlt);
+      const res = await fetch('/api/admin/gallery-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: img.id, fields: { alt_text: newAlt } }),
+      });
+      if (res.ok) {
+        setImages(prev => prev.map(i => i.id === img.id ? { ...i, alt_text: newAlt } : i));
+      }
+    }, 500);
   }
 
   function onDragStart(id: string) {

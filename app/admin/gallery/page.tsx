@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getImagesByContext, uploadImage, deleteImage, updateImageMeta, reorderImages, type SiteImage } from '@/lib/images';
+import { getImagesByContext, deleteImage, updateImageMeta, reorderImages, type SiteImage } from '@/lib/images';
 
 export default function AdminGalleryPage() {
   const [images, setImages] = useState<SiteImage[]>([]);
@@ -29,7 +29,14 @@ export default function AdminGalleryPage() {
 
     try {
       for (const file of files) {
-        await uploadImage(file, 'gallery');
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('context', 'gallery');
+        const res = await fetch('/api/admin/gallery-upload', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error ?? `Upload failed (${res.status})`);
+        }
       }
       await load();
     } catch (err) {

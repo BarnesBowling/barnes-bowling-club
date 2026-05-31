@@ -131,7 +131,7 @@ export const competitionSheets: CompetitionSheet[] = [
           { player1: 'Colin & Fausto',      player2: 'Alaric & Jane'      },
         ],
       },
-      { name: 'Round 2',    deadline: 'By July 12th', matches: blank(4) },
+      { name: 'Round 2',    deadline: 'By July 12th', matches: blank(8) },
       { name: 'Semi-Finals', deadline: 'By Aug 9th',  matches: blank(2) },
       { name: 'Final',       deadline: 'September',   matches: blank(1) },
     ],

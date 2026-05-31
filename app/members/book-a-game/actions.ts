@@ -187,11 +187,34 @@ export async function cancelFixtureBooking(id: string): Promise<{ success: boole
   const session = await getSession();
   if (!session) return { success: false, error: 'Not authenticated.' };
 
+  // Fetch the booking to check ownership before deleting
+  const { data: booking } = await supabaseAdmin
+    .from('fixture_bookings')
+    .select('member_email')
+    .eq('id', id)
+    .single();
+
+  if (!booking) return { success: false, error: 'Booking not found.' };
+
+  const isOwner = booking.member_email === session.email;
+
+  if (!isOwner) {
+    // Allow admins to cancel any booking
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('email', session.email)
+      .maybeSingle();
+
+    if (profile?.role !== 'admin') {
+      return { success: false, error: 'You can only cancel your own bookings.' };
+    }
+  }
+
   const { error } = await supabaseAdmin
     .from('fixture_bookings')
     .delete()
-    .eq('id', id)
-    .eq('member_email', session.email);
+    .eq('id', id);
 
   if (error) return { success: false, error: 'Failed to cancel booking.' };
 

@@ -7,10 +7,12 @@ import {
   getBookingsForDate,
   getBookingsForRange,
   getMemberBookings,
+  getCurrentMember,
   createFixtureBooking,
   cancelFixtureBooking,
   type FixtureBooking,
   type RangeBooking,
+  type MemberOption,
 } from './actions';
 import { MEMBERS } from '@/lib/handicapData';
 
@@ -480,6 +482,7 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
 // ─── Main Client Component ──────────────────────────────────────────────────
 
 export function BookAGameClient() {
+  const [currentMember, setCurrentMember] = useState<MemberOption | null>(null);
   const [competition, setCompetition] = useState<CompId>('shield');
   const [player1, setPlayer1] = useState('');
   const [player2, setPlayer2] = useState('');
@@ -500,6 +503,16 @@ export function BookAGameClient() {
   const isPairs = COMPETITIONS.find(c => c.id === competition)?.isPairs ?? false;
   const takenSlots = new Set(bookings.map(b => b.time_slot));
   const today = localDateStr(new Date());
+
+  // Load the logged-in member and lock Player 1 to them
+  useEffect(() => {
+    getCurrentMember().then(member => {
+      if (member) {
+        setCurrentMember(member);
+        setPlayer1(member.name);
+      }
+    });
+  }, []);
 
   const fetchBookings = useCallback(async (d: string) => {
     if (!d) return;
@@ -570,7 +583,7 @@ export function BookAGameClient() {
     }
 
     setStatus('success');
-    setPlayer1(''); setPlayer2(''); setPlayer3(''); setPlayer4('');
+    setPlayer1(currentMember?.name ?? ''); setPlayer2(''); setPlayer3(''); setPlayer4('');
     setTimeSlot('');
     await fetchBookings(date);
     setRefreshKey(k => k + 1);
@@ -673,13 +686,19 @@ export function BookAGameClient() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                         <div>
-                          <label style={labelStyle}>Player 1</label>
-                          <PlayerCombobox
-                            value={player1}
-                            onChange={setPlayer1}
-                            options={playerOptions.filter(n => n !== player2 && n !== player3 && n !== player4)}
-                            placeholder="Type to search…"
-                          />
+                          <label style={labelStyle}>Player 1 (you)</label>
+                          <div style={{
+                            ...inputStyle,
+                            background: 'rgba(45,90,61,.05)',
+                            color: 'var(--green-deep)',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                          }}>
+                            {player1 || 'Loading…'}
+                            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400, marginLeft: 'auto' }}>locked</span>
+                          </div>
                         </div>
                         <div>
                           <label style={labelStyle}>Player 2 (partner)</label>
@@ -716,14 +735,20 @@ export function BookAGameClient() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <div>
-                        <label style={labelStyle}>Player 1</label>
-                        <PlayerCombobox
-                          value={player1}
-                          onChange={setPlayer1}
-                          options={playerOptions.filter(n => n !== player2)}
-                          placeholder="Type to search…"
-                          style={{ maxWidth: '280px' }}
-                        />
+                        <label style={labelStyle}>Player 1 (you)</label>
+                        <div style={{
+                          ...inputStyle,
+                          maxWidth: '280px',
+                          background: 'rgba(45,90,61,.05)',
+                          color: 'var(--green-deep)',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                        }}>
+                          {player1 || 'Loading…'}
+                          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400, marginLeft: 'auto' }}>locked</span>
+                        </div>
                       </div>
                       <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-muted)', paddingLeft: '2px' }}>vs</div>
                       <div>

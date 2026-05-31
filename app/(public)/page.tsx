@@ -180,30 +180,30 @@ export default function LandingPage() {
       `}</style>
 
       {/* ── Sketch backdrop ── */}
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundImage: "url('/images/clubhouse_sketch.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center 46%',
-        opacity: 0.35,
-        animation: 'bbc-fade-in 3s ease-in-out forwards',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'linear-gradient(to left, rgba(27,59,42,0) 0%, rgba(27,59,42,0.35) 50%, rgba(27,59,42,0.7) 100%)',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'linear-gradient(to top, rgba(8,24,15,0.75) 0%, rgba(8,24,15,0.4) 25%, transparent 55%)',
-        pointerEvents: 'none',
-      }} />
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundImage: "url('/images/clubhouse_sketch.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 46%',
+          opacity: 0.35,
+          animation: 'bbc-fade-in 3s ease-in-out forwards',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'linear-gradient(to left, rgba(27,59,42,0) 0%, rgba(27,59,42,0.35) 50%, rgba(27,59,42,0.7) 100%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'linear-gradient(to top, rgba(8,24,15,0.75) 0%, rgba(8,24,15,0.4) 25%, transparent 55%)',
+          pointerEvents: 'none',
+        }} />
 
-      {/* ── Stage ── */}
+        {/* ── Stage ── */}
       <div
         className="stage"
         style={{

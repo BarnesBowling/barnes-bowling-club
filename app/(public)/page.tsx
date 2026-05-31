@@ -84,7 +84,7 @@ export default function LandingPage() {
           className="bbc-sketch-fade"
           style={{
             position: 'absolute',
-            top: '25%',
+            top: '40%',
             left: '50%',
             transform: 'translate(-50%, -50%) perspective(1200px) rotateY(-22deg)',
             width: '145%',

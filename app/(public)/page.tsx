@@ -66,7 +66,7 @@ export default function LandingPage() {
           to   { opacity: 1; }
         }
         .stage {
-          animation: bbc-fade-in 1s ease-in-out 2.4s both;
+          animation: bbc-fade-in 0.5s ease-in-out 1.2s both;
         }
         .bbc-sketch path {
           fill: none;
@@ -74,109 +74,109 @@ export default function LandingPage() {
           stroke-width: 1px;
           stroke-dasharray: 10000;
           stroke-dashoffset: 10000;
-          animation: drawPath 3s ease-in-out forwards;
+          animation: drawPath 1.5s ease-in-out forwards;
         }
         .bbc-sketch path:first-child {
           stroke-width: 1.8px;
-          animation-duration: 5s;
+          animation-duration: 2.5s;
           animation-delay: 0s;
         }
-        .bbc-sketch path:nth-child(2) { animation-delay: 0.1s; }
-        .bbc-sketch path:nth-child(3) { animation-delay: 0.2s; }
-        .bbc-sketch path:nth-child(4) { animation-delay: 0.3s; }
-        .bbc-sketch path:nth-child(5) { animation-delay: 0.4s; }
-        .bbc-sketch path:nth-child(6) { animation-delay: 0.5s; }
-        .bbc-sketch path:nth-child(7) { animation-delay: 0.6s; }
-        .bbc-sketch path:nth-child(8) { animation-delay: 0.7s; }
-        .bbc-sketch path:nth-child(9) { animation-delay: 0.8s; }
-        .bbc-sketch path:nth-child(10) { animation-delay: 0.9s; }
-        .bbc-sketch path:nth-child(11) { animation-delay: 1.0s; }
-        .bbc-sketch path:nth-child(12) { animation-delay: 1.1s; }
-        .bbc-sketch path:nth-child(13) { animation-delay: 1.2s; }
-        .bbc-sketch path:nth-child(14) { animation-delay: 1.3s; }
-        .bbc-sketch path:nth-child(15) { animation-delay: 1.4s; }
-        .bbc-sketch path:nth-child(16) { animation-delay: 1.5s; }
-        .bbc-sketch path:nth-child(17) { animation-delay: 1.6s; }
-        .bbc-sketch path:nth-child(18) { animation-delay: 1.7s; }
-        .bbc-sketch path:nth-child(19) { animation-delay: 1.8s; }
-        .bbc-sketch path:nth-child(20) { animation-delay: 1.9s; }
-        .bbc-sketch path:nth-child(21) { animation-delay: 2.0s; }
-        .bbc-sketch path:nth-child(22) { animation-delay: 2.1s; }
-        .bbc-sketch path:nth-child(23) { animation-delay: 2.2s; }
-        .bbc-sketch path:nth-child(24) { animation-delay: 2.3s; }
-        .bbc-sketch path:nth-child(25) { animation-delay: 2.4s; }
-        .bbc-sketch path:nth-child(26) { animation-delay: 2.5s; }
-        .bbc-sketch path:nth-child(27) { animation-delay: 2.6s; }
-        .bbc-sketch path:nth-child(28) { animation-delay: 2.7s; }
-        .bbc-sketch path:nth-child(29) { animation-delay: 2.8s; }
-        .bbc-sketch path:nth-child(30) { animation-delay: 2.9s; }
-        .bbc-sketch path:nth-child(31) { animation-delay: 3.0s; }
-        .bbc-sketch path:nth-child(32) { animation-delay: 3.1s; }
-        .bbc-sketch path:nth-child(33) { animation-delay: 3.2s; }
-        .bbc-sketch path:nth-child(34) { animation-delay: 3.3s; }
-        .bbc-sketch path:nth-child(35) { animation-delay: 3.4s; }
-        .bbc-sketch path:nth-child(36) { animation-delay: 3.5s; }
-        .bbc-sketch path:nth-child(37) { animation-delay: 3.6s; }
-        .bbc-sketch path:nth-child(38) { animation-delay: 3.7s; }
-        .bbc-sketch path:nth-child(39) { animation-delay: 3.8s; }
-        .bbc-sketch path:nth-child(40) { animation-delay: 3.9s; }
-        .bbc-sketch path:nth-child(41) { animation-delay: 4.0s; }
-        .bbc-sketch path:nth-child(42) { animation-delay: 4.1s; }
-        .bbc-sketch path:nth-child(43) { animation-delay: 4.2s; }
-        .bbc-sketch path:nth-child(44) { animation-delay: 4.3s; }
-        .bbc-sketch path:nth-child(45) { animation-delay: 4.4s; }
-        .bbc-sketch path:nth-child(46) { animation-delay: 4.5s; }
-        .bbc-sketch path:nth-child(47) { animation-delay: 4.6s; }
-        .bbc-sketch path:nth-child(48) { animation-delay: 4.7s; }
-        .bbc-sketch path:nth-child(49) { animation-delay: 4.8s; }
-        .bbc-sketch path:nth-child(50) { animation-delay: 4.9s; }
-        .bbc-sketch path:nth-child(51) { animation-delay: 5.0s; }
-        .bbc-sketch path:nth-child(52) { animation-delay: 5.1s; }
-        .bbc-sketch path:nth-child(53) { animation-delay: 5.2s; }
-        .bbc-sketch path:nth-child(54) { animation-delay: 5.3s; }
-        .bbc-sketch path:nth-child(55) { animation-delay: 5.4s; }
-        .bbc-sketch path:nth-child(56) { animation-delay: 5.5s; }
-        .bbc-sketch path:nth-child(57) { animation-delay: 5.6s; }
-        .bbc-sketch path:nth-child(58) { animation-delay: 5.7s; }
-        .bbc-sketch path:nth-child(59) { animation-delay: 5.8s; }
-        .bbc-sketch path:nth-child(60) { animation-delay: 5.9s; }
-        .bbc-sketch path:nth-child(61) { animation-delay: 6.0s; }
-        .bbc-sketch path:nth-child(62) { animation-delay: 6.1s; }
-        .bbc-sketch path:nth-child(63) { animation-delay: 6.2s; }
-        .bbc-sketch path:nth-child(64) { animation-delay: 6.3s; }
-        .bbc-sketch path:nth-child(65) { animation-delay: 6.4s; }
-        .bbc-sketch path:nth-child(66) { animation-delay: 6.5s; }
-        .bbc-sketch path:nth-child(67) { animation-delay: 6.6s; }
-        .bbc-sketch path:nth-child(68) { animation-delay: 6.7s; }
-        .bbc-sketch path:nth-child(69) { animation-delay: 6.8s; }
-        .bbc-sketch path:nth-child(70) { animation-delay: 6.9s; }
-        .bbc-sketch path:nth-child(71) { animation-delay: 7.0s; }
-        .bbc-sketch path:nth-child(72) { animation-delay: 7.1s; }
-        .bbc-sketch path:nth-child(73) { animation-delay: 7.2s; }
-        .bbc-sketch path:nth-child(74) { animation-delay: 7.3s; }
-        .bbc-sketch path:nth-child(75) { animation-delay: 7.4s; }
-        .bbc-sketch path:nth-child(76) { animation-delay: 7.5s; }
-        .bbc-sketch path:nth-child(77) { animation-delay: 7.6s; }
-        .bbc-sketch path:nth-child(78) { animation-delay: 7.7s; }
-        .bbc-sketch path:nth-child(79) { animation-delay: 7.8s; }
-        .bbc-sketch path:nth-child(80) { animation-delay: 7.9s; }
-        .bbc-sketch path:nth-child(81) { animation-delay: 8.0s; }
-        .bbc-sketch path:nth-child(82) { animation-delay: 8.1s; }
-        .bbc-sketch path:nth-child(83) { animation-delay: 8.2s; }
-        .bbc-sketch path:nth-child(84) { animation-delay: 8.3s; }
-        .bbc-sketch path:nth-child(85) { animation-delay: 8.4s; }
-        .bbc-sketch path:nth-child(86) { animation-delay: 8.5s; }
-        .bbc-sketch path:nth-child(87) { animation-delay: 8.6s; }
-        .bbc-sketch path:nth-child(88) { animation-delay: 8.7s; }
-        .bbc-sketch path:nth-child(89) { animation-delay: 8.8s; }
-        .bbc-sketch path:nth-child(90) { animation-delay: 8.9s; }
-        .bbc-sketch path:nth-child(91) { animation-delay: 9.0s; }
-        .bbc-sketch path:nth-child(92) { animation-delay: 9.1s; }
-        .bbc-sketch path:nth-child(93) { animation-delay: 9.2s; }
-        .bbc-sketch path:nth-child(94) { animation-delay: 9.3s; }
-        .bbc-sketch path:nth-child(95) { animation-delay: 9.4s; }
-        .bbc-sketch path:nth-child(96) { animation-delay: 9.5s; }
-        .bbc-sketch path:nth-child(97) { animation-delay: 9.6s; }
+        .bbc-sketch path:nth-child(2) { animation-delay: 0.05s; }
+        .bbc-sketch path:nth-child(3) { animation-delay: 0.1s; }
+        .bbc-sketch path:nth-child(4) { animation-delay: 0.15s; }
+        .bbc-sketch path:nth-child(5) { animation-delay: 0.2s; }
+        .bbc-sketch path:nth-child(6) { animation-delay: 0.25s; }
+        .bbc-sketch path:nth-child(7) { animation-delay: 0.3s; }
+        .bbc-sketch path:nth-child(8) { animation-delay: 0.35s; }
+        .bbc-sketch path:nth-child(9) { animation-delay: 0.4s; }
+        .bbc-sketch path:nth-child(10) { animation-delay: 0.45s; }
+        .bbc-sketch path:nth-child(11) { animation-delay: 0.5s; }
+        .bbc-sketch path:nth-child(12) { animation-delay: 0.55s; }
+        .bbc-sketch path:nth-child(13) { animation-delay: 0.6s; }
+        .bbc-sketch path:nth-child(14) { animation-delay: 0.65s; }
+        .bbc-sketch path:nth-child(15) { animation-delay: 0.7s; }
+        .bbc-sketch path:nth-child(16) { animation-delay: 0.75s; }
+        .bbc-sketch path:nth-child(17) { animation-delay: 0.8s; }
+        .bbc-sketch path:nth-child(18) { animation-delay: 0.85s; }
+        .bbc-sketch path:nth-child(19) { animation-delay: 0.9s; }
+        .bbc-sketch path:nth-child(20) { animation-delay: 0.95s; }
+        .bbc-sketch path:nth-child(21) { animation-delay: 1.0s; }
+        .bbc-sketch path:nth-child(22) { animation-delay: 1.05s; }
+        .bbc-sketch path:nth-child(23) { animation-delay: 1.1s; }
+        .bbc-sketch path:nth-child(24) { animation-delay: 1.15s; }
+        .bbc-sketch path:nth-child(25) { animation-delay: 1.2s; }
+        .bbc-sketch path:nth-child(26) { animation-delay: 1.25s; }
+        .bbc-sketch path:nth-child(27) { animation-delay: 1.3s; }
+        .bbc-sketch path:nth-child(28) { animation-delay: 1.35s; }
+        .bbc-sketch path:nth-child(29) { animation-delay: 1.4s; }
+        .bbc-sketch path:nth-child(30) { animation-delay: 1.45s; }
+        .bbc-sketch path:nth-child(31) { animation-delay: 1.5s; }
+        .bbc-sketch path:nth-child(32) { animation-delay: 1.55s; }
+        .bbc-sketch path:nth-child(33) { animation-delay: 1.6s; }
+        .bbc-sketch path:nth-child(34) { animation-delay: 1.65s; }
+        .bbc-sketch path:nth-child(35) { animation-delay: 1.7s; }
+        .bbc-sketch path:nth-child(36) { animation-delay: 1.75s; }
+        .bbc-sketch path:nth-child(37) { animation-delay: 1.8s; }
+        .bbc-sketch path:nth-child(38) { animation-delay: 1.85s; }
+        .bbc-sketch path:nth-child(39) { animation-delay: 1.9s; }
+        .bbc-sketch path:nth-child(40) { animation-delay: 1.95s; }
+        .bbc-sketch path:nth-child(41) { animation-delay: 2.0s; }
+        .bbc-sketch path:nth-child(42) { animation-delay: 2.05s; }
+        .bbc-sketch path:nth-child(43) { animation-delay: 2.1s; }
+        .bbc-sketch path:nth-child(44) { animation-delay: 2.15s; }
+        .bbc-sketch path:nth-child(45) { animation-delay: 2.2s; }
+        .bbc-sketch path:nth-child(46) { animation-delay: 2.25s; }
+        .bbc-sketch path:nth-child(47) { animation-delay: 2.3s; }
+        .bbc-sketch path:nth-child(48) { animation-delay: 2.35s; }
+        .bbc-sketch path:nth-child(49) { animation-delay: 2.4s; }
+        .bbc-sketch path:nth-child(50) { animation-delay: 2.45s; }
+        .bbc-sketch path:nth-child(51) { animation-delay: 2.5s; }
+        .bbc-sketch path:nth-child(52) { animation-delay: 2.55s; }
+        .bbc-sketch path:nth-child(53) { animation-delay: 2.6s; }
+        .bbc-sketch path:nth-child(54) { animation-delay: 2.65s; }
+        .bbc-sketch path:nth-child(55) { animation-delay: 2.7s; }
+        .bbc-sketch path:nth-child(56) { animation-delay: 2.75s; }
+        .bbc-sketch path:nth-child(57) { animation-delay: 2.8s; }
+        .bbc-sketch path:nth-child(58) { animation-delay: 2.85s; }
+        .bbc-sketch path:nth-child(59) { animation-delay: 2.9s; }
+        .bbc-sketch path:nth-child(60) { animation-delay: 2.95s; }
+        .bbc-sketch path:nth-child(61) { animation-delay: 3.0s; }
+        .bbc-sketch path:nth-child(62) { animation-delay: 3.05s; }
+        .bbc-sketch path:nth-child(63) { animation-delay: 3.1s; }
+        .bbc-sketch path:nth-child(64) { animation-delay: 3.15s; }
+        .bbc-sketch path:nth-child(65) { animation-delay: 3.2s; }
+        .bbc-sketch path:nth-child(66) { animation-delay: 3.25s; }
+        .bbc-sketch path:nth-child(67) { animation-delay: 3.3s; }
+        .bbc-sketch path:nth-child(68) { animation-delay: 3.35s; }
+        .bbc-sketch path:nth-child(69) { animation-delay: 3.4s; }
+        .bbc-sketch path:nth-child(70) { animation-delay: 3.45s; }
+        .bbc-sketch path:nth-child(71) { animation-delay: 3.5s; }
+        .bbc-sketch path:nth-child(72) { animation-delay: 3.55s; }
+        .bbc-sketch path:nth-child(73) { animation-delay: 3.6s; }
+        .bbc-sketch path:nth-child(74) { animation-delay: 3.65s; }
+        .bbc-sketch path:nth-child(75) { animation-delay: 3.7s; }
+        .bbc-sketch path:nth-child(76) { animation-delay: 3.75s; }
+        .bbc-sketch path:nth-child(77) { animation-delay: 3.8s; }
+        .bbc-sketch path:nth-child(78) { animation-delay: 3.85s; }
+        .bbc-sketch path:nth-child(79) { animation-delay: 3.9s; }
+        .bbc-sketch path:nth-child(80) { animation-delay: 3.95s; }
+        .bbc-sketch path:nth-child(81) { animation-delay: 4.0s; }
+        .bbc-sketch path:nth-child(82) { animation-delay: 4.05s; }
+        .bbc-sketch path:nth-child(83) { animation-delay: 4.1s; }
+        .bbc-sketch path:nth-child(84) { animation-delay: 4.15s; }
+        .bbc-sketch path:nth-child(85) { animation-delay: 4.2s; }
+        .bbc-sketch path:nth-child(86) { animation-delay: 4.25s; }
+        .bbc-sketch path:nth-child(87) { animation-delay: 4.3s; }
+        .bbc-sketch path:nth-child(88) { animation-delay: 4.35s; }
+        .bbc-sketch path:nth-child(89) { animation-delay: 4.4s; }
+        .bbc-sketch path:nth-child(90) { animation-delay: 4.45s; }
+        .bbc-sketch path:nth-child(91) { animation-delay: 4.5s; }
+        .bbc-sketch path:nth-child(92) { animation-delay: 4.55s; }
+        .bbc-sketch path:nth-child(93) { animation-delay: 4.6s; }
+        .bbc-sketch path:nth-child(94) { animation-delay: 4.65s; }
+        .bbc-sketch path:nth-child(95) { animation-delay: 4.7s; }
+        .bbc-sketch path:nth-child(96) { animation-delay: 4.75s; }
+        .bbc-sketch path:nth-child(97) { animation-delay: 4.8s; }
       `}</style>
 
       {/* ── Sketch backdrop ── */}
@@ -187,7 +187,7 @@ export default function LandingPage() {
           backgroundSize: 'cover',
           backgroundPosition: 'center 46%',
           opacity: 0.35,
-          animation: 'bbc-fade-in 1.2s ease-in-out forwards',
+          animation: 'bbc-fade-in 0.6s ease-in-out forwards',
           pointerEvents: 'none',
         }} />
         <div style={{

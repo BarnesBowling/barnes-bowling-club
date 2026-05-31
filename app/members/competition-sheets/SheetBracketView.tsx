@@ -8,21 +8,33 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
   if (!sheet.rounds) return null;
 
   const rounds = sheet.rounds;
-  const BOX_W = 160;
+  const BOX_W = sheet.competition === 'pairs' ? 200 : 160;
   const BOX_H = 48;
   const BOX_GAP = 16;
   const ROUND_GAP = 80;
-  const STUB = 40; // horizontal arm length from match box right edge to vertical column
+  const STUB = 40;
 
   const maxRoundMatches = Math.max(...rounds.map(r => r.matches.length));
   const totalH = maxRoundMatches * (BOX_H + BOX_GAP) - BOX_GAP;
   const svgW = rounds.length * (BOX_W + ROUND_GAP) - ROUND_GAP;
-  const svgH = totalH + 60; // 60px for round labels
+  const svgH = totalH + 60;
 
-  // Returns the top-left Y of a match box. Centre = returned Y + BOX_H/2.
-  function boxY(roundIndex: number, matchIndex: number, totalMatches: number) {
+  // Standard equal-distribution position for a match in a given round.
+  function slotY(matchIndex: number, totalMatches: number): number {
     const slotH = totalH / totalMatches;
     return 60 + matchIndex * slotH + slotH / 2 - BOX_H / 2;
+  }
+
+  // Returns the top-left Y for a match box.
+  // If this round's match is explicitly routed to a specific next-round slot via
+  // fromPrevRound, align its box with that target slot so connectors are horizontal.
+  function boxY(roundIndex: number, matchIndex: number): number {
+    const nextRound = rounds[roundIndex + 1];
+    if (nextRound) {
+      const target = nextRound.matches.findIndex(m => m.fromPrevRound === matchIndex);
+      if (target !== -1) return slotY(target, nextRound.matches.length);
+    }
+    return slotY(matchIndex, rounds[roundIndex].matches.length);
   }
 
   return (
@@ -33,11 +45,24 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
         viewBox={`0 0 ${svgW} ${svgH}`}
         style={{ display: 'block', minWidth: svgW }}
       >
+        <defs>
+          {rounds.map((round, ri) =>
+            round.matches.map((_, mi) => (
+              <clipPath key={`clip-${ri}-${mi}`} id={`clip-${ri}-${mi}`}>
+                <rect
+                  x={ri * (BOX_W + ROUND_GAP) + 8}
+                  y={boxY(ri, mi)}
+                  width={BOX_W - 16}
+                  height={BOX_H}
+                />
+              </clipPath>
+            ))
+          )}
+        </defs>
 
         {/* ── Pass 1: round labels + match boxes ── */}
         {rounds.map((round, ri) => {
           const x = ri * (BOX_W + ROUND_GAP);
-          const matchCount = round.matches.length;
 
           return (
             <g key={`round-${ri}`}>
@@ -56,7 +81,7 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
               </text>
 
               {round.matches.map((match, mi) => {
-                const y = boxY(ri, mi, matchCount);
+                const y = boxY(ri, mi);
                 return (
                   <g key={`box-${ri}-${mi}`}>
                     <rect
@@ -78,6 +103,7 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
                       fontSize="11"
                       fill={match.winner === 'player1' ? 'var(--gold, #C9A84C)' : 'var(--green-deep, #2D5A3D)'}
                       fontWeight={match.winner === 'player1' ? '700' : '400'}
+                      clipPath={`url(#clip-${ri}-${mi})`}
                     >
                       {match.player1 || '—'}
                     </text>
@@ -87,6 +113,7 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
                       fontSize="11"
                       fill={match.winner === 'player2' ? 'var(--gold, #C9A84C)' : 'var(--green-deep, #2D5A3D)'}
                       fontWeight={match.winner === 'player2' ? '700' : '400'}
+                      clipPath={`url(#clip-${ri}-${mi})`}
                     >
                       {match.player2 || '—'}
                     </text>
@@ -100,15 +127,15 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
         {/* ── Pass 2: connector brackets between rounds ── */}
         {rounds.slice(0, -1).map((round, ri) => {
           const x = ri * (BOX_W + ROUND_GAP);
-          const matchCount = round.matches.length;
           const rightX = x + BOX_W;
           const vertX = rightX + STUB;
           const nextX = (ri + 1) * (BOX_W + ROUND_GAP);
           const nextRound = rounds[ri + 1];
           const nextMatchCount = nextRound.matches.length;
 
-          // Explicit connections: next-round matches with fromPrevRound set bypass
-          // the standard pair logic and get individual bezier connectors instead.
+          // Explicit connections: next-round matches with fromPrevRound bypass the
+          // standard pair logic. Because boxes are already aligned with their targets,
+          // connectors are simple horizontal lines at the shared centre Y.
           const explicitTargets = nextRound.matches.reduce<{ mi: number; from: number }[]>(
             (acc, m, mi) => {
               if (m.fromPrevRound !== undefined) acc.push({ mi, from: m.fromPrevRound });
@@ -120,17 +147,13 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
           if (explicitTargets.length > 0) {
             return (
               <g key={`connectors-${ri}`}>
-                {explicitTargets.map(({ mi, from }) => {
-                  const srcY = boxY(ri, from, matchCount) + BOX_H / 2;
-                  const dstY = boxY(ri + 1, mi, nextMatchCount) + BOX_H / 2;
-                  const cpX = (rightX + nextX) / 2;
+                {explicitTargets.map(({ mi }) => {
+                  const y = slotY(mi, nextMatchCount) + BOX_H / 2;
                   return (
-                    <path
+                    <line
                       key={`conn-${ri}-${mi}`}
-                      d={`M ${rightX} ${srcY} C ${cpX} ${srcY} ${cpX} ${dstY} ${nextX} ${dstY}`}
-                      stroke={GOLD}
-                      strokeWidth={LINE_W}
-                      fill="none"
+                      x1={rightX} y1={y} x2={nextX} y2={y}
+                      stroke={GOLD} strokeWidth={LINE_W}
                     />
                   );
                 })}
@@ -138,7 +161,8 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
             );
           }
 
-          // Standard adjacent-pair connector logic (power-of-2 brackets)
+          // Standard adjacent-pair connector logic (power-of-2 brackets).
+          const matchCount = round.matches.length;
           return (
             <g key={`connectors-${ri}`}>
               {Array.from({ length: Math.ceil(matchCount / 2) }, (_, pairIdx) => {
@@ -146,8 +170,8 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
                 const botMi = topMi + 1;
                 if (botMi >= matchCount) return null;
 
-                const topMidY = boxY(ri, topMi, matchCount) + BOX_H / 2;
-                const botMidY = boxY(ri, botMi, matchCount) + BOX_H / 2;
+                const topMidY = boxY(ri, topMi) + BOX_H / 2;
+                const botMidY = boxY(ri, botMi) + BOX_H / 2;
                 const junctionY = (topMidY + botMidY) / 2;
 
                 return (

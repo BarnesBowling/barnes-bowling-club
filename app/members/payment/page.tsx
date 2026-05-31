@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { verifyMemberSession, SESSION_COOKIE } from '@/lib/memberSession';
 import { StripePaymentForm } from './StripePaymentForm';
+import { PayPalPaymentForm } from './PayPalPaymentForm';
 
 export default async function PaymentPage({
   searchParams,
@@ -159,6 +160,52 @@ export default async function PaymentPage({
               Secure online payment
             </div>
             <StripePaymentForm />
+          </div>
+
+          {/* ── PayPal divider ── */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            margin: '1px 0',
+            padding: '1.25rem 0',
+          }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(45,90,61,.15)' }} />
+            <span style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              letterSpacing: '.08em',
+              whiteSpace: 'nowrap',
+            }}>
+              or pay with PayPal
+            </span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(45,90,61,.15)' }} />
+          </div>
+
+          {/* ── PayPal payment form ── */}
+          <div style={{ background: 'var(--cream)', padding: '2rem 2.5rem', marginBottom: '1px' }}>
+            <div style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '9px',
+              fontWeight: 700,
+              letterSpacing: '.2em',
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              marginBottom: '6px',
+            }}>
+              Pay by PayPal
+            </div>
+            <div style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--green-deep)',
+              marginBottom: '1.5rem',
+            }}>
+              Secure PayPal payment
+            </div>
+            <PayPalPaymentForm memberEmail={session.email} />
           </div>
 
           {/* Bank transfer */}

@@ -89,7 +89,7 @@ export default function LandingPage() {
             inset: 0,
             width: '145%',
             height: 'auto',
-            transform: 'translateX(-15%) translateY(-8%)',
+            transform: 'translateX(-10%) translateY(46%)',
             opacity: 1,
           }}
         >

@@ -177,8 +177,17 @@ export default function LandingPage() {
           backgroundImage: "url('/images/clubhouse_sketch.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center 46%',
-          opacity: 0.35,
-
+          opacity: 0.45,
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundImage: "url('/images/clubhouse_sketch.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 46%',
+          opacity: 0.15,
+          mixBlendMode: 'multiply',
           pointerEvents: 'none',
         }} />
         <div style={{

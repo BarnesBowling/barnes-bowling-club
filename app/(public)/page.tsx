@@ -66,7 +66,7 @@ export default function LandingPage() {
           to   { opacity: 1; }
         }
         .stage {
-          animation: bbc-fade-in 2s ease-in-out 6s both;
+          animation: bbc-fade-in 2s ease-in-out 4.8s both;
         }
         .bbc-sketch path {
           fill: none;
@@ -187,7 +187,7 @@ export default function LandingPage() {
           backgroundSize: 'cover',
           backgroundPosition: 'center 46%',
           opacity: 0.35,
-          animation: 'bbc-fade-in 3s ease-in-out forwards',
+          animation: 'bbc-fade-in 2.4s ease-in-out forwards',
           pointerEvents: 'none',
         }} />
         <div style={{

@@ -99,8 +99,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.25)',
               strokeWidth: 1.8,
-              strokeDasharray: 5000,
-              strokeDashoffset: 5000,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 4s ease-in-out 0.00s forwards',
             }}
           />
@@ -110,8 +110,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.08s forwards',
             }}
           />
@@ -121,8 +121,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.16s forwards',
             }}
           />
@@ -132,8 +132,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.24s forwards',
             }}
           />
@@ -143,8 +143,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.32s forwards',
             }}
           />
@@ -154,8 +154,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.40s forwards',
             }}
           />
@@ -165,8 +165,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.48s forwards',
             }}
           />
@@ -176,8 +176,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.56s forwards',
             }}
           />
@@ -187,8 +187,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.64s forwards',
             }}
           />
@@ -198,8 +198,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.72s forwards',
             }}
           />
@@ -209,8 +209,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.80s forwards',
             }}
           />
@@ -220,8 +220,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.88s forwards',
             }}
           />
@@ -231,8 +231,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 0.96s forwards',
             }}
           />
@@ -242,8 +242,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 1.04s forwards',
             }}
           />
@@ -253,8 +253,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 1.12s forwards',
             }}
           />
@@ -264,8 +264,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 1.20s forwards',
             }}
           />
@@ -275,8 +275,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 1.28s forwards',
             }}
           />
@@ -286,8 +286,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 1.36s forwards',
             }}
           />
@@ -297,8 +297,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 1.44s forwards',
             }}
           />
@@ -308,8 +308,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 1.52s forwards',
             }}
           />
@@ -319,8 +319,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 1.2,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 1.5s ease-in-out 1.60s forwards',
             }}
           />
@@ -330,8 +330,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 1.68s forwards',
             }}
           />
@@ -341,8 +341,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 1.76s forwards',
             }}
           />
@@ -352,8 +352,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 1.84s forwards',
             }}
           />
@@ -363,8 +363,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 1.92s forwards',
             }}
           />
@@ -374,8 +374,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.00s forwards',
             }}
           />
@@ -385,8 +385,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.08s forwards',
             }}
           />
@@ -396,8 +396,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.16s forwards',
             }}
           />
@@ -407,8 +407,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.24s forwards',
             }}
           />
@@ -418,8 +418,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.32s forwards',
             }}
           />
@@ -429,8 +429,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.40s forwards',
             }}
           />
@@ -440,8 +440,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.48s forwards',
             }}
           />
@@ -451,8 +451,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.56s forwards',
             }}
           />
@@ -462,8 +462,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.64s forwards',
             }}
           />
@@ -473,8 +473,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.72s forwards',
             }}
           />
@@ -484,8 +484,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.80s forwards',
             }}
           />
@@ -495,8 +495,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.88s forwards',
             }}
           />
@@ -506,8 +506,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 2.96s forwards',
             }}
           />
@@ -517,8 +517,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.04s forwards',
             }}
           />
@@ -528,8 +528,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.12s forwards',
             }}
           />
@@ -539,8 +539,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.20s forwards',
             }}
           />
@@ -550,8 +550,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.28s forwards',
             }}
           />
@@ -561,8 +561,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.36s forwards',
             }}
           />
@@ -572,8 +572,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.44s forwards',
             }}
           />
@@ -583,8 +583,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.52s forwards',
             }}
           />
@@ -594,8 +594,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.60s forwards',
             }}
           />
@@ -605,8 +605,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.68s forwards',
             }}
           />
@@ -616,8 +616,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.76s forwards',
             }}
           />
@@ -627,8 +627,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.84s forwards',
             }}
           />
@@ -638,8 +638,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 3.92s forwards',
             }}
           />
@@ -649,8 +649,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.00s forwards',
             }}
           />
@@ -660,8 +660,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.08s forwards',
             }}
           />
@@ -671,8 +671,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.16s forwards',
             }}
           />
@@ -682,8 +682,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.24s forwards',
             }}
           />
@@ -693,8 +693,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.32s forwards',
             }}
           />
@@ -704,8 +704,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.40s forwards',
             }}
           />
@@ -715,8 +715,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.48s forwards',
             }}
           />
@@ -726,8 +726,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.56s forwards',
             }}
           />
@@ -737,8 +737,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.64s forwards',
             }}
           />
@@ -748,8 +748,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.72s forwards',
             }}
           />
@@ -759,8 +759,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.80s forwards',
             }}
           />
@@ -770,8 +770,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.88s forwards',
             }}
           />
@@ -781,8 +781,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 4.96s forwards',
             }}
           />
@@ -792,8 +792,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.04s forwards',
             }}
           />
@@ -803,8 +803,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.12s forwards',
             }}
           />
@@ -814,8 +814,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.20s forwards',
             }}
           />
@@ -825,8 +825,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.28s forwards',
             }}
           />
@@ -836,8 +836,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.36s forwards',
             }}
           />
@@ -847,8 +847,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.44s forwards',
             }}
           />
@@ -858,8 +858,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.52s forwards',
             }}
           />
@@ -869,8 +869,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.60s forwards',
             }}
           />
@@ -880,8 +880,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.68s forwards',
             }}
           />
@@ -891,8 +891,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.76s forwards',
             }}
           />
@@ -902,8 +902,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.84s forwards',
             }}
           />
@@ -913,8 +913,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 5.92s forwards',
             }}
           />
@@ -924,8 +924,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.00s forwards',
             }}
           />
@@ -935,8 +935,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.08s forwards',
             }}
           />
@@ -946,8 +946,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.16s forwards',
             }}
           />
@@ -957,8 +957,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.24s forwards',
             }}
           />
@@ -968,8 +968,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.32s forwards',
             }}
           />
@@ -979,8 +979,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.40s forwards',
             }}
           />
@@ -990,8 +990,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.48s forwards',
             }}
           />
@@ -1001,8 +1001,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.56s forwards',
             }}
           />
@@ -1012,8 +1012,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.64s forwards',
             }}
           />
@@ -1023,8 +1023,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.72s forwards',
             }}
           />
@@ -1034,8 +1034,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.80s forwards',
             }}
           />
@@ -1045,8 +1045,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.88s forwards',
             }}
           />
@@ -1056,8 +1056,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 6.96s forwards',
             }}
           />
@@ -1067,8 +1067,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 7.04s forwards',
             }}
           />
@@ -1078,8 +1078,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 7.12s forwards',
             }}
           />
@@ -1089,8 +1089,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 7.20s forwards',
             }}
           />
@@ -1100,8 +1100,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 7.28s forwards',
             }}
           />
@@ -1111,8 +1111,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 7.36s forwards',
             }}
           />
@@ -1122,8 +1122,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 7.44s forwards',
             }}
           />
@@ -1133,8 +1133,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 7.52s forwards',
             }}
           />
@@ -1144,8 +1144,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 7.60s forwards',
             }}
           />
@@ -1155,8 +1155,8 @@ export default function LandingPage() {
               fill: 'none',
               stroke: 'rgba(245,240,232,0.18)',
               strokeWidth: 0.7,
-              strokeDasharray: 500,
-              strokeDashoffset: 500,
+              strokeDasharray: 10000,
+              strokeDashoffset: 10000,
               animation: 'drawPath 0.8s ease-in-out 7.68s forwards',
             }}
           />

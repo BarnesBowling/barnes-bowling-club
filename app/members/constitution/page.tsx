@@ -376,10 +376,25 @@ export default function ConstitutionPage() {
 
   return (
     <>
+      <style>{`
+        @media print {
+          nav, footer, .no-print { display: none !important; }
+          .print-header {
+            background: white !important;
+            border-bottom: 2px solid #2D5A3D;
+            padding-bottom: 1rem !important;
+          }
+          .print-header h1, .print-header p, .print-header a, .print-header em {
+            color: #2D5A3D !important;
+          }
+          .print-header .section-tag { display: none !important; }
+          @page { margin: 1.5cm; }
+        }
+      `}</style>
       <Navbar />
       <main>
         {/* Header */}
-        <div style={{ background: 'var(--green-deep)', padding: '1rem 2rem 4rem', color: 'var(--cream)' }}>
+        <div className="print-header" style={{ background: 'var(--green-deep)', padding: '1rem 2rem 4rem', color: 'var(--cream)' }}>
           <div className="section-inner">
             <a href="/members/dashboard" className="section-tag" style={{ color: 'var(--gold)', borderTopColor: 'var(--gold)', textDecoration: 'none' }}>Members Area</a>
             <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>
@@ -450,22 +465,23 @@ export default function ConstitutionPage() {
             </p>
           </div>
 
-          {/* Download link */}
-          <div style={{ marginTop: '1.5rem' }}>
-            <a
-              href="https://barnesbowling.club/wp-content/uploads/2024/02/BBC-Constitution-November-2021.docx.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
+          {/* Print / save as PDF */}
+          <div className="no-print" style={{ marginTop: '1.5rem' }}>
+            <button
+              onClick={() => window.print()}
               style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: '12px',
                 color: 'var(--green-mid)',
-                textDecoration: 'none',
+                cursor: 'pointer',
                 letterSpacing: '.05em',
               }}
             >
-              Download PDF ↗
-            </a>
+              Print / Save as PDF ↗
+            </button>
           </div>
 
           {/* Ground Rules accordion */}
@@ -529,28 +545,12 @@ export default function ConstitutionPage() {
                   Playing and Ground Rules 2025
                 </div>
                 <RenderRuleDoc sections={GROUND_RULES_DOC} />
-                <div style={{ marginTop: '1.25rem' }}>
-                  <a
-                    href="https://barnesbowling.club/wp-content/uploads/2024/02/BBC-Playing-and-Ground-Rules-2020-Feb-2020.docx.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: '12px',
-                      color: 'var(--green-mid)',
-                      textDecoration: 'none',
-                      letterSpacing: '.05em',
-                    }}
-                  >
-                    Download PDF ↗
-                  </a>
-                </div>
               </div>
             )}
           </div>
 
           {/* Back link */}
-          <div style={{ marginTop: '3rem' }}>
+          <div className="no-print" style={{ marginTop: '3rem' }}>
             <a href="/members/dashboard" style={{
               fontFamily: "'DM Sans', sans-serif",
               fontSize: '13px',

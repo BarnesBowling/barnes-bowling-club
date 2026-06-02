@@ -191,7 +191,7 @@ export function Navbar() {
 
           {/* Brand */}
           <Link href="/" className="nav-brand">
-            <span className="nav-brand-name">BBC</span>
+            <span className="nav-brand-name">Barnes Bowling Club</span>
             <span className="nav-brand-sub">Est.&nbsp;<span className="nav-brand-sup">c</span>1725</span>
           </Link>
 

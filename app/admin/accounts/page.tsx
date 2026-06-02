@@ -8,6 +8,7 @@ import { AdminAccountForm } from './AdminAccountForm';
 
 const CATEGORY_LABELS: Record<string, string> = {
   membership_fee: 'Membership Fee',
+  joining_fee:    'Joining Fee £100',
   guest_fee:      'Guest Fee',
   event_fee:      'Event Fee',
   manser_fee:     'Manser Fee',

@@ -30,14 +30,30 @@ interface Props {
   memberEmail: string;
 }
 
+const PAYMENT_PRESETS = [
+  { value: '',             label: '— Select or enter below —', amount: '',    description: '' },
+  { value: 'annual',       label: 'Annual Subscription — £215', amount: '215', description: 'Annual Subscription 2026' },
+  { value: 'joining_fee',  label: 'Joining Fee — £100',         amount: '100', description: 'Joining Fee 2026' },
+  { value: 'guest_fee',    label: 'Guest Fee — £5',             amount: '5',   description: 'Guest Fee' },
+];
+
 function PayPalForm({ memberEmail }: Props) {
   const [memberName, setMemberName]             = useState('');
   const [membershipNumber, setMembershipNumber] = useState('');
   const [reference, setReference]               = useState('');
   const [amount, setAmount]                     = useState('');
+  const [paymentType, setPaymentType]           = useState('');
   const [error, setError]                       = useState<string | null>(null);
   const [success, setSuccess]                   = useState(false);
   const [paidAmount, setPaidAmount]             = useState('');
+
+  function handlePreset(value: string) {
+    const preset = PAYMENT_PRESETS.find(p => p.value === value);
+    if (!preset) return;
+    setPaymentType(value);
+    if (preset.amount)      setAmount(preset.amount);
+    if (preset.description) setReference(preset.description);
+  }
 
   const amountNum = parseFloat(amount);
   const amountValid = !isNaN(amountNum) && amountNum >= 1;
@@ -118,13 +134,27 @@ function PayPalForm({ memberEmail }: Props) {
         />
       </div>
 
+      {/* Payment type quick-select */}
+      <div>
+        <label style={labelStyle}>Payment type</label>
+        <select
+          value={paymentType}
+          onChange={e => handlePreset(e.target.value)}
+          style={inputStyle}
+        >
+          {PAYMENT_PRESETS.map(p => (
+            <option key={p.value} value={p.value}>{p.label}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Amount */}
       <div>
         <label style={labelStyle}>Amount (£)</label>
         <input
           type="number"
           value={amount}
-          onChange={e => { setAmount(e.target.value); setError(null); }}
+          onChange={e => { setAmount(e.target.value); setPaymentType(''); setError(null); }}
           min="1"
           step="0.01"
           placeholder="0.00"

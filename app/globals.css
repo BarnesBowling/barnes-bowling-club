@@ -44,7 +44,7 @@ p { margin: 0; }
 .nav-main { background-color: #f9f7f4; background-image: url('/images/texture.png'); background-repeat: repeat; background-size: 43px 43px; border-bottom: none; }
 .nav-main-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; height: 54px; gap: 1.5rem; }
 .nav-brand { flex-shrink: 0; text-decoration: none; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; position: relative; top: 0; margin-left: -2px; }
-.nav-brand-name { display: block; font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; color: var(--green-deep); line-height: 1.2; letter-spacing: .02em; white-space: nowrap; }
+.nav-brand-name { display: block; font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--green-deep); line-height: 1.2; letter-spacing: .02em; white-space: nowrap; }
 .nav-brand-sub { display: block; font-family: 'DM Sans', sans-serif; font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
 .nav-brand-sup { font-size: 6px; vertical-align: super; line-height: 0; letter-spacing: 0; font-style: italic; }
 .navlinks { display: flex; flex: 1; align-items: center; justify-content: space-between; position: relative; top: 20px; }
@@ -345,7 +345,7 @@ textarea { min-height: 110px; }
   .nav-topbar { display: none; }
   .nav-main-inner { padding: 0 1rem; height: 62px; }
   .nav-right { display: flex !important; }
-  .nav-brand-name { font-size: 13px !important; }
+  .nav-brand-name { font-size: 26px !important; }
   .nav-brand-sub { display: block !important; font-size: 9px !important; }
   .nav-members-btn { padding: 6px 10px !important; font-size: 10px !important; }
 }

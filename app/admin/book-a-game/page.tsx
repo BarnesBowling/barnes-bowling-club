@@ -621,7 +621,7 @@ export default function AdminBookAGamePage() {
 
               {status === 'success' && (
                 <div style={{ marginBottom: '1.25rem', padding: '12px 16px', background: 'rgba(45,90,61,.07)', border: '1px solid rgba(45,90,61,.2)', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-deep)', fontWeight: 500 }}>
-                  Booking confirmed and registered under {player1Email || 'the selected member'}.
+                  Booking confirmed and registered.
                 </div>
               )}
 

@@ -34,13 +34,15 @@ type MatchPayload = {
   sideB: string;
   sideAPairId: string | null;
   sideBPairId: string | null;
-  sideAScore: number;
-  sideBScore: number;
+  sideAScore: string | number;
+  sideBScore: string | number;
   notes: string;
 };
 
 function buildMatchRecord(data: MatchPayload) {
-  const { competitionSlug, round, matchDate, sideA, sideB, sideAPairId, sideBPairId, sideAScore, sideBScore, notes } = data;
+  const { competitionSlug, round, matchDate, sideA, sideB, sideAPairId, sideBPairId, notes } = data;
+  const sideAScore = parseInt(String(data.sideAScore), 10);
+  const sideBScore = parseInt(String(data.sideBScore), 10);
   const winnerSide: WinnerSide = sideAScore > sideBScore ? 'a' : sideAScore < sideBScore ? 'b' : 'draw';
 
   let manser_adjusted_a: number | null = null;

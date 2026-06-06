@@ -5,10 +5,8 @@ import {
   getBookingsForDate,
   getBookingsForRange,
   cancelFixtureBooking,
-  getMembersList,
   type FixtureBooking,
   type RangeBooking,
-  type MemberOption,
 } from '@/app/members/book-a-game/actions';
 import { createFixtureBookingAsAdmin } from './actions';
 import { MEMBERS } from '@/lib/handicapData';
@@ -321,10 +319,8 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
 }
 
 export default function AdminBookAGamePage() {
-  const [members, setMembers] = useState<MemberOption[]>([]);
   const [competition, setCompetition] = useState<CompId>('shield');
   const [player1, setPlayer1] = useState('');
-  const [player1Email, setPlayer1Email] = useState('');
   const [player2, setPlayer2] = useState('');
   const [player3, setPlayer3] = useState('');
   const [player4, setPlayer4] = useState('');
@@ -343,16 +339,6 @@ export default function AdminBookAGamePage() {
   const isPairs = COMPETITIONS.find(c => c.id === competition)?.isPairs ?? false;
   const takenSlots = new Set(bookings.map(b => b.time_slot));
   const today = localDateStr(new Date());
-
-  useEffect(() => {
-    getMembersList().then(setMembers);
-  }, []);
-
-  useEffect(() => {
-    if (!player1) { setPlayer1Email(''); return; }
-    const match = members.find(m => m.name === player1);
-    setPlayer1Email(match?.email ?? '');
-  }, [player1, members]);
 
   const fetchBookings = useCallback(async (d: string) => {
     if (!d) return;
@@ -404,10 +390,6 @@ export default function AdminBookAGamePage() {
       setErrorMsg('Please fill in all required fields and select a time slot.');
       return;
     }
-    if (!player1Email) {
-      setErrorMsg('Could not find a member account for Player 1. Make sure the name matches a registered member.');
-      return;
-    }
     if (isPairs && (!player3.trim() || !player4.trim())) {
       setErrorMsg('Please enter all four player names for Pairs.');
       return;
@@ -426,7 +408,6 @@ export default function AdminBookAGamePage() {
       player4: isPairs ? player4.trim() : null,
       date,
       time_slot: timeSlot,
-      member_email: player1Email,
     });
 
     setSubmitting(false);
@@ -438,7 +419,7 @@ export default function AdminBookAGamePage() {
     }
 
     setStatus('success');
-    setPlayer1(''); setPlayer1Email(''); setPlayer2(''); setPlayer3(''); setPlayer4('');
+    setPlayer1(''); setPlayer2(''); setPlayer3(''); setPlayer4('');
     setTimeSlot('');
     await fetchBookings(date);
     setRefreshKey(k => k + 1);

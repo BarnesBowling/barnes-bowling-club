@@ -511,9 +511,21 @@ export default function AdminBookAGamePage() {
               <div style={{ marginBottom: '2rem' }}>
                 <div style={sectionHeadStyle}>{isPairs ? 'Players (2 vs 2)' : 'Players (1 vs 1)'}</div>
 
-                {player1 && (
-                  <div style={{ marginBottom: '0.75rem', padding: '8px 12px', background: player1Email ? 'rgba(45,90,61,.06)' : 'rgba(192,57,43,.06)', border: `1px solid ${player1Email ? 'rgba(45,90,61,.2)' : 'rgba(192,57,43,.2)'}`, fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: player1Email ? 'var(--green-deep)' : '#c0392b' }}>
-                    {player1Email ? `Member account: ${player1Email}` : '⚠ No member account found for this name'}
+                {player1 && player1Email && (
+                  <div style={{ marginBottom: '0.75rem', padding: '8px 12px', background: 'rgba(45,90,61,.06)', border: '1px solid rgba(45,90,61,.2)', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'var(--green-deep)' }}>
+                    Member account: {player1Email}
+                  </div>
+                )}
+                {player1 && !player1Email && (
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <label style={labelStyle}>Member email (manual entry)</label>
+                    <input
+                      type="email"
+                      value={player1Email}
+                      onChange={e => setPlayer1Email(e.target.value)}
+                      placeholder="member@example.com"
+                      style={{ ...inputStyle, maxWidth: '280px' }}
+                    />
                   </div>
                 )}
 
@@ -642,7 +654,7 @@ export default function AdminBookAGamePage() {
 
               <button
                 type="submit"
-                disabled={submitting || !date || !timeSlot || !player1 || !player1Email}
+                disabled={submitting || !player1.trim() || !player2.trim() || !date || !timeSlot || !player1Email.trim()}
                 style={{
                   padding: '11px 28px',
                   fontFamily: "'DM Sans', sans-serif",
@@ -652,8 +664,8 @@ export default function AdminBookAGamePage() {
                   textTransform: 'uppercase',
                   border: 'none',
                   borderRadius: '2px',
-                  cursor: submitting || !date || !timeSlot || !player1 || !player1Email ? 'not-allowed' : 'pointer',
-                  background: submitting || !date || !timeSlot || !player1 || !player1Email ? 'rgba(45,90,61,.35)' : 'var(--green-deep)',
+                  cursor: submitting || !player1.trim() || !player2.trim() || !date || !timeSlot || !player1Email.trim() ? 'not-allowed' : 'pointer',
+                  background: submitting || !player1.trim() || !player2.trim() || !date || !timeSlot || !player1Email.trim() ? 'rgba(45,90,61,.35)' : 'var(--green-deep)',
                   color: 'var(--cream)',
                 }}
               >

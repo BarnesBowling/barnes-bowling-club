@@ -8,11 +8,22 @@ import { AdminResultsClient } from './AdminResultsClient';
 export default async function AdminResultsPage() {
   try { await requireAdminSession(); } catch { redirect('/login?redirect=/admin/results'); }
 
-  const [{ data: competitions }, { data: pairs }, { data: matches }] = await Promise.all([
+  const [
+    { data: competitions, error: compErr },
+    { data: pairs, error: pairsErr },
+    { data: matches, error: matchErr },
+  ] = await Promise.all([
     supabaseAdmin.from('competitions').select('*').order('name'),
     supabaseAdmin.from('pairs_teams').select('*').order('created_at', { ascending: false }),
     supabaseAdmin.from('matches').select('*').order('match_date', { ascending: false }).limit(20),
-  ]);
+  ]).catch(err => {
+    console.error('[AdminResultsPage] Supabase query failed:', err);
+    return [{ data: null, error: err }, { data: null, error: null }, { data: null, error: null }] as const;
+  });
+
+  if (compErr)   console.error('[AdminResultsPage] competitions:', compErr.message);
+  if (pairsErr)  console.error('[AdminResultsPage] pairs_teams:', pairsErr.message);
+  if (matchErr)  console.error('[AdminResultsPage] matches:', matchErr.message);
 
   return (
     <>

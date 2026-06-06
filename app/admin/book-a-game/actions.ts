@@ -31,7 +31,7 @@ export async function createFixtureBookingAsAdmin(input: {
   player4: string | null;
   date: string;
   time_slot: string;
-  member_email: string;
+  member_email?: string;
 }): Promise<{ success: true; id: string } | { success: false; error: string }> {
   const admin = await requireAdmin();
   if (!admin) return { success: false, error: 'Admin access required.' };
@@ -48,7 +48,7 @@ export async function createFixtureBookingAsAdmin(input: {
   const { data, error } = await supabaseAdmin
     .from('fixture_bookings')
     .insert({
-      member_email: input.member_email,
+      member_email: input.member_email ?? 'admin-booking@barnesbowlingclub.org',
       competition: input.competition,
       player1: input.player1,
       player2: input.player2,

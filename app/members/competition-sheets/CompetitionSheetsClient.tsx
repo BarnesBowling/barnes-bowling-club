@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { CompetitionSheet, Competition } from '@/data/competition-sheets';
+import type { CompetitionSheet, Competition, MatchResult } from '@/data/competition-sheets';
 import { SheetBracketView } from './SheetBracketView';
 import { ManserRoundRobinGrid } from './ManserRoundRobinGrid';
 
@@ -13,7 +13,12 @@ const FILTERS: { value: 'all' | Competition; label: string }[] = [
   { value: 'manser', label: 'Manser' },
 ];
 
-export function CompetitionSheetsClient({ sheets }: { sheets: CompetitionSheet[] }) {
+interface Props {
+  sheets: CompetitionSheet[];
+  results: MatchResult[];
+}
+
+export function CompetitionSheetsClient({ sheets, results }: Props) {
   const [active, setActive]       = useState<'all' | Competition>('all');
   const [lightbox, setLightbox]   = useState<CompetitionSheet | null>(null);
 
@@ -79,15 +84,20 @@ export function CompetitionSheetsClient({ sheets }: { sheets: CompetitionSheet[]
       {(active === 'all' ? (['cup', 'shield', 'pairs', 'manser'] as Competition[]) : [active]).flatMap(comp =>
         sheets
           .filter(s => s.competition === comp)
-          .map(sheet => (
-            <div key={sheet.id} style={{ marginBottom: '3rem' }}>
-              {sheet.type === 'round-robin' && sheet.players ? (
-                <ManserRoundRobinGrid players={sheet.players} rules={sheet.rules} initialScores={sheet.initialScores} />
-              ) : (
-                <SheetBracketView sheet={sheet} />
-              )}
-            </div>
-          ))
+          .map(sheet => {
+            const sheetResults = results.filter(
+              r => r.competition_slug === sheet.id || r.competition_slug === sheet.competition,
+            );
+            return (
+              <div key={sheet.id} style={{ marginBottom: '3rem' }}>
+                {sheet.type === 'round-robin' && sheet.players ? (
+                  <ManserRoundRobinGrid players={sheet.players} rules={sheet.rules} results={sheetResults} />
+                ) : (
+                  <SheetBracketView sheet={sheet} results={sheetResults} />
+                )}
+              </div>
+            );
+          })
       )}
 
       {/* ── Image lightbox ── */}

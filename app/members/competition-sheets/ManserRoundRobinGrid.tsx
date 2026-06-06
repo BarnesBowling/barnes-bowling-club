@@ -1,20 +1,40 @@
 'use client';
 
 import { useState } from 'react';
+import type { MatchResult } from '@/data/competition-sheets';
 
-const CELL = 30;    // px — score cell width & height
-const NAME_W = 148; // px — left name column width
-const NUM_W  = 26;  // px — row number column width
-const HEADER_H = 160; // px — column header height (fits longest name vertically)
+const CELL = 30;
+const NAME_W = 148;
+const NUM_W  = 26;
+const HEADER_H = 160;
+
+function norm(s: string) {
+  return s.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function buildLiveScores(players: string[], results: MatchResult[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const r of results) {
+    const na = norm(r.side_a);
+    const nb = norm(r.side_b);
+    const ri = players.findIndex(p => { const np = norm(p); return na.includes(np) || np.includes(na); });
+    const ci = players.findIndex(p => { const np = norm(p); return nb.includes(np) || np.includes(nb); });
+    if (ri !== -1 && ci !== -1 && ri !== ci) {
+      out[`${ri}:${ci}`] = String(r.side_a_score);
+      out[`${ci}:${ri}`] = String(r.side_b_score);
+    }
+  }
+  return out;
+}
 
 interface Props {
   players: string[];
   rules?: string;
-  initialScores?: Record<string, string>;
+  results: MatchResult[];
 }
 
-export function ManserRoundRobinGrid({ players, rules, initialScores }: Props) {
-  const [scores, setScores] = useState<Record<string, string>>(initialScores ?? {});
+export function ManserRoundRobinGrid({ players, rules, results }: Props) {
+  const [scores, setScores] = useState<Record<string, string>>(() => buildLiveScores(players, results));
   const n = players.length;
 
   function cellKey(r: number, c: number) { return `${r}:${c}`; }
@@ -22,7 +42,6 @@ export function ManserRoundRobinGrid({ players, rules, initialScores }: Props) {
   return (
     <div style={{ width: '100%', overflowX: 'auto', overflowY: 'visible' }}>
 
-      {/* Rules — top right, plain text */}
       {rules && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
           <span style={{
@@ -39,11 +58,8 @@ export function ManserRoundRobinGrid({ players, rules, initialScores }: Props) {
       <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: NUM_W + NAME_W + n * CELL }}>
         <thead>
           <tr style={{ height: HEADER_H }}>
-            {/* Corner: row-number col */}
             <th style={{ width: NUM_W, minWidth: NUM_W }} />
-            {/* Corner: name col */}
             <th style={{ width: NAME_W, minWidth: NAME_W }} />
-            {/* Column headers — numbers + vertical names */}
             {players.map((name, ci) => (
               <th
                 key={ci}
@@ -83,7 +99,6 @@ export function ManserRoundRobinGrid({ players, rules, initialScores }: Props) {
         <tbody>
           {players.map((player, ri) => (
             <tr key={ri} style={{ height: CELL }}>
-              {/* Row number */}
               <td style={{
                 width: NUM_W,
                 textAlign: 'right',
@@ -97,7 +112,6 @@ export function ManserRoundRobinGrid({ players, rules, initialScores }: Props) {
               }}>
                 {ri + 1}
               </td>
-              {/* Player name */}
               <td style={{
                 width: NAME_W,
                 paddingRight: '10px',
@@ -111,7 +125,6 @@ export function ManserRoundRobinGrid({ players, rules, initialScores }: Props) {
               }}>
                 {player}
               </td>
-              {/* Score cells */}
               {players.map((_, ci) => {
                 const diagonal = ri === ci;
                 return (

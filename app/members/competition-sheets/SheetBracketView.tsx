@@ -1,10 +1,19 @@
 'use client';
-import type { CompetitionSheet } from '@/data/competition-sheets';
+import type { CompetitionSheet, MatchResult } from '@/data/competition-sheets';
 
 const GOLD = '#b5924a';
 const LINE_W = 1.5;
 
-export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
+function norm(s: string) {
+  return s.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+interface Props {
+  sheet: CompetitionSheet;
+  results: MatchResult[];
+}
+
+export function SheetBracketView({ sheet, results }: Props) {
   if (!sheet.rounds) return null;
 
   const rounds = sheet.rounds;
@@ -19,15 +28,11 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
   const svgW = rounds.length * (BOX_W + ROUND_GAP) - ROUND_GAP;
   const svgH = totalH + 60;
 
-  // Standard equal-distribution position for a match in a given round.
   function slotY(matchIndex: number, totalMatches: number): number {
     const slotH = totalH / totalMatches;
     return 60 + matchIndex * slotH + slotH / 2 - BOX_H / 2;
   }
 
-  // Returns the top-left Y for a match box.
-  // If this round's match is explicitly routed to a specific next-round slot via
-  // fromPrevRound, align its box with that target slot so connectors are horizontal.
   function boxY(roundIndex: number, matchIndex: number): number {
     const nextRound = rounds[roundIndex + 1];
     if (nextRound) {
@@ -35,6 +40,21 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
       if (target !== -1) return slotY(target, nextRound.matches.length);
     }
     return slotY(matchIndex, rounds[roundIndex].matches.length);
+  }
+
+  function findResult(player1: string, player2: string): MatchResult | null {
+    if (!player1 || !player2 || player1 === 'Bye' || player2 === 'Bye') return null;
+    const np1 = norm(player1);
+    const np2 = norm(player2);
+    return results.find(r => {
+      const na = norm(r.side_a);
+      const nb = norm(r.side_b);
+      const aMatchesP1 = na.includes(np1) || np1.includes(na);
+      const bMatchesP2 = nb.includes(np2) || np2.includes(nb);
+      const aMatchesP2 = na.includes(np2) || np2.includes(na);
+      const bMatchesP1 = nb.includes(np1) || np1.includes(nb);
+      return (aMatchesP1 && bMatchesP2) || (aMatchesP2 && bMatchesP1);
+    }) ?? null;
   }
 
   return (
@@ -52,7 +72,7 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
                 <rect
                   x={ri * (BOX_W + ROUND_GAP) + 8}
                   y={boxY(ri, mi)}
-                  width={BOX_W - 16}
+                  width={BOX_W - 44}
                   height={BOX_H}
                 />
               </clipPath>
@@ -82,6 +102,23 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
 
               {round.matches.map((match, mi) => {
                 const y = boxY(ri, mi);
+                const result = findResult(match.player1, match.player2);
+
+                let p1Score: number | null = null;
+                let p2Score: number | null = null;
+                let p1Won = match.winner === 'player1';
+                let p2Won = match.winner === 'player2';
+
+                if (result) {
+                  const na = norm(result.side_a);
+                  const np1 = norm(match.player1);
+                  const isP1SideA = na.includes(np1) || np1.includes(na);
+                  p1Score = isP1SideA ? result.side_a_score : result.side_b_score;
+                  p2Score = isP1SideA ? result.side_b_score : result.side_a_score;
+                  p1Won = result.winner_side === (isP1SideA ? 'a' : 'b');
+                  p2Won = result.winner_side === (isP1SideA ? 'b' : 'a');
+                }
+
                 return (
                   <g key={`box-${ri}-${mi}`}>
                     <rect
@@ -101,8 +138,8 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
                       x={x + 10} y={y + BOX_H / 2 - 6}
                       fontFamily="'Libre Baskerville', serif"
                       fontSize="11"
-                      fill={match.winner === 'player1' ? 'var(--gold, #C9A84C)' : 'var(--green-deep, #2D5A3D)'}
-                      fontWeight={match.winner === 'player1' ? '700' : '400'}
+                      fill={p1Won ? GOLD : 'var(--green-deep, #2D5A3D)'}
+                      fontWeight={p1Won ? '700' : '400'}
                       clipPath={`url(#clip-${ri}-${mi})`}
                     >
                       {match.player1 || '—'}
@@ -111,12 +148,36 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
                       x={x + 10} y={y + BOX_H / 2 + 16}
                       fontFamily="'Libre Baskerville', serif"
                       fontSize="11"
-                      fill={match.winner === 'player2' ? 'var(--gold, #C9A84C)' : 'var(--green-deep, #2D5A3D)'}
-                      fontWeight={match.winner === 'player2' ? '700' : '400'}
+                      fill={p2Won ? GOLD : 'var(--green-deep, #2D5A3D)'}
+                      fontWeight={p2Won ? '700' : '400'}
                       clipPath={`url(#clip-${ri}-${mi})`}
                     >
                       {match.player2 || '—'}
                     </text>
+                    {p1Score !== null && (
+                      <text
+                        x={x + BOX_W - 10} y={y + BOX_H / 2 - 6}
+                        textAnchor="end"
+                        fontFamily="'DM Sans', sans-serif"
+                        fontSize="10"
+                        fontWeight={p1Won ? '700' : '400'}
+                        fill={p1Won ? GOLD : 'var(--green-deep, #2D5A3D)'}
+                      >
+                        {p1Score}
+                      </text>
+                    )}
+                    {p2Score !== null && (
+                      <text
+                        x={x + BOX_W - 10} y={y + BOX_H / 2 + 16}
+                        textAnchor="end"
+                        fontFamily="'DM Sans', sans-serif"
+                        fontSize="10"
+                        fontWeight={p2Won ? '700' : '400'}
+                        fill={p2Won ? GOLD : 'var(--green-deep, #2D5A3D)'}
+                      >
+                        {p2Score}
+                      </text>
+                    )}
                   </g>
                 );
               })}
@@ -133,9 +194,6 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
           const nextRound = rounds[ri + 1];
           const nextMatchCount = nextRound.matches.length;
 
-          // Explicit connections: next-round matches with fromPrevRound bypass the
-          // standard pair logic. Because boxes are already aligned with their targets,
-          // connectors are simple horizontal lines at the shared centre Y.
           const explicitTargets = nextRound.matches.reduce<{ mi: number; from: number }[]>(
             (acc, m, mi) => {
               if (m.fromPrevRound !== undefined) acc.push({ mi, from: m.fromPrevRound });
@@ -161,7 +219,6 @@ export function SheetBracketView({ sheet }: { sheet: CompetitionSheet }) {
             );
           }
 
-          // Standard adjacent-pair connector logic (power-of-2 brackets).
           const matchCount = round.matches.length;
           return (
             <g key={`connectors-${ri}`}>

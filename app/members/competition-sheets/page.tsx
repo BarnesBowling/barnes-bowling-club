@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { verifyMemberSession, SESSION_COOKIE } from '@/lib/memberSession';
 import { competitionSheets } from '@/data/competition-sheets';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { CompetitionSheetsClient } from './CompetitionSheetsClient';
 
 export default async function CompetitionSheetsPage() {
@@ -11,6 +12,10 @@ export default async function CompetitionSheetsPage() {
   const sc = cookieStore.get(SESSION_COOKIE);
   const session = sc ? await verifyMemberSession(sc.value) : null;
   if (!session) redirect('/login?redirect=/members/competition-sheets');
+
+  const { data: matchResults } = await supabaseAdmin
+    .from('matches')
+    .select('competition_slug, side_a, side_b, side_a_score, side_b_score, winner_side');
 
   return (
     <>
@@ -32,7 +37,7 @@ export default async function CompetitionSheetsPage() {
         </div>
 
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
-          <CompetitionSheetsClient sheets={competitionSheets} />
+          <CompetitionSheetsClient sheets={competitionSheets} results={matchResults ?? []} />
         </div>
       </main>
       <Footer />

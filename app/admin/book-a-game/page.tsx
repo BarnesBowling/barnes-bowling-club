@@ -1,6 +1,3 @@
-Here it is — paste everything below into the terminal, then press **Ctrl+D**:
-
-```
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -720,6 +717,10 @@ export default function AdminBookAGamePage() {
       </div>
     </div>
   );
-}
-```
-
+}git add app/admin/book-a-game/page.tsx
+git commit -m "Fix admin book-a-game page - remove stray text"
+git push
+git log --oneline -3
+git add app/admin/book-a-game/page.tsx
+git commit -m "Fix admin book-a-game page"
+git push

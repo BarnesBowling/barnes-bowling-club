@@ -69,29 +69,53 @@ function buildMatchRecord(data: MatchPayload) {
 }
 
 export async function addMatch(data: MatchPayload): Promise<void> {
-  await requireAdminSession();
-  const record = buildMatchRecord(data);
-  const { error } = await supabaseAdmin.from('matches').insert({ ...record, created_by: 'admin' });
-  if (error) throw new Error(error.message);
-  revalidatePath('/admin/results');
-  revalidatePath('/members/results');
+  try {
+    await requireAdminSession();
+    const record = buildMatchRecord(data);
+    const { error } = await supabaseAdmin.from('matches').insert({ ...record, created_by: 'admin' });
+    if (error) {
+      console.error('[addMatch] Supabase error:', JSON.stringify(error));
+      throw new Error(error.message);
+    }
+    revalidatePath('/admin/results');
+    revalidatePath('/members/results');
+  } catch (err) {
+    console.error('[addMatch] failed:', err);
+    throw err;
+  }
 }
 
 export async function updateMatch(id: string, data: MatchPayload): Promise<void> {
-  await requireAdminSession();
-  const record = buildMatchRecord(data);
-  const { error } = await supabaseAdmin.from('matches').update(record).eq('id', id);
-  if (error) throw new Error(error.message);
-  revalidatePath('/admin/results');
-  revalidatePath('/members/results');
+  try {
+    await requireAdminSession();
+    const record = buildMatchRecord(data);
+    const { error } = await supabaseAdmin.from('matches').update(record).eq('id', id);
+    if (error) {
+      console.error('[updateMatch] Supabase error:', JSON.stringify(error));
+      throw new Error(error.message);
+    }
+    revalidatePath('/admin/results');
+    revalidatePath('/members/results');
+  } catch (err) {
+    console.error('[updateMatch] failed:', err);
+    throw err;
+  }
 }
 
 export async function deleteMatch(id: string): Promise<void> {
-  await requireAdminSession();
-  const { error } = await supabaseAdmin.from('matches').delete().eq('id', id);
-  if (error) throw new Error(error.message);
-  revalidatePath('/admin/results');
-  revalidatePath('/members/results');
+  try {
+    await requireAdminSession();
+    const { error } = await supabaseAdmin.from('matches').delete().eq('id', id);
+    if (error) {
+      console.error('[deleteMatch] Supabase error:', JSON.stringify(error));
+      throw new Error(error.message);
+    }
+    revalidatePath('/admin/results');
+    revalidatePath('/members/results');
+  } catch (err) {
+    console.error('[deleteMatch] failed:', err);
+    throw err;
+  }
 }
 
 export async function addPairTeam(data: {
@@ -100,22 +124,35 @@ export async function addPairTeam(data: {
   combinedHandicap: number;
   teamHandicap: number;
 }): Promise<void> {
-  await requireAdminSession();
-  const { playerA, playerB, combinedHandicap, teamHandicap } = data;
-  const { error } = await supabaseAdmin.from('pairs_teams').insert({
-    season: 2026,
-    player_a: playerA,
-    player_b: playerB,
-    team_name: `${playerA} & ${playerB}`,
-    combined_handicap: combinedHandicap,
-    team_handicap: teamHandicap,
-  });
-  if (error) throw new Error(error.message);
-  revalidatePath('/admin/results');
+  try {
+    await requireAdminSession();
+    const { playerA, playerB, combinedHandicap, teamHandicap } = data;
+    const { error } = await supabaseAdmin.from('pairs_teams').insert({
+      season: 2026,
+      player_a: playerA,
+      player_b: playerB,
+      team_name: `${playerA} & ${playerB}`,
+      combined_handicap: combinedHandicap,
+      team_handicap: teamHandicap,
+    });
+    if (error) {
+      console.error('[addPairTeam] Supabase error:', JSON.stringify(error));
+      throw new Error(error.message);
+    }
+    revalidatePath('/admin/results');
+  } catch (err) {
+    console.error('[addPairTeam] failed:', err);
+    throw err;
+  }
 }
 
 export async function deletePairTeam(id: string): Promise<void> {
-  await requireAdminSession();
-  await supabaseAdmin.from('pairs_teams').delete().eq('id', id);
-  revalidatePath('/admin/results');
+  try {
+    await requireAdminSession();
+    await supabaseAdmin.from('pairs_teams').delete().eq('id', id);
+    revalidatePath('/admin/results');
+  } catch (err) {
+    console.error('[deletePairTeam] failed:', err);
+    throw err;
+  }
 }

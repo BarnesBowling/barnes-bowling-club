@@ -357,9 +357,18 @@ export default function AdminBookAGamePage() {
   const fetchBookings = useCallback(async (d: string) => {
     if (!d) return;
     setLoadingSlots(true);
-    const dayBookings = await getBookingsForDate(d);
-    setBookings(dayBookings);
-    setLoadingSlots(false);
+    try {
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Timed out fetching bookings')), 5000)
+      );
+      const dayBookings = await Promise.race([getBookingsForDate(d), timeout]);
+      setBookings(dayBookings);
+    } catch (err) {
+      console.error('[fetchBookings]', err);
+      setBookings([]);
+    } finally {
+      setLoadingSlots(false);
+    }
   }, []);
 
   useEffect(() => {

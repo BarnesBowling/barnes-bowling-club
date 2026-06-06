@@ -6,7 +6,15 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import { AdminResultsClient } from './AdminResultsClient';
 
 export default async function AdminResultsPage() {
-  try { await requireAdminSession(); } catch { redirect('/login?redirect=/admin/results'); }
+  try {
+    await requireAdminSession();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg !== 'unauthenticated' && msg !== 'forbidden') {
+      console.error('[AdminResultsPage] requireAdminSession threw unexpectedly:', err);
+    }
+    redirect('/login?redirect=/admin/results');
+  }
 
   const [
     { data: competitions, error: compErr },
@@ -17,40 +25,45 @@ export default async function AdminResultsPage() {
     supabaseAdmin.from('pairs_teams').select('*').order('created_at', { ascending: false }),
     supabaseAdmin.from('matches').select('*').order('match_date', { ascending: false }).limit(20),
   ]).catch(err => {
-    console.error('[AdminResultsPage] Supabase query failed:', err);
+    console.error('[AdminResultsPage] Promise.all threw (network/init error):', err);
     return [{ data: null, error: err }, { data: null, error: null }, { data: null, error: null }] as const;
   });
 
-  if (compErr)   console.error('[AdminResultsPage] competitions:', compErr.message);
-  if (pairsErr)  console.error('[AdminResultsPage] pairs_teams:', pairsErr.message);
-  if (matchErr)  console.error('[AdminResultsPage] matches:', matchErr.message);
+  if (compErr)  console.error('[AdminResultsPage] competitions query failed:', JSON.stringify(compErr));
+  if (pairsErr) console.error('[AdminResultsPage] pairs_teams query failed:', JSON.stringify(pairsErr));
+  if (matchErr) console.error('[AdminResultsPage] matches query failed:', JSON.stringify(matchErr));
 
-  return (
-    <>
-      <Navbar />
-      <main>
-        {/* Green header */}
-        <div style={{ background: 'var(--green-deep)', padding: '1rem 2rem 4rem', color: 'var(--cream)' }}>
-          <div className="section-inner">
-            <a href="/admin" className="section-tag" style={{ color: 'var(--gold)', borderTopColor: 'var(--gold)', textDecoration: 'none' }}>Admin</a>
-            <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>
-              Results <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>&amp; Leaderboard</em>
-            </h1>
-            <p className="section-lead" style={{ color: 'rgba(245,240,232,.65)' }}>
-              Enter match results, register pair teams, and manage the season leaderboard.
-            </p>
+  try {
+    return (
+      <>
+        <Navbar />
+        <main>
+          {/* Green header */}
+          <div style={{ background: 'var(--green-deep)', padding: '1rem 2rem 4rem', color: 'var(--cream)' }}>
+            <div className="section-inner">
+              <a href="/admin" className="section-tag" style={{ color: 'var(--gold)', borderTopColor: 'var(--gold)', textDecoration: 'none' }}>Admin</a>
+              <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>
+                Results <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>&amp; Leaderboard</em>
+              </h1>
+              <p className="section-lead" style={{ color: 'rgba(245,240,232,.65)' }}>
+                Enter match results, register pair teams, and manage the season leaderboard.
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
-          <AdminResultsClient
-            competitions={competitions ?? []}
-            pairs={pairs ?? []}
-            recentMatches={matches ?? []}
-          />
-        </div>
-      </main>
-      <Footer />
-    </>
-  );
+          <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
+            <AdminResultsClient
+              competitions={competitions ?? []}
+              pairs={pairs ?? []}
+              recentMatches={matches ?? []}
+            />
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  } catch (err) {
+    console.error('[AdminResultsPage] render error:', err);
+    throw err;
+  }
 }

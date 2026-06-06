@@ -133,6 +133,11 @@ export default async function Admin() {
                 title="Member Accounts"
                 description="Post charges and payments to member account statements"
               />
+              <AdminLinkCard
+                href="/admin/book-a-game"
+                title="Book a Match"
+                description="Book a fixture on behalf of any member"
+              />
             </div>
           </section>
 

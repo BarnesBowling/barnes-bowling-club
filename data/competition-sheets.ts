@@ -4,6 +4,15 @@
 // For bracket type, populate rounds[]. For round-robin, populate players[]. For image/pdf, set src.
 
 export type Competition = 'cup' | 'shield' | 'pairs' | 'manser';
+
+export type MatchResult = {
+  competition_slug: string;
+  side_a: string;
+  side_b: string;
+  side_a_score: number | null;
+  side_b_score: number | null;
+  winner_side: string | null;
+};
 export type SheetType = 'bracket' | 'image' | 'pdf' | 'round-robin';
 
 export interface BracketMatch {

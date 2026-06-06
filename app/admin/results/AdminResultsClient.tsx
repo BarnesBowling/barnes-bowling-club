@@ -583,11 +583,11 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
           }}>
             <div>
               <label style={labelStyle}>{scoreLabel} A</label>
-              <input type="number" max={maxScore ?? 99} required value={sideAScore} onChange={e => setSideAScore(e.target.value)} style={inputStyle} />
+              <input type="text" inputMode="numeric" pattern="-?[0-9]*" required value={sideAScore} onChange={e => setSideAScore(e.target.value)} style={inputStyle} />
             </div>
             <div>
               <label style={labelStyle}>{scoreLabel} B</label>
-              <input type="number" max={maxScore ?? 99} required value={sideBScore} onChange={e => setSideBScore(e.target.value)} style={inputStyle} />
+              <input type="text" inputMode="numeric" pattern="-?[0-9]*" required value={sideBScore} onChange={e => setSideBScore(e.target.value)} style={inputStyle} />
             </div>
             <div>
               <label style={labelStyle}>Notes (optional)</label>

@@ -98,9 +98,9 @@ export default function GeneralCommitteePage() {
         }}>
           <div style={{ maxWidth: '960px', margin: '0 auto' }}>
 
-            {/* Row 1 — Honorary President */}
+            {/* Row 1 — President */}
             <Row>
-              <Card m={{ name: 'Judith Heaton', role: 'Honorary President (Non-Voting / Advisory)' }} />
+              <Card m={{ name: 'Judith Heaton', role: 'President (Non-Voting / Advisory)' }} />
             </Row>
 
             {/* Row 2 — Chair */}

@@ -1,11 +1,90 @@
 'use client';
-import type { CompetitionSheet, MatchResult } from '@/data/competition-sheets';
+import type { CompetitionSheet, MatchResult, BracketRound } from '@/data/competition-sheets';
 
 const GOLD = '#b5924a';
 const LINE_W = 1.5;
 
 function norm(s: string) {
   return s.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function buildProgressedRounds(
+  originalRounds: BracketRound[],
+  results: MatchResult[],
+): BracketRound[] {
+  // Deep-clone so we never mutate the imported data array
+  const rounds: BracketRound[] = originalRounds.map(r => ({
+    ...r,
+    matches: r.matches.map(m => ({ ...m })),
+  }));
+
+  function resolveResult(p1: string, p2: string): MatchResult | null {
+    if (!p1 || !p2 || p1 === 'Bye' || p2 === 'Bye') return null;
+    const np1 = norm(p1);
+    const np2 = norm(p2);
+    return results.find(r => {
+      const na = norm(r.side_a);
+      const nb = norm(r.side_b);
+      const aMatchesP1 = na.includes(np1) || np1.includes(na);
+      const bMatchesP2 = nb.includes(np2) || np2.includes(nb);
+      const aMatchesP2 = na.includes(np2) || np2.includes(na);
+      const bMatchesP1 = nb.includes(np1) || np1.includes(nb);
+      return (aMatchesP1 && bMatchesP2) || (aMatchesP2 && bMatchesP1);
+    }) ?? null;
+  }
+
+  for (let ri = 0; ri < rounds.length - 1; ri++) {
+    const curr = rounds[ri];
+    const next = rounds[ri + 1];
+
+    for (let mi = 0; mi < curr.matches.length; mi++) {
+      const match = curr.matches[mi];
+      let winner = '';
+
+      if (match.player2 === 'Bye' && match.player1) {
+        // Bye: player1 auto-progresses
+        winner = match.player1;
+      } else if (match.player1 && match.player2) {
+        // Prefer live DB result, fall back to static winner field
+        const result = resolveResult(match.player1, match.player2);
+        if (result?.winner_side) {
+          const na = norm(result.side_a);
+          const np1 = norm(match.player1);
+          const isP1SideA = na.includes(np1) || np1.includes(na);
+          winner = result.winner_side === (isP1SideA ? 'a' : 'b') ? match.player1 : match.player2;
+        } else if (match.winner === 'player1') {
+          winner = match.player1;
+        } else if (match.winner === 'player2') {
+          winner = match.player2;
+        }
+      }
+
+      if (!winner) continue;
+
+      // Determine which slot in the next round receives this winner
+      const explicitIdx = next.matches.findIndex(m => m.fromPrevRound === mi);
+
+      if (explicitIdx !== -1) {
+        // Explicit fromPrevRound link: winner fills player1 of that slot
+        const origSlot = originalRounds[ri + 1].matches[explicitIdx];
+        if (!origSlot.player1) {
+          next.matches[explicitIdx] = { ...next.matches[explicitIdx], player1: winner };
+        }
+      } else {
+        // Standard bracket pairing: match mi → next-round match floor(mi/2)
+        const nextMatchIdx = Math.floor(mi / 2);
+        const slot = mi % 2 === 0 ? 'player1' : 'player2';
+        if (nextMatchIdx < next.matches.length) {
+          const origSlot = originalRounds[ri + 1].matches[nextMatchIdx];
+          if (!origSlot[slot]) {
+            next.matches[nextMatchIdx] = { ...next.matches[nextMatchIdx], [slot]: winner };
+          }
+        }
+      }
+    }
+  }
+
+  return rounds;
 }
 
 interface Props {
@@ -16,12 +95,13 @@ interface Props {
 export function SheetBracketView({ sheet, results }: Props) {
   if (!sheet.rounds) return null;
 
-  const rounds = sheet.rounds;
   const BOX_W = sheet.competition === 'pairs' ? 200 : 160;
   const BOX_H = 48;
   const BOX_GAP = 16;
   const ROUND_GAP = 80;
   const STUB = 40;
+
+  const rounds = buildProgressedRounds(sheet.rounds, results);
 
   const maxRoundMatches = Math.max(...rounds.map(r => r.matches.length));
   const totalH = maxRoundMatches * (BOX_H + BOX_GAP) - BOX_GAP;

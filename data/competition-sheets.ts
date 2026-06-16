@@ -66,7 +66,7 @@ export const competitionSheets: CompetitionSheet[] = [
           { player1: 'Sarah Crosbie-Smith', player2: 'Toby Steedman'    },
           { player1: 'Gareth Ballance',     player2: 'Alaric Evans'     },
           { player1: 'Gerry Summers',       player2: 'Judith Heaton'    },
-          { player1: 'Roger Ford',          player2: 'Venina Rees'      },
+          { player1: 'Venina Rees',          player2: 'Roger Ford'      },
           { player1: 'Brian Evans',         player2: 'Hayley Steedman'  },
           { player1: "Jim O'Neill",         player2: 'Ginette Grimes'   },
           { player1: 'Brian Coles',         player2: 'Mark Hunter'      },

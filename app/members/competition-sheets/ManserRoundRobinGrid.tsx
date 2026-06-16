@@ -6,6 +6,7 @@ import type { MatchResult } from '@/data/competition-sheets';
 const CELL = 30;
 const NAME_W = 148;
 const NUM_W  = 26;
+const TOTAL_W = 48;
 const HEADER_H = 160;
 
 function norm(s: string) {
@@ -25,6 +26,16 @@ function buildLiveScores(players: string[], results: MatchResult[]): Record<stri
     }
   }
   return out;
+}
+
+function rowTotal(scores: Record<string, string>, ri: number, n: number): number {
+  let total = 0;
+  for (let ci = 0; ci < n; ci++) {
+    if (ci === ri) continue;
+    const v = parseInt(scores[`${ri}:${ci}`] ?? '', 10);
+    if (!isNaN(v)) total += v;
+  }
+  return total;
 }
 
 interface Props {
@@ -55,7 +66,7 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
         </div>
       )}
 
-      <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: NUM_W + NAME_W + n * CELL }}>
+      <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: NUM_W + NAME_W + n * CELL + TOTAL_W }}>
         <thead>
           <tr style={{ height: HEADER_H }}>
             <th style={{ width: NUM_W, minWidth: NUM_W }} />
@@ -86,19 +97,42 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
                   lineHeight: 1,
                   display: 'inline-block',
                 }}>
-                  <span style={{
-                    fontWeight: 400,
-                    color: 'rgba(45,90,61,.45)',
-                  }}>{ci + 1}. </span>
+                  <span style={{ fontWeight: 400, color: 'rgba(45,90,61,.45)' }}>{ci + 1}. </span>
                   {name}
                 </div>
               </th>
             ))}
+            {/* Total column header */}
+            <th style={{
+              width: TOTAL_W,
+              minWidth: TOTAL_W,
+              height: HEADER_H,
+              padding: '4px 6px',
+              verticalAlign: 'bottom',
+              textAlign: 'center',
+              borderLeft: '2px solid rgba(201,168,76,.3)',
+              borderBottom: 'none',
+            }}>
+              <div style={{
+                writingMode: 'vertical-rl',
+                transform: 'rotate(180deg)',
+                whiteSpace: 'nowrap',
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: '10px',
+                fontWeight: 700,
+                color: 'var(--gold, #C9A84C)',
+                lineHeight: 1,
+                display: 'inline-block',
+              }}>
+                Total
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody>
           {players.map((player, ri) => (
             <tr key={ri} style={{ height: CELL }}>
+              {/* Row number */}
               <td style={{
                 width: NUM_W,
                 textAlign: 'right',
@@ -112,6 +146,7 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
               }}>
                 {ri + 1}
               </td>
+              {/* Player name */}
               <td style={{
                 width: NAME_W,
                 paddingRight: '10px',
@@ -125,6 +160,7 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
               }}>
                 {player}
               </td>
+              {/* Score cells */}
               {players.map((_, ci) => {
                 const diagonal = ri === ci;
                 return (
@@ -165,6 +201,22 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
                   </td>
                 );
               })}
+              {/* Total cell */}
+              <td style={{
+                width: TOTAL_W,
+                height: CELL,
+                padding: '0 6px',
+                textAlign: 'center',
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: '12px',
+                fontWeight: 700,
+                color: 'var(--gold, #C9A84C)',
+                borderLeft: '2px solid rgba(201,168,76,.3)',
+                background: 'rgba(201,168,76,.05)',
+                whiteSpace: 'nowrap',
+              }}>
+                {rowTotal(scores, ri, n)}
+              </td>
             </tr>
           ))}
         </tbody>

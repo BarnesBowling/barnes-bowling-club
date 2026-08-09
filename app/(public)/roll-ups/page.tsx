@@ -50,8 +50,7 @@ export default async function RollUpsPage() {
               All Welcome
             </div>
             <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(2rem,5vw,3.5rem)' }}>
-              Wednesday Roll-ups —<br />
-              <em style={{ color: 'var(--gold-light)' }}>come and have a go!</em>
+              Wednesday Club Nights
             </h1>
             <p className="section-lead" style={{ color: 'rgba(245,240,232,.7)', maxWidth: '600px' }}>
               Every Wednesday evening we open the green for informal roll-ups.
@@ -72,7 +71,7 @@ export default async function RollUpsPage() {
             }}>
               {[
                 { label: 'When', value: 'Every Wednesday evening', sub: 'Throughout the season, Apr–Oct' },
-                { label: 'Where', value: 'The Sun Inn, Barnes', sub: 'Barnes High Street, SW13 9LB' },
+                { label: 'Where', value: 'Barnes Bowling Club behind the Sun Inn', sub: '' },
                 { label: 'Equipment', value: 'All provided', sub: 'Just wear flat-soled shoes' },
                 { label: 'Cost', value: 'Free to try', sub: 'No booking needed — just turn up' },
               ].map(({ label, value, sub }) => (
@@ -127,7 +126,7 @@ export default async function RollUpsPage() {
                   color: 'var(--text-mid)',
                   margin: '0 0 1rem',
                 }}>
-                  Every Wednesday from 6–8pm, we open the green to anyone over 16 who wants to
+                  Every Wednesday from 6–8pm, we open the green to anyone over 18 who wants to
                   try their hand. Bring flat-soled shoes and a willingness to have a go — that&apos;s it.
                 </p>
                 <p style={{

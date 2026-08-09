@@ -174,7 +174,7 @@ export function ApplicationForm() {
 
       <style>{`
         .appform-input:focus { border-color: var(--gold) !important; }
-        .appform-enquiry-btn:hover { background: rgba(168,149,96,0.1) !important; }
+        .appform-enquiry-btn:hover { background: rgba(220,38,38,0.08) !important; }
         .appform-submit-btn:hover:not(:disabled) { background: #6b5519 !important; }
       `}</style>
 
@@ -187,7 +187,8 @@ export function ApplicationForm() {
         marginBottom: '0.75rem',
       }}>
         <p style={{ fontFamily: optima, fontSize: '15px', color: 'var(--green-deep)', lineHeight: 1.7, margin: 0 }}>
-          This form is for applicants who have already visited the Club and met or played with at least two Committee Members. If you have not yet visited, please start with an enquiry first.
+          <strong>This form is for applicants who have already visited the Club and met or played with at least two Committee Members.</strong>{' '}
+          <strong style={{ color: '#dc2626' }}>If you have not yet visited, please start with an enquiry first.</strong>
         </p>
         <a
           href="/apply"
@@ -196,8 +197,8 @@ export function ApplicationForm() {
             display: 'inline-block',
             marginTop: '1rem',
             background: 'transparent',
-            border: '1px solid var(--gold)',
-            color: 'var(--gold)',
+            border: '1px solid #dc2626',
+            color: '#dc2626',
             padding: '0.6rem 1.25rem',
             borderRadius: '4px',
             fontFamily: optima,
@@ -226,33 +227,66 @@ export function ApplicationForm() {
         </div>
       )}
 
-      {/* ── Section 1: Your Details ── */}
-      <SectionHeading>Your Details</SectionHeading>
+      {/* ── Section 1: Your Details (fields left, passport photo right) ── */}
+      <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <SectionHeading>Your Details</SectionHeading>
 
-      <Field>
-        <label style={labelStyle}>Full Name {asterisk}</label>
-        <input name="full_name" type="text" required autoComplete="name" className="appform-input" style={inputStyle} />
-      </Field>
+          <Field>
+            <label style={labelStyle}>Full Name {asterisk}</label>
+            <input name="full_name" type="text" required autoComplete="name" className="appform-input" style={inputStyle} />
+          </Field>
 
-      <Field>
-        <label style={labelStyle}>Date of Birth {asterisk}</label>
-        <input name="dob" type="date" required className="appform-input" style={inputStyle} />
-      </Field>
+          <Field>
+            <label style={labelStyle}>Date of Birth {asterisk}</label>
+            <input name="dob" type="date" required className="appform-input" style={inputStyle} />
+          </Field>
 
-      <Field>
-        <label style={labelStyle}>Email Address {asterisk}</label>
-        <input name="email" type="email" required autoComplete="email" className="appform-input" style={inputStyle} />
-      </Field>
+          <Field>
+            <label style={labelStyle}>Email Address {asterisk}</label>
+            <input name="email" type="email" required autoComplete="email" className="appform-input" style={inputStyle} />
+          </Field>
 
-      <Field>
-        <label style={labelStyle}>Phone Number {asterisk}</label>
-        <input name="phone" type="tel" required autoComplete="tel" className="appform-input" style={inputStyle} />
-      </Field>
+          <Field>
+            <label style={labelStyle}>Phone Number {asterisk}</label>
+            <input name="phone" type="tel" required autoComplete="tel" className="appform-input" style={inputStyle} />
+          </Field>
 
-      <Field>
-        <label style={labelStyle}>Address {asterisk}</label>
-        <textarea name="address" rows={3} required autoComplete="street-address" className="appform-input" style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
-      </Field>
+          <Field>
+            <label style={labelStyle}>Address {asterisk}</label>
+            <textarea name="address" rows={3} required autoComplete="street-address" className="appform-input" style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
+          </Field>
+        </div>
+
+        <div style={{ flexShrink: 0 }}>
+          <label style={labelStyle}>Passport Photo</label>
+          <div style={{
+            width: 133,
+            height: 170,
+            border: '1px dashed var(--green-deep)',
+            background: '#f9f9f7',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            padding: '10px',
+            boxSizing: 'border-box',
+          }}>
+            <span style={{
+              fontFamily: optima,
+              fontSize: '11px',
+              fontStyle: 'italic',
+              color: 'rgba(45,90,61,0.55)',
+              textAlign: 'center',
+              lineHeight: 1.4,
+            }}>
+              Attach passport sized photo
+            </span>
+            <input type="file" name="passport_photo" accept="image/*" style={{ fontSize: '10px', maxWidth: '100%' }} />
+          </div>
+        </div>
+      </div>
 
       <Field>
         <label style={labelStyle}>Are you rejoining the Club? {asterisk}</label>

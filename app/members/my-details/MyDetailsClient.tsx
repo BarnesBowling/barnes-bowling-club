@@ -188,9 +188,10 @@ interface Props {
   memberName: string;
   profile: Profile | null;
   balance: Balance | null;
+  photoIdFilename?: string | null;
 }
 
-export function MyDetailsClient({ email, memberId, memberName, profile, balance }: Props) {
+export function MyDetailsClient({ email, memberId, memberName, profile, balance, photoIdFilename }: Props) {
   const [openSection, setOpenSection] = useState<string | null>('details');
 
   const [detailsState, detailsAction] = useActionState(savePersonalDetails, null);
@@ -309,6 +310,44 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance 
           {email}
         </div>
       </div>
+
+      {/* ── Member Photo ID ── */}
+      {photoIdFilename && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginBottom: '2.5rem',
+          padding: '1.5rem',
+          background: 'rgba(45,90,61,.02)',
+          border: '1px solid rgba(45,90,61,.08)',
+        }}>
+          <div style={{
+            width: 105,
+            aspectRatio: '35/45',
+            overflow: 'hidden',
+            border: `2px solid ${GOLD}`,
+            flexShrink: 0,
+          }}>
+            <img
+              src={`/member-photos/${photoIdFilename}`}
+              alt="Your member photo ID"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+            />
+          </div>
+          <div style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: '9px',
+            fontWeight: 700,
+            letterSpacing: '.18em',
+            textTransform: 'uppercase',
+            color: GOLD,
+            marginTop: '0.75rem',
+          }}>
+            Your Member Photo ID
+          </div>
+        </div>
+      )}
 
       {/* ── Accordion 1: Member Details ── */}
       <AccordionRow title="Member Details" open={openSection === 'details'} onToggle={() => toggle('details')}>

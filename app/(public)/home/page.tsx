@@ -325,7 +325,7 @@ export default async function Home() {
 
             <div className="membership-card" style={{ flex: '1 1 320px', maxWidth: '460px', display: 'flex', flexDirection: 'column' }}>
               <div className="membership-card-tag">No Experience Needed</div>
-              <div className="membership-card-name">Wednesday Roll-ups — Welcome!</div>
+              <div className="membership-card-name">Wednesday Club Nights</div>
               <div style={{ flex: 1, marginTop: '1.5rem' }}>
                 <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '15px', lineHeight: 1.9, color: 'rgba(245,240,232,.75)', margin: '0 0 1.25rem' }}>
                   Try your arm at one of our Wednesday evening roll-ups — just turn up! No experience is needed and all equipment is provided on the day.
@@ -411,7 +411,7 @@ export default async function Home() {
                 </div>
                 <div>
                   <div className="find-label">Address</div>
-                  <div className="find-value">Sun Inn, Church Road<br />Barnes, London SW13 9HE</div>
+                  <div className="find-value">Barnes Bowling Club<br />Sun Inn, Church Road<br />Barnes, London SW13 9HE</div>
                 </div>
               </div>
               <div className="find-item">

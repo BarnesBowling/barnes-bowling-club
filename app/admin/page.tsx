@@ -1,9 +1,12 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { requireAdminSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { AdminLinkCard } from './AdminLinkCard';
+import { TickerAdmin } from './TickerAdmin';
+import { EventsAdmin } from './EventsAdmin';
 
 async function updateGreen(formData: FormData) {
   'use server';
@@ -60,6 +63,134 @@ async function deleteNotice(formData: FormData) {
   redirect('/admin');
 }
 
+async function addTickerMessage(formData: FormData) {
+  'use server';
+  await requireAdminSession();
+  const message = String(formData.get('message')).trim();
+  if (!message) return;
+  const { data: last } = await supabaseAdmin
+    .from('ticker_messages')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .single();
+  await supabaseAdmin.from('ticker_messages').insert({ message, sort_order: (last?.sort_order ?? 0) + 1 });
+  revalidatePath('/admin');
+  revalidatePath('/');
+}
+
+async function saveTickerMessage(formData: FormData) {
+  'use server';
+  await requireAdminSession();
+  const id = String(formData.get('id'));
+  const message = String(formData.get('message')).trim();
+  if (!message) return;
+  await supabaseAdmin.from('ticker_messages').update({ message }).eq('id', id);
+  revalidatePath('/admin');
+  revalidatePath('/');
+}
+
+async function deleteTickerMessage(formData: FormData) {
+  'use server';
+  await requireAdminSession();
+  await supabaseAdmin.from('ticker_messages').delete().eq('id', String(formData.get('id')));
+  revalidatePath('/admin');
+  revalidatePath('/');
+}
+
+async function toggleTickerMessage(formData: FormData) {
+  'use server';
+  await requireAdminSession();
+  const active = formData.get('active') === 'true';
+  await supabaseAdmin.from('ticker_messages').update({ active }).eq('id', String(formData.get('id')));
+  revalidatePath('/admin');
+  revalidatePath('/');
+}
+
+async function moveTickerMessage(formData: FormData) {
+  'use server';
+  await requireAdminSession();
+  const id = String(formData.get('id'));
+  const neighbourId = String(formData.get('neighbour_id'));
+  const myOrder = Number(formData.get('my_order'));
+  const neighbourOrder = Number(formData.get('neighbour_order'));
+  await Promise.all([
+    supabaseAdmin.from('ticker_messages').update({ sort_order: neighbourOrder }).eq('id', id),
+    supabaseAdmin.from('ticker_messages').update({ sort_order: myOrder }).eq('id', neighbourId),
+  ]);
+  revalidatePath('/admin');
+  revalidatePath('/');
+}
+
+async function saveOfficerPhoto(formData: FormData) {
+  'use server';
+  await requireAdminSession();
+  const id = String(formData.get('id'));
+  const photo_filename = String(formData.get('photo_filename')).trim() || null;
+  await supabaseAdmin.from('officers').update({ photo_filename }).eq('id', id);
+  revalidatePath('/admin');
+  revalidatePath('/members/dashboard');
+}
+
+async function addEvent(formData: FormData) {
+  'use server';
+  await requireAdminSession();
+  const title = String(formData.get('title')).trim();
+  const rawDate = String(formData.get('event_date') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim() || null;
+  const category = String(formData.get('category') ?? '').trim() || null;
+  const dayLabel = String(formData.get('day_label') ?? '').trim() || null;
+  const location = String(formData.get('location') ?? '').trim() || null;
+  const isTbc = Boolean(formData.get('is_tbc'));
+  await supabaseAdmin.from('events').insert({
+    title,
+    event_date: rawDate ? new Date(rawDate).toISOString() : null,
+    description,
+    category,
+    day_label: dayLabel,
+    location,
+    is_tbc: isTbc,
+    visibility: 'members',
+  });
+  revalidatePath('/admin');
+  revalidatePath('/members/dashboard');
+  revalidatePath('/members/competitions');
+}
+
+async function updateEvent(formData: FormData) {
+  'use server';
+  await requireAdminSession();
+  const id = String(formData.get('id'));
+  const title = String(formData.get('title')).trim();
+  const rawDate = String(formData.get('event_date') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim() || null;
+  const category = String(formData.get('category') ?? '').trim() || null;
+  const dayLabel = String(formData.get('day_label') ?? '').trim() || null;
+  const location = String(formData.get('location') ?? '').trim() || null;
+  const isTbc = Boolean(formData.get('is_tbc'));
+  await supabaseAdmin.from('events').update({
+    title,
+    event_date: rawDate ? new Date(rawDate).toISOString() : null,
+    description,
+    category,
+    day_label: dayLabel,
+    location,
+    is_tbc: isTbc,
+  }).eq('id', id);
+  revalidatePath('/admin');
+  revalidatePath('/members/dashboard');
+  revalidatePath('/members/competitions');
+}
+
+async function deleteEvent(formData: FormData) {
+  'use server';
+  await requireAdminSession();
+  await supabaseAdmin.from('events').delete().eq('id', String(formData.get('id')));
+  revalidatePath('/admin');
+  revalidatePath('/members/dashboard');
+  revalidatePath('/members/competitions');
+}
+
 async function updateMembershipAppClubUse(formData: FormData) {
   'use server';
   await requireAdminSession();
@@ -82,13 +213,16 @@ async function updateMembershipAppClubUse(formData: FormData) {
 export default async function Admin() {
   try { await requireAdminSession(); } catch { redirect('/login?redirect=/admin'); }
 
-  const [{ data: apps }, { data: membershipApps }, { data: notices }, { data: sections }, { data: historySections }, { data: timelineEntries }] = await Promise.all([
+  const [{ data: apps }, { data: membershipApps }, { data: notices }, { data: sections }, { data: historySections }, { data: timelineEntries }, { data: tickerMessages }, { data: adminOfficers }, { data: adminEvents }] = await Promise.all([
     supabaseAdmin.from('applications').select('*').order('created_at', { ascending: false }).limit(20),
     supabaseAdmin.from('membership_applications').select('*').order('created_at', { ascending: false }).limit(50),
     supabaseAdmin.from('notices').select('*').order('published_at', { ascending: false }),
     supabaseAdmin.from('how_to_play').select('*').order('sort_order'),
     supabaseAdmin.from('history_sections').select('*').order('sort_order'),
     supabaseAdmin.from('history_timeline').select('*').order('year'),
+    supabaseAdmin.from('ticker_messages').select('id, message, sort_order, active').order('sort_order'),
+    supabaseAdmin.from('officers').select('id, name, role, sort_order, photo_filename').eq('group_name', 'Committee').order('sort_order'),
+    supabaseAdmin.from('events').select('id, title, event_date, description, category, is_tbc, bank_holiday, day_label, location, visibility').order('event_date', { nullsFirst: false }),
   ]);
 
   const inputStyle = { padding: '.7rem', border: '1px solid rgba(45,90,61,.2)', fontFamily: 'inherit', fontSize: '14px', width: '100%' };
@@ -124,6 +258,11 @@ export default async function Admin() {
                 description="Enter match results and manage the Manser leaderboard"
               />
               <AdminLinkCard
+                href="/admin/hero-images"
+                title="Home Page Images"
+                description="Replace hero, What's Happening, Come and Play, and Get Involved photos"
+              />
+              <AdminLinkCard
                 href="/admin/gallery"
                 title="Gallery"
                 description="Upload and manage public gallery photos"
@@ -157,6 +296,83 @@ export default async function Admin() {
               </div>
               <button className="btn" style={{ alignSelf: 'flex-start' }}>Update banner</button>
             </form>
+          </section>
+
+          {/* SCROLLING BANNER */}
+          <section>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', marginBottom: '.5rem' }}>Scrolling banner</h2>
+            <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.5rem' }}>
+              Messages scroll across the bottom of the landing page. Click any message to edit it inline. Changes appear on the next page load.
+            </p>
+            {(!tickerMessages || tickerMessages.length === 0) && (
+              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '14px', marginBottom: '1rem' }}>
+                No ticker messages found — run the <code>ticker_messages</code> migration in the Supabase dashboard first.
+              </p>
+            )}
+            <TickerAdmin
+              initialMessages={tickerMessages ?? []}
+              addMessage={addTickerMessage}
+              saveMessage={saveTickerMessage}
+              deleteMessage={deleteTickerMessage}
+              toggleMessage={toggleTickerMessage}
+              moveMessage={moveTickerMessage}
+            />
+          </section>
+
+          {/* COMMITTEE PHOTOS */}
+          <section>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', marginBottom: '.5rem' }}>Committee photos</h2>
+            <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.5rem' }}>
+              Upload photos to <code>public/committee/</code> then enter the filename here (e.g. <code>jane-smith.jpg</code>). Leave blank to show the placeholder silhouette.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+              {adminOfficers?.map((o) => (
+                <div key={o.id} style={{ background: 'white', border: '1px solid rgba(45,90,61,.12)', padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+                  {o.photo_filename ? (
+                    <img
+                      src={`/committee/${o.photo_filename}`}
+                      alt={o.name}
+                      style={{ width: '52px', height: '52px', borderRadius: '6px', objectFit: 'cover', objectPosition: 'center top', flexShrink: 0, border: '1px solid rgba(45,90,61,.12)' }}
+                    />
+                  ) : (
+                    <div style={{ width: '52px', height: '52px', borderRadius: '6px', background: 'var(--green-deep)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 100 100" width="30" height="30" fill="rgba(245,240,232,.35)">
+                        <circle cx="50" cy="35" r="20" />
+                        <ellipse cx="50" cy="85" rx="32" ry="25" />
+                      </svg>
+                    </div>
+                  )}
+                  <div style={{ minWidth: '180px' }}>
+                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '15px', color: 'var(--green-deep)', fontWeight: 500 }}>{o.name}</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase' as const, color: 'var(--gold)', marginTop: '2px' }}>{o.role}</div>
+                  </div>
+                  <form action={saveOfficerPhoto} style={{ display: 'flex', alignItems: 'center', gap: '.5rem', flex: 1, minWidth: '240px' }}>
+                    <input type="hidden" name="id" value={o.id} />
+                    <input
+                      name="photo_filename"
+                      defaultValue={o.photo_filename ?? ''}
+                      placeholder="e.g. jane-smith.jpg"
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <button className="btn" style={{ whiteSpace: 'nowrap', padding: '0.7rem 1.25rem' }}>Save</button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* SEASON EVENTS */}
+          <section>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', marginBottom: '.5rem' }}>Season events</h2>
+            <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.5rem' }}>
+              Manage the season calendar shown on the members dashboard and competition dates page.
+            </p>
+            <EventsAdmin
+              initialEvents={adminEvents ?? []}
+              addEvent={addEvent}
+              updateEvent={updateEvent}
+              deleteEvent={deleteEvent}
+            />
           </section>
 
           {/* NOTICES */}

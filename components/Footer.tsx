@@ -68,6 +68,7 @@ export function Footer() {
           <div>
             <div style={colHeading}>Address</div>
             <address style={{ ...bodyText, fontStyle: 'normal', marginBottom: '10px' }}>
+              Barnes Bowling Club<br />
               The Sun Inn<br />
               Church Road<br />
               Barnes SW13

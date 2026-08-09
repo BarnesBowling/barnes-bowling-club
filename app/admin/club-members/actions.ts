@@ -63,6 +63,35 @@ export async function deleteClubMember(id: string): Promise<void> {
   revalidatePath('/members/handicaps');
 }
 
+export async function savePhotoId(id: string, filename: string | null): Promise<void> {
+  await requireAdminSession();
+  const { error } = await supabaseAdmin
+    .from('club_members')
+    .update({ photo_id_filename: filename, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/club-members');
+}
+
+export async function clearMemberPhoto(id: string): Promise<void> {
+  await requireAdminSession();
+  const { error } = await supabaseAdmin
+    .from('club_members')
+    .update({ photo_id_filename: null, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/club-members');
+}
+
+export async function checkMemberHasLedger(id: string): Promise<boolean> {
+  await requireAdminSession();
+  const { count } = await supabaseAdmin
+    .from('member_ledger')
+    .select('id', { count: 'exact', head: true })
+    .eq('member_id', id);
+  return (count ?? 0) > 0;
+}
+
 export async function inviteClubMember(id: string, email: string): Promise<void> {
   await requireAdminSession();
 

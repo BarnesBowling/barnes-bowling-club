@@ -1,6 +1,6 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { getImagesByContext } from '@/lib/images';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 function parsePosition(altText: string | null): { objectPosition: string; cleanAlt: string | null } {
   if (altText?.startsWith('pos:')) {
@@ -29,7 +29,12 @@ const FALLBACK_IMAGES = [
 ];
 
 export default async function Gallery() {
-  const dbImages = await getImagesByContext('gallery').catch(() => []);
+  const { data } = await supabaseAdmin
+    .from('site_images')
+    .select('id, public_url, alt_text, caption, sort_order')
+    .eq('context', 'gallery')
+    .order('sort_order', { ascending: true });
+  const dbImages = data ?? [];
   const useDb = dbImages.length > 0;
 
   return (

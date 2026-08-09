@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getImagesByContext, updateImageMeta, reorderImages, type SiteImage } from '@/lib/images';
+import { getImagesByContext, updateImageMeta, type SiteImage } from '@/lib/images';
 
 // Position is stored as a prefix on alt_text: "pos:30|actual alt text"
 function parsePosition(altText: string | null): { pos: number; cleanAlt: string | null } {
@@ -140,7 +140,12 @@ export default function AdminGalleryPage() {
 
   async function onDrop() {
     if (dragId) {
-      await reorderImages(images.map(i => i.id));
+      const orderedIds = images.map(i => i.id);
+      await fetch('/api/admin/gallery-reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderedIds }),
+      });
     }
     setDragId(null);
   }

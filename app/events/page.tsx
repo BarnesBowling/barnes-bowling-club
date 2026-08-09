@@ -53,7 +53,7 @@ export default function EventsPage() {
             <p className="section-lead" style={{ color: 'rgba(245,240,232,.7)', maxWidth: '600px' }}>
               The full fixture list and competition schedule for the 2026 season.
               The green opens in April and closes in October — all events are held at
-              The Sun Inn, Barnes High Street, SW13 9LB unless otherwise noted.
+              the Barnes Bowling Club behind the Sun Inn.
             </p>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function EventsPage() {
                 { label: 'Season Opens',  value: '25th April 2026',       sub: 'First play of the year' },
                 { label: 'Season Closes', value: 'Early October 2026',    sub: 'Last roll-up of the year' },
                 { label: 'Roll-Ups',      value: 'Every Wednesday',       sub: '6-8pm throughout the season' },
-                { label: 'Venue',         value: 'The Sun Inn, Barnes',   sub: 'Barnes High Street, SW13 9LB' },
+                { label: 'Venue',         value: 'Barnes Bowling Club behind the Sun Inn', sub: '' },
               ].map(({ label, value, sub }) => (
                 <div key={label} style={{ backgroundColor: '#f9f7f4', backgroundImage: "url('/images/texture.png')", backgroundRepeat: 'repeat', backgroundSize: '43px 43px', padding: '2rem 1.75rem' }}>
                   <div style={{

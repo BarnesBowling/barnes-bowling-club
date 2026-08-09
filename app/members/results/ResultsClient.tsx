@@ -147,7 +147,7 @@ export function ResultsClient({ matches: initialMatches, competitions }: Props) 
   const [manserSortAsc, setManserSortAsc] = useState(false);
 
   // ── Overall leaderboard sort state ────────────────────────────────────────
-  const [overallSortKey, setOverallSortKey] = useState<OverallSortKey>('wins');
+  const [overallSortKey, setOverallSortKey] = useState<OverallSortKey>('rank');
   const [overallSortAsc, setOverallSortAsc] = useState(false);
 
   // ── Player detail view ────────────────────────────────────────────────────
@@ -249,7 +249,7 @@ export function ResultsClient({ matches: initialMatches, competitions }: Props) 
 
   function overallSortIndicator(key: OverallSortKey): string {
     if (key !== overallSortKey) return '';
-    return overallSortAsc ? ' ▲' : ' ▼';
+    return overallSortAsc ? ' ↑' : ' ↓';
   }
 
   // ── Manser leaderboard (recalculates whenever matches updates) ────────────
@@ -310,7 +310,7 @@ export function ResultsClient({ matches: initialMatches, competitions }: Props) 
 
   function sortIndicator(key: ManserSortKey): string {
     if (key !== manserSortKey) return '';
-    return manserSortAsc ? ' ▲' : ' ▼';
+    return manserSortAsc ? ' ↑' : ' ↓';
   }
 
   // ── Shared player name button style ──────────────────────────────────────
@@ -650,10 +650,65 @@ export function ResultsClient({ matches: initialMatches, competitions }: Props) 
       </section>
 
       {/* ── Section B: Overall Record ──────────────────────────────────── */}
-      <section style={dividerStyle}>
+      <section id="leaderboard" style={dividerStyle}>
         <h2 style={sectionHeadingStyle}>Overall Record</h2>
-        <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', lineHeight: 1.7, color: 'var(--text-mid)', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
-          Win/loss record across all competitions for the 2026 season. Click any column header to sort.
+        <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', lineHeight: 1.7, color: 'var(--text-mid)', marginTop: '0.5rem', marginBottom: '1.25rem' }}>
+          Win/loss record across all competitions for the 2026 season.
+        </p>
+
+        {/* Sort pills */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+          <span style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '.1em',
+            textTransform: 'uppercase',
+            color: 'var(--text-muted)',
+            whiteSpace: 'nowrap',
+          }}>
+            Sort by:
+          </span>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {([
+              { key: 'rank'   as OverallSortKey, label: 'Leader' },
+              { key: 'player' as OverallSortKey, label: 'Name'   },
+              { key: 'wins'   as OverallSortKey, label: 'Wins'   },
+              { key: 'winPct' as OverallSortKey, label: 'Score'  },
+            ]).map(({ key, label }) => {
+              const isActive = overallSortKey === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleOverallSort(key)}
+                  style={{
+                    padding: '6px 18px',
+                    border: '1.5px solid var(--green-deep)',
+                    borderRadius: '20px',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    letterSpacing: '.06em',
+                    cursor: 'pointer',
+                    background: isActive ? 'var(--green-deep)' : '#fff',
+                    color: isActive ? '#fff' : 'var(--green-deep)',
+                    transition: 'background .15s, color .15s',
+                  }}
+                >
+                  {label}{isActive ? (overallSortAsc ? ' ↑' : ' ↓') : ''}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <p style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '11px',
+          fontStyle: 'italic',
+          color: 'var(--text-muted)',
+          margin: '0 0 1.25rem',
+        }}>
+          Click any column header to sort
         </p>
 
         {sortedOverallEntries.length === 0 ? (
@@ -742,9 +797,64 @@ export function ResultsClient({ matches: initialMatches, competitions }: Props) 
           lineHeight: 1.7,
           color: 'var(--text-mid)',
           marginTop: '0.5rem',
-          marginBottom: '1.5rem',
+          marginBottom: '1.25rem',
         }}>
           Points are adjusted by handicap. The better player must clear the worse player&apos;s handicap before their points count.
+        </p>
+
+        {/* Sort pills */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+          <span style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '.1em',
+            textTransform: 'uppercase',
+            color: 'var(--text-muted)',
+            whiteSpace: 'nowrap',
+          }}>
+            Sort by:
+          </span>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {([
+              { key: 'totalPoints' as ManserSortKey, label: 'Leader' },
+              { key: 'player'      as ManserSortKey, label: 'Name'   },
+              { key: 'avgPoints'   as ManserSortKey, label: 'Avg'    },
+              { key: 'games'       as ManserSortKey, label: 'Games'  },
+            ]).map(({ key, label }) => {
+              const isActive = manserSortKey === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleManserSort(key)}
+                  style={{
+                    padding: '6px 18px',
+                    border: '1.5px solid var(--green-deep)',
+                    borderRadius: '20px',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    letterSpacing: '.06em',
+                    cursor: 'pointer',
+                    background: isActive ? 'var(--green-deep)' : '#fff',
+                    color: isActive ? '#fff' : 'var(--green-deep)',
+                    transition: 'background .15s, color .15s',
+                  }}
+                >
+                  {label}{isActive ? (manserSortAsc ? ' ↑' : ' ↓') : ''}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <p style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '11px',
+          fontStyle: 'italic',
+          color: 'var(--text-muted)',
+          margin: '0 0 1.25rem',
+        }}>
+          Click any column header to sort
         </p>
 
         {sortedManserEntries.length === 0 ? (

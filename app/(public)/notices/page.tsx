@@ -1,7 +1,14 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 
-const NOTICES: { title: string; pdf: string }[] = [
+type Notice =
+  | { title: string; date?: string; pdf: string; type?: never }
+  | { title: string; date?: string; src: string; type: 'pdf' }
+  | { title: string; date?: string; src: string; type: 'image' };
+
+const NOTICES: Notice[] = [
+  { title: 'Family Bowling Competition', date: '30 August 2026', src: '/notices/family-bowling.pdf', type: 'pdf' },
+  { title: 'Silver Fox Competition', date: '5 August 2026', src: '/notices/silver-fox-notice.jpg', type: 'image' },
   { title: 'Sun Inn Bins',         pdf: '/notices/sun-inn-bins.pdf' },
   { title: 'Nightly Club Pack-up', pdf: '/notices/nightly-club-packup.pdf' },
 ];
@@ -40,37 +47,56 @@ export default function Notices() {
           <div className="section-inner" style={{ padding: '4rem 2rem 5rem' }}>
             <div className="notice-board">
               <div className="notice-grid">
-                {NOTICES.map(({ title, pdf }) => (
-                  <div key={pdf} className="notice-card" style={{ width: CARD_W, height: CARD_H }}>
-                    <div className="notice-pin notice-pin-left" />
-                    <div className="notice-pin notice-pin-right" />
-                    <div className="notice-card-inner">
-                      {/* Wrapper clipped to card dimensions; iframe renders full-quality then CSS scales it down */}
-                      <a
-                        href={pdf}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ display: 'block', lineHeight: 0, width: '100%', height: '100%' }}
-                      >
-                        <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
-                          <iframe
-                            src={`${pdf}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
-                            width={PDF_W}
-                            height={PDF_H}
-                            style={{
-                              border: 'none',
-                              display: 'block',
-                              pointerEvents: 'none',
-                              transform: `scale(${SCALE})`,
-                              transformOrigin: 'top left',
-                            }}
-                            title={title}
-                          />
-                        </div>
-                      </a>
+                {NOTICES.map((notice) => {
+                  const pdfSrc = notice.type === 'image' ? null : (notice.type === 'pdf' ? notice.src : notice.pdf);
+                  const key = notice.type === 'image' ? notice.src : pdfSrc!;
+                  return (
+                    <div key={key} className="notice-card" style={{ width: CARD_W, height: CARD_H }}>
+                      <div className="notice-pin notice-pin-left" />
+                      <div className="notice-pin notice-pin-right" />
+                      <div className="notice-card-inner">
+                        {notice.type === 'image' ? (
+                          <a
+                            href={notice.src}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: 'block', lineHeight: 0, width: '100%', height: '100%' }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={notice.src}
+                              alt={notice.title}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            />
+                          </a>
+                        ) : (
+                          <a
+                            href={pdfSrc!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: 'block', lineHeight: 0, width: '100%', height: '100%' }}
+                          >
+                            <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
+                              <iframe
+                                src={`${pdfSrc}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
+                                width={PDF_W}
+                                height={PDF_H}
+                                style={{
+                                  border: 'none',
+                                  display: 'block',
+                                  pointerEvents: 'none',
+                                  transform: `scale(${SCALE})`,
+                                  transformOrigin: 'top left',
+                                }}
+                                title={notice.title}
+                              />
+                            </div>
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

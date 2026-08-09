@@ -19,6 +19,9 @@ export default function Contact() {
         <div className="section-inner" style={{ padding: '4rem 2rem' }}>
           <div className="contact-grid">
             <div>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '24px', fontWeight: 500, color: 'var(--green-deep)', marginBottom: '2rem' }}>
+                Barnes Bowling Club
+              </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
                 <div>
                   <div className="section-tag">Address</div>
@@ -76,7 +79,7 @@ export default function Contact() {
                 If you&apos;ve been wondering whether bowls might be for you, the best thing to do is come along and try. We&apos;re a warm, welcoming Club and there&apos;s nothing better than seeing the green for yourself.
               </p>
               <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', lineHeight: 1.8, color: 'var(--green-deep)', marginBottom: '0.9rem' }}>
-                <strong>Wednesday Club Nights</strong> are the perfect introduction. From 6pm every Wednesday, it&apos;s a relaxed, free social evening — no booking, no fee, no experience needed. Just turn up. You&apos;ll meet Members and Committee Members, have a roll-up on the green, and get a real feel for the Club.
+                <strong>Wednesday Club Nights</strong>{' '}are the perfect introduction. From 6pm every Wednesday, it&apos;s a relaxed, free social evening — no booking, no fee, no experience needed. Just turn up. You&apos;ll meet Members and Committee Members, have a roll-up on the green, and get a real feel for the Club.
               </p>
               <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', lineHeight: 1.8, color: 'var(--green-deep)', marginBottom: '0.9rem' }}>
                 There&apos;s always someone happy to lend a hand and show you the ropes. Bowls is one of the few sports where women and men play together as equals — it&apos;s social, surprisingly competitive when you want it to be, and good fun whatever the weather.

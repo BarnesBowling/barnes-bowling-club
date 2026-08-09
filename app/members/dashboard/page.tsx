@@ -252,12 +252,46 @@ export default async function Dashboard() {
           {/* Committee */}
           {officers && officers.length > 0 && (
             <section>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', fontWeight: 500, color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
+              <style>{`
+                .committee-photo-grid {
+                  display: grid;
+                  grid-template-columns: repeat(4, 1fr);
+                  gap: 2rem 1.5rem;
+                }
+                @media (max-width: 600px) {
+                  .committee-photo-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                  }
+                }
+              `}</style>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', fontWeight: 500, color: 'var(--green-deep)', marginBottom: '1.5rem' }}>
                 Club committee
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', background: 'rgba(45,90,61,.08)' }}>
+              <div className="committee-photo-grid">
                 {officers.map((o) => (
-                  <div key={o.id} style={{ background: 'var(--cream)', padding: '1rem 1.25rem', minWidth: '160px', flex: '1 0 160px' }}>
+                  <div key={o.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                    {o.photo_filename ? (
+                      <img
+                        src={`/committee/${o.photo_filename}`}
+                        alt={o.name}
+                        style={(() => {
+                          const overrides: Record<string, { objectFit: 'contain' | 'cover'; objectPosition: string; background?: string; transform?: string; transformOrigin?: string }> = {
+                            'Tracy Greasley': { objectFit: 'contain', objectPosition: '15% center', background: '#f4f4f4' },
+                            'Judith Heaton':  { objectFit: 'cover',   objectPosition: 'center 35%', transform: 'scale(1.3)', transformOrigin: 'center top' },
+                            'Brian Coles':    { objectFit: 'cover',   objectPosition: 'center 35%', transform: 'scale(1.3)', transformOrigin: 'center top' },
+                          };
+                          const ov = overrides[o.name] ?? { objectFit: 'cover' as const, objectPosition: 'center top' };
+                          return { width: '120px', height: '120px', borderRadius: '8px', marginBottom: '0.75rem', border: '1px solid rgba(45,90,61,.12)', ...ov };
+                        })()}
+                      />
+                    ) : (
+                      <div style={{ width: '120px', height: '120px', borderRadius: '8px', marginBottom: '0.75rem', background: 'var(--green-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(45,90,61,.12)' }}>
+                        <svg viewBox="0 0 100 100" width="56" height="56" fill="rgba(245,240,232,.35)">
+                          <circle cx="50" cy="35" r="20" />
+                          <ellipse cx="50" cy="85" rx="32" ry="25" />
+                        </svg>
+                      </div>
+                    )}
                     <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: '#c9a84c', marginBottom: '4px' }}>{o.role}</div>
                     <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '15px', fontWeight: 500, color: 'var(--green-deep)' }}>{o.name}</div>
                   </div>

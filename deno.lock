@@ -11,6 +11,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@paypal/react-paypal-js@^9.2.0",
         "npm:@stripe/react-stripe-js@^6.3.0",
         "npm:@stripe/stripe-js@^9.5.0",
         "npm:@supabase/ssr@latest",
@@ -21,6 +22,7 @@
         "npm:autoprefixer@latest",
         "npm:eslint-config-next@latest",
         "npm:eslint@latest",
+        "npm:jspdf@^4.2.1",
         "npm:lucide-react@latest",
         "npm:next@latest",
         "npm:page-flip@^2.0.7",

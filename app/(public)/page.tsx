@@ -1,10 +1,22 @@
-'use client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
-const TICKER_TEXT =
+export const revalidate = 60;
+
+const TICKER_FALLBACK =
   'Season 2026 ·  25th April to early October  ✶  Playing Membership £215 · Joining Fee £100  ✶  Wednesday nights 6–8pm open to all  ✶  International Day 28 June · Guests Welcome  ';
 
-export default function LandingPage() {
-  const doubled = TICKER_TEXT + TICKER_TEXT;
+export default async function LandingPage() {
+  const { data: rows } = await supabaseAdmin
+    .from('ticker_messages')
+    .select('message')
+    .eq('active', true)
+    .order('sort_order');
+
+  const tickerText = rows && rows.length > 0
+    ? rows.map((r) => r.message).join('  ✶  ') + '  '
+    : TICKER_FALLBACK;
+
+  const doubled = tickerText + tickerText;
 
   return (
     <main

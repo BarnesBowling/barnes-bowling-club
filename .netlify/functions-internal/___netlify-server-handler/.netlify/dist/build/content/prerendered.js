@@ -182,17 +182,29 @@ var routeToFilePath = (path) => {
   }
   return `/${path}`;
 };
-var buildPagesCacheValue = async (path, initialRevalidateSeconds, shouldUseEnumKind, shouldSkipJson = false) => ({
+function prerenderManifestRouteToRevalidateAndCacheControlProperties(prerenderManifestRoute) {
+  if (!prerenderManifestRoute) {
+    return {};
+  }
+  return {
+    revalidate: prerenderManifestRoute.initialRevalidateSeconds,
+    cacheControl: prerenderManifestRoute.initialRevalidateSeconds ? {
+      revalidate: prerenderManifestRoute.initialRevalidateSeconds,
+      expire: typeof prerenderManifestRoute.initialExpireSeconds === "number" ? prerenderManifestRoute.initialExpireSeconds + (prerenderManifestRoute.initialExpireSeconds === prerenderManifestRoute.initialRevalidateSeconds ? 31536e6 : 0) : void 0
+    } : void 0
+  };
+}
+var buildPagesCacheValue = async (path, prerenderManifestRoute, shouldUseEnumKind, shouldSkipJson = false) => ({
   kind: shouldUseEnumKind ? "PAGES" : "PAGE",
   html: await readFile(`${path}.html`, "utf-8"),
   pageData: shouldSkipJson ? {} : JSON.parse(await readFile(`${path}.json`, "utf-8")),
   headers: void 0,
   status: void 0,
-  revalidate: initialRevalidateSeconds
+  ...prerenderManifestRouteToRevalidateAndCacheControlProperties(prerenderManifestRoute)
 });
 var RSC_SEGMENTS_DIR_SUFFIX = ".segments";
 var RSC_SEGMENT_SUFFIX = ".segment.rsc";
-var buildAppCacheValue = async (path, shouldUseAppPageKind, rscIsRequired = true) => {
+var buildAppCacheValue = async (path, prerenderManifestRoute, shouldUseAppPageKind, rscIsRequired = true) => {
   const meta = JSON.parse(await readFile(`${path}.meta`, "utf-8"));
   const html = await readFile(`${path}.html`, "utf-8");
   if (shouldUseAppPageKind) {
@@ -219,7 +231,8 @@ var buildAppCacheValue = async (path, shouldUseAppPageKind, rscIsRequired = true
         return void 0;
       }),
       segmentData,
-      ...meta
+      ...meta,
+      ...prerenderManifestRouteToRevalidateAndCacheControlProperties(prerenderManifestRoute)
     };
   }
   const rsc = await readFile(`${path}.rsc`, "utf-8").catch(
@@ -232,19 +245,26 @@ var buildAppCacheValue = async (path, shouldUseAppPageKind, rscIsRequired = true
     kind: "PAGE",
     html,
     pageData: rsc,
-    ...meta
+    ...meta,
+    ...prerenderManifestRouteToRevalidateAndCacheControlProperties(prerenderManifestRoute)
   };
 };
-var buildRouteCacheValue = async (path, initialRevalidateSeconds, shouldUseEnumKind) => ({
+var buildRouteCacheValue = async (path, prerenderManifestRoute, shouldUseEnumKind) => ({
   kind: shouldUseEnumKind ? "APP_ROUTE" : "ROUTE",
   body: await readFile(`${path}.body`, "base64"),
   ...JSON.parse(await readFile(`${path}.meta`, "utf-8")),
-  revalidate: initialRevalidateSeconds
+  ...prerenderManifestRouteToRevalidateAndCacheControlProperties(prerenderManifestRoute)
 });
-var buildFetchCacheValue = async (path) => ({
-  kind: "FETCH",
-  ...JSON.parse(await readFile(path, "utf-8"))
-});
+var buildFetchCacheValue = async (path) => {
+  const data = JSON.parse(await readFile(path, "utf-8"));
+  return {
+    value: {
+      kind: "FETCH",
+      ...data
+    },
+    lastModified: Date.now() - (data?.revalidate ?? 31536e6)
+  };
+};
 var copyPrerenderedContent = async (ctx) => {
   return tracer.withActiveSpan("copyPrerenderedContent", async () => {
     try {
@@ -260,38 +280,39 @@ var copyPrerenderedContent = async (ctx) => {
       let appRouterNotFoundDefinedInPrerenderManifest = false;
       await Promise.all([
         ...Object.entries(manifest.routes).map(
-          ([route, meta]) => limitConcurrentPrerenderContentHandling(async () => {
-            const lastModified = meta.initialRevalidateSeconds ? Date.now() - 31536e6 : Date.now();
+          ([route, prerenderManifestRoute]) => limitConcurrentPrerenderContentHandling(async () => {
+            const lastModified = prerenderManifestRoute.initialRevalidateSeconds ? Date.now() - prerenderManifestRoute.initialRevalidateSeconds * 1e3 : Date.now();
             const key = routeToFilePath(route);
             let value;
             switch (true) {
               // Parallel route default layout has no prerendered page
-              case (meta.dataRoute?.endsWith("/default.rsc") && !existsSync(join(ctx.publishDir, "server/app", `${key}.html`))):
+              case (prerenderManifestRoute.dataRoute?.endsWith("/default.rsc") && !existsSync(join(ctx.publishDir, "server/app", `${key}.html`))):
                 return;
-              case meta.dataRoute?.endsWith(".json"):
+              case prerenderManifestRoute.dataRoute?.endsWith(".json"):
                 if (manifest.notFoundRoutes.includes(route)) {
                   return;
                 }
                 value = await buildPagesCacheValue(
                   join(ctx.publishDir, "server/pages", key),
-                  meta.initialRevalidateSeconds,
+                  prerenderManifestRoute,
                   shouldUseEnumKind
                 );
                 break;
-              case meta.dataRoute?.endsWith(".rsc"):
+              case prerenderManifestRoute.dataRoute?.endsWith(".rsc"):
                 value = await buildAppCacheValue(
                   join(ctx.publishDir, "server/app", key),
+                  prerenderManifestRoute,
                   shouldUseAppPageKind,
-                  meta.renderingMode !== "PARTIALLY_STATIC"
+                  prerenderManifestRoute.renderingMode !== "PARTIALLY_STATIC"
                 );
                 if (route === "/_not-found") {
                   appRouterNotFoundDefinedInPrerenderManifest = true;
                 }
                 break;
-              case meta.dataRoute === null:
+              case prerenderManifestRoute.dataRoute === null:
                 value = await buildRouteCacheValue(
                   join(ctx.publishDir, "server/app", key),
-                  meta.initialRevalidateSeconds,
+                  prerenderManifestRoute,
                   shouldUseEnumKind
                 );
                 break;
@@ -322,6 +343,7 @@ var copyPrerenderedContent = async (ctx) => {
             const key = routeToFilePath(route);
             const value = await buildAppCacheValue(
               join(ctx.publishDir, "server/app", key),
+              void 0,
               shouldUseAppPageKind,
               // shells always have `renderingMode === 'PARTIALLY_STATIC'`
               false
@@ -335,6 +357,7 @@ var copyPrerenderedContent = async (ctx) => {
         const key = "/404";
         const value = await buildAppCacheValue(
           join(ctx.publishDir, "server/app/_not-found"),
+          void 0,
           shouldUseAppPageKind
         );
         await writeCacheEntry(key, value, lastModified, ctx);
@@ -352,9 +375,8 @@ var copyFetchContent = async (ctx) => {
     });
     await Promise.all(
       paths.map(async (key) => {
-        const lastModified = Date.now() - 31536e6;
         const path = join(ctx.publishDir, "cache/fetch-cache", key);
-        const value = await buildFetchCacheValue(path);
+        const { value, lastModified } = await buildFetchCacheValue(path);
         await writeCacheEntry(key, value, lastModified, ctx);
       })
     );

@@ -3,7 +3,7 @@
 // type values: 'bracket' | 'image' | 'pdf' | 'round-robin'
 // For bracket type, populate rounds[]. For round-robin, populate players[]. For image/pdf, set src.
 
-export type Competition = 'cup' | 'shield' | 'pairs' | 'manser';
+export type Competition = 'cup' | 'shield' | 'pairs' | 'manser' | 'plus_cup' | 'ladies_day';
 
 export type MatchResult = {
   competition_slug: string;
@@ -37,6 +37,7 @@ export interface CompetitionSheet {
   src?: string;
   rules?: string;
   note?: string;
+  slug?: string;           // explicit DB competition_slug when it differs from id/competition
   rounds?: BracketRound[];
   players?: string[];
   initialScores?: Record<string, string>;
@@ -68,7 +69,7 @@ export const competitionSheets: CompetitionSheet[] = [
           { player1: 'Gerry Summers',       player2: 'Judith Heaton'    },
           { player1: 'Venina Rees',          player2: 'Roger Ford'      },
           { player1: 'Brian Evans',         player2: 'Hayley Steedman'  },
-          { player1: "Jim O'Neill",         player2: 'Ginette Grimes'   },
+          { player1: "Jim O'Neill",         player2: 'Ginnette Grimes'  },
           { player1: 'Brian Coles',         player2: 'Mark Hunter'      },
           { player1: 'Rupert Warburton',    player2: 'Phil Thompson'    },
           { player1: 'Fausto More',         player2: 'Jeremy Frearson'  },
@@ -98,7 +99,7 @@ export const competitionSheets: CompetitionSheet[] = [
         deadline: 'By July 7th',
         matches: [
           { player1: 'Andrew Cleven',       player2: 'Gareth Ballance'   },
-          { player1: 'Phil Thompson',       player2: 'Ginette Grimes'    },
+          { player1: 'Phil Thompson',       player2: 'Ginnette Grimes'   },
           { player1: 'Danny Peel',          player2: "Jim O'Neill"       },
           { player1: 'Marisa Talbot',       player2: 'Hayley Steedman'   },
           { player1: 'Tracy Greasley',      player2: 'Catherine Mitrenas'},
@@ -128,44 +129,81 @@ export const competitionSheets: CompetitionSheet[] = [
     competition: 'pairs',
     date: '2026 Season',
     type: 'bracket',
-    rules: 'Rounds 1–3 to 15 Points · Semi-Finals & Final to 21 Points · Half Combined Handicap',
+    rules: 'Rounds 1, 2 & Quarter-Final to 15 Points · Semi-Final & Final to 21 Points · Half Combined Handicap',
     note: 'The first named pair are responsible for contacting their opponents to arrange the match',
     rounds: [
       {
         name: 'Round 1',
         deadline: 'By June 21st',
         matches: [
-          { player1: 'Brian C & Jim',       player2: 'Bernard & Ian'      },
-          { player1: 'Toby & Hayley',       player2: 'Simon D & Andrew F' },
-          { player1: 'Fee & Terry',         player2: 'Tracy & Mark'       },
-          { player1: 'Colin & Fausto',      player2: 'Alaric & Jane'      },
+          { player1: 'Brian C & Jim',   player2: 'Bernard & Ian',      winner: 'player2' },
+          { player1: 'Toby & Hayley',   player2: 'Simon D & Andrew F', winner: 'player2' },
+          { player1: 'Fee & Terry',     player2: 'Tracy & Mark',        winner: 'player2' },
+          { player1: 'Colin & Fausto',  player2: 'Alaric & Peter E',    winner: 'player1' },
         ],
       },
       {
         name: 'Round 2',
         deadline: 'By July 12th',
         matches: [
-          { player1: 'Danny & Phil',         player2: '' },
-          { player1: 'Ed & Jules',           player2: '' },
-          { player1: 'Ginette & Jeff',       player2: '' },
-          { player1: 'Rhona & Adrian',       player2: '' },
-          { player1: 'Catherine & Jon',      player2: '' },
-          { player1: 'Judith & David',       player2: '' },
-          { player1: 'Gerry & Anita',        player2: '' },
-          { player1: 'Venina & Marisa',      player2: '' },
-          { player1: 'Andrew C & Stephanie', player2: '' },
-          { player1: 'Roger F & Maggie',     player2: '' },
-          { player1: 'Annie & Rupert',       player2: '' },
-          { player1: 'Simon C & Philippa',   player2: '' },
-          { player1: '', player2: '', fromPrevRound: 0 },
-          { player1: '', player2: '', fromPrevRound: 1 },
-          { player1: '', player2: '', fromPrevRound: 2 },
-          { player1: '', player2: '', fromPrevRound: 3 },
+          { player1: 'Danny & Phil',         player2: 'Ed & Jules',          winner: 'player1' },
+          { player1: 'Ginnette & Jeff',       player2: 'Rhona & Adrian',      winner: 'player1' },
+          { player1: 'Catherine & Jon',       player2: 'Judith & David',      winner: 'player2' },
+          { player1: 'Gerry & Anita',         player2: 'Venina & Marisa',     winner: 'player1' },
+          { player1: 'Andrew C & Stephanie',  player2: 'Roger F & Maggie',    winner: 'player1' },
+          { player1: 'Annie & Rupert',        player2: 'Simon C & Philippa',  winner: 'player2' },
+          { player1: 'Bernard & Ian',         player2: 'Simon D & Andrew F',  winner: 'player1' },
+          { player1: 'Tracy & Mark',          player2: 'Colin & Fausto',      winner: 'player1' },
         ],
       },
-      { name: 'Round 3',    deadline: 'By Aug 9th',   matches: blank(8) },
-      { name: 'Semi-Finals', deadline: 'By Aug 31st', matches: blank(4) },
-      { name: 'Final',       deadline: 'September',   matches: blank(2) },
+      {
+        name: 'Quarter-Final',
+        deadline: 'By Aug 9th',
+        matches: [
+          { player1: 'Danny & Phil',       player2: 'Ginnette & Jeff'  },
+          { player1: 'Judith & David',     player2: 'Bye'               },
+          { player1: 'Simon C & Philippa', player2: 'Bye'               },
+          { player1: 'Bernard & Ian',      player2: 'Tracy & Mark'      },
+        ],
+      },
+      { name: 'Semi-Final', deadline: 'By Aug 31st', matches: blank(2) },
+      { name: 'Final',      deadline: 'September',   matches: blank(1) },
+    ],
+  },
+
+  {
+    id: 'plus-cup-2026',
+    title: 'The Challenger Plus Cup',
+    competition: 'plus_cup',
+    date: '2026 Season',
+    type: 'round-robin',
+    slug: 'plus-cup',
+    rules: 'Each game scored by accumulated points after 6 ends. For Plus and Scratch handicap players only.',
+    players: [
+      'Ian Livingstone',
+      'Jan Allcorn',
+      'Jeff Black',
+      'Marisa Talbot',
+      'Michael Perkins',
+      "Noel O'Hara",
+    ],
+  },
+
+  {
+    id: 'ladies-day-2026',
+    title: "Ladies' Day",
+    competition: 'ladies_day',
+    date: '2026 Season',
+    type: 'round-robin',
+    slug: 'ladies-day',
+    rules: 'No handicap. Score based on 6 ends played. Average score across all games.',
+    players: [
+      'Venina',
+      'Julia',
+      'Rhona',
+      'Marisa',
+      'Jan',
+      'Catherine',
     ],
   },
 
@@ -181,7 +219,9 @@ export const competitionSheets: CompetitionSheet[] = [
       'Alaric', 'Brian Coles', 'David Priestley', 'Ginnette Grimes',
       "Jim O'Neill", 'Judith Heaton', 'Rhona', 'Venina',
       'Andrew', 'Bernard O', 'Catherine M', "Noel O'Hara",
-      'Fee Power', 'Lucas Papa',
+      'Fee Power', 'Luke',
+      'Toby S', 'Peter S', 'Jon', 'Elena',
+      'Fausto', 'James L', 'Gordon', 'James B', 'Adrian',
     ],
     initialScores: {
       '0:1': '1',   // Andrew Fox → Mark Hunter

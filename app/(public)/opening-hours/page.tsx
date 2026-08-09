@@ -55,13 +55,13 @@ export default function OpeningHours() {
 
                 <section style={{ marginBottom: '2.5rem' }}>
                   <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '28px', fontWeight: 700, color: 'var(--green-deep)', marginBottom: '1rem' }}>
-                    Wednesday Roll Ups
+                    Wednesday Club Nights
                   </h2>
                   <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', color: 'var(--green-deep)', lineHeight: 1.8, margin: '0 0 0.75rem' }}>
                     <strong>Every Wednesday, 6–8pm — Club Night.</strong>
                   </p>
                   <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', color: 'var(--green-deep)', lineHeight: 1.8, margin: '0 0 0.75rem' }}>
-                    Every Wednesday from 6–8pm, we open the green to anyone over 16 who wants to try their hand. Bring flat-soled shoes and a willingness to have a go — that&apos;s it.
+                    Every Wednesday from 6–8pm, we open the green to anyone over 18 who wants to try their hand. Bring flat-soled shoes and a willingness to have a go — that&apos;s it.
                   </p>
                   <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', color: 'var(--green-deep)', lineHeight: 1.8, margin: 0 }}>
                     The BBQ is usually fired up, drinks are usually flowing, and it&apos;s the perfect way to meet our members in a relaxed setting.

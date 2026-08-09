@@ -3,12 +3,6 @@
 import { useState } from 'react';
 import type { MatchResult } from '@/data/competition-sheets';
 
-const CELL = 30;
-const NAME_W = 148;
-const NUM_W  = 26;
-const TOTAL_W = 48;
-const HEADER_H = 160;
-
 function norm(s: string) {
   return s.toLowerCase().replace(/\s+/g, ' ').trim();
 }
@@ -38,15 +32,38 @@ function rowTotal(scores: Record<string, string>, ri: number, n: number): number
   return total;
 }
 
+function rowAverage(scores: Record<string, string>, ri: number, n: number): string {
+  let total = 0;
+  let played = 0;
+  for (let ci = 0; ci < n; ci++) {
+    if (ci === ri) continue;
+    const v = parseInt(scores[`${ri}:${ci}`] ?? '', 10);
+    if (!isNaN(v)) { total += v; played++; }
+  }
+  return played === 0 ? '—' : (total / played).toFixed(1);
+}
+
 interface Props {
   players: string[];
   rules?: string;
   results: MatchResult[];
+  scale?: number;
+  showAverage?: boolean;
 }
 
-export function ManserRoundRobinGrid({ players, rules, results }: Props) {
+export function ManserRoundRobinGrid({ players, rules, results, scale = 1, showAverage = false }: Props) {
   const [scores, setScores] = useState<Record<string, string>>(() => buildLiveScores(players, results));
   const n = players.length;
+
+  const CELL     = Math.round(30 * scale);
+  const NAME_W   = Math.round(148 * scale);
+  const NUM_W    = Math.round(26 * scale);
+  const TOTAL_W  = Math.round(48 * scale);
+  const HEADER_H = Math.round(160 * scale);
+
+  const fs10 = `${Math.round(10 * scale)}px`;
+  const fs11 = `${Math.round(11 * scale)}px`;
+  const fs12 = `${Math.round(12 * scale)}px`;
 
   function cellKey(r: number, c: number) { return `${r}:${c}`; }
 
@@ -57,7 +74,7 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
           <span style={{
             fontFamily: "'DM Sans', sans-serif",
-            fontSize: '11px',
+            fontSize: fs11,
             color: 'var(--text-muted)',
             letterSpacing: '.04em',
           }}>
@@ -91,7 +108,7 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
                   transform: 'rotate(180deg)',
                   whiteSpace: 'nowrap',
                   fontFamily: "'DM Sans', sans-serif",
-                  fontSize: '10px',
+                  fontSize: fs10,
                   fontWeight: 600,
                   color: 'var(--green-deep, #2D5A3D)',
                   lineHeight: 1,
@@ -102,7 +119,7 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
                 </div>
               </th>
             ))}
-            {/* Total column header */}
+            {/* Total / Average column header */}
             <th style={{
               width: TOTAL_W,
               minWidth: TOTAL_W,
@@ -118,13 +135,13 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
                 transform: 'rotate(180deg)',
                 whiteSpace: 'nowrap',
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: '10px',
+                fontSize: fs10,
                 fontWeight: 700,
                 color: 'var(--gold, #C9A84C)',
                 lineHeight: 1,
                 display: 'inline-block',
               }}>
-                Total
+                {showAverage ? 'Average Score' : 'Total'}
               </div>
             </th>
           </tr>
@@ -138,7 +155,7 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
                 textAlign: 'right',
                 paddingRight: '5px',
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: '10px',
+                fontSize: fs10,
                 fontWeight: 600,
                 color: 'rgba(45,90,61,.45)',
                 whiteSpace: 'nowrap',
@@ -151,7 +168,7 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
                 width: NAME_W,
                 paddingRight: '10px',
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: '11px',
+                fontSize: fs11,
                 fontWeight: 500,
                 color: 'var(--text-dark, #272727)',
                 whiteSpace: 'nowrap',
@@ -190,7 +207,7 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
                           background: 'transparent',
                           textAlign: 'center',
                           fontFamily: "'DM Sans', sans-serif",
-                          fontSize: '11px',
+                          fontSize: fs11,
                           color: 'var(--text-dark, #272727)',
                           padding: 0,
                           cursor: 'text',
@@ -201,21 +218,21 @@ export function ManserRoundRobinGrid({ players, rules, results }: Props) {
                   </td>
                 );
               })}
-              {/* Total cell */}
+              {/* Total / Average cell */}
               <td style={{
                 width: TOTAL_W,
                 height: CELL,
                 padding: '0 6px',
                 textAlign: 'center',
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: '12px',
+                fontSize: fs12,
                 fontWeight: 700,
                 color: 'var(--gold, #C9A84C)',
                 borderLeft: '2px solid rgba(201,168,76,.3)',
                 background: 'rgba(201,168,76,.05)',
                 whiteSpace: 'nowrap',
               }}>
-                {rowTotal(scores, ri, n)}
+                {showAverage ? rowAverage(scores, ri, n) : rowTotal(scores, ri, n)}
               </td>
             </tr>
           ))}

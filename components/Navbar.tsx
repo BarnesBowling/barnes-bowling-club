@@ -12,9 +12,10 @@ const SEARCH_PAGES = [
   { title: 'Gallery',               href: '/gallery',             keywords: 'gallery photos photography pictures images club' },
   { title: 'News',                  href: '/news',                keywords: 'news updates announcements newsletter latest' },
   { title: 'Community',             href: '/community',           keywords: 'community local barnes residents neighbours' },
+  { title: 'Corporate Hire',        href: '/corporate-hire',      keywords: 'corporate hire private events team days client entertaining venue green' },
   { title: 'Contact',               href: '/contact',             keywords: 'contact get in touch email address phone' },
   { title: 'Membership',            href: '/membership',          keywords: 'membership join subscribe fee playing member annual' },
-  { title: 'Wednesday Roll-ups',    href: '/roll-ups',            keywords: 'roll ups wednesday beginners try experience visitors taster' },
+  { title: 'Wednesday Club Nights',  href: '/roll-ups',            keywords: 'roll ups wednesday beginners try experience visitors taster' },
   { title: 'Membership Enquiry',     href: '/apply',               keywords: 'apply enquiry membership enquire interested joining' },
   { title: 'Membership Application', href: '/membership-application', keywords: 'membership application form apply join formal' },
   { title: 'Opening Hours',         href: '/opening-hours',       keywords: 'opening hours visit season winter daily hours green' },
@@ -31,6 +32,7 @@ const KEYWORD_ROUTES: { keywords: string[]; href: string }[] = [
   { keywords: ['results', 'leaderboard', 'scores', 'winners', 'standings', 'manser leaderboard', 'match results'], href: '/members/results' },
   { keywords: ['news', 'newsletter'],                                         href: '/news' },
   { keywords: ['community'],                                                  href: '/community' },
+  { keywords: ['corporate hire', 'corporate', 'private hire', 'venue hire'], href: '/corporate-hire' },
   { keywords: ['opening hours', 'hours', 'season', 'winter meet'],           href: '/opening-hours' },
   { keywords: ['contact', 'visit', 'location', 'address'],                   href: '/contact' },
   { keywords: ['membership', 'join', 'apply'],                               href: '/apply' },
@@ -67,7 +69,7 @@ const MEMBERSHIP_LINKS = [
 
 const ABOUT_US_LINKS = [
   { href: '/history',           label: 'History' },
-  { href: '/general-committee', label: 'General Committee' },
+  { href: '/general-committee', label: 'Committee' },
   { href: '/opening-hours',     label: 'Opening Hours' },
   { href: '/contact',           label: 'Contact Us' },
 ];
@@ -231,6 +233,7 @@ export function Navbar() {
               </div>
             </div>
             <Link href="/community">Community</Link>
+            <Link href="/corporate-hire">Corporate Hire</Link>
             <Link href="/contact">Contact</Link>
           </div>
 
@@ -302,8 +305,9 @@ export function Navbar() {
           {MEMBERSHIP_LINKS.map(l => (
             <a key={l.href + l.label} href={l.href} className="nav-mobile-sub-link" onClick={() => setMenuOpen(false)}>{l.label}</a>
           ))}
-          <a href="/community" className="nav-mobile-link" onClick={() => setMenuOpen(false)}>Community</a>
-          <a href="/contact"   className="nav-mobile-link" onClick={() => setMenuOpen(false)}>Contact</a>
+          <a href="/community"      className="nav-mobile-link" onClick={() => setMenuOpen(false)}>Community</a>
+          <a href="/corporate-hire" className="nav-mobile-link" onClick={() => setMenuOpen(false)}>Corporate Hire</a>
+          <a href="/contact"        className="nav-mobile-link" onClick={() => setMenuOpen(false)}>Contact</a>
 
           <div className="nav-mobile-bottom">
             <Link className="nav-members-btn" href="/members/dashboard" onClick={() => setMenuOpen(false)}>

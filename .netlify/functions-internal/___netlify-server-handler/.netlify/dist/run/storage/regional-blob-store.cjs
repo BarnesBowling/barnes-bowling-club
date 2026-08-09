@@ -44,7 +44,7 @@ var getEnvironment = () => {
   };
 };
 
-// node_modules/@netlify/otel/dist/main.js
+// node_modules/@netlify/blobs/node_modules/@netlify/otel/dist/main.js
 var GET_TRACER = "__netlify__getTracer";
 var getTracer = (name, version) => {
   return globalThis[GET_TRACER]?.(name, version);

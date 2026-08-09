@@ -73,6 +73,13 @@ export function ResultsNavDropdown() {
             Results
           </a>
           <a
+            href="/members/results#leaderboard"
+            onClick={() => setOpen(false)}
+            style={{ ...linkStyle, border: 'none', borderBottom: '1px solid rgba(45,90,61,.08)', padding: '10px 14px' }}
+          >
+            Leaderboard
+          </a>
+          <a
             href="/members/competition-sheets"
             onClick={() => setOpen(false)}
             style={{ ...linkStyle, border: 'none', padding: '10px 14px' }}

@@ -118,6 +118,13 @@ export function SheetBracketView({ sheet, results }: Props) {
     if (nextRound) {
       const target = nextRound.matches.findIndex(m => m.fromPrevRound === matchIndex);
       if (target !== -1) return slotY(target, nextRound.matches.length);
+      // Bottom-align when current round has fewer matches than next (bye-entry: Pairs R1→R2).
+      // Offset so R1[0]↔R2[4], R1[1]↔R2[5], etc.
+      const currCount = rounds[roundIndex].matches.length;
+      const nextCount = nextRound.matches.length;
+      if (currCount < nextCount) {
+        return slotY(nextCount - currCount + matchIndex, nextCount);
+      }
     }
     return slotY(matchIndex, rounds[roundIndex].matches.length);
   }
@@ -199,6 +206,7 @@ export function SheetBracketView({ sheet, results }: Props) {
                   p2Won = result.winner_side === (isP1SideA ? 'b' : 'a');
                 }
 
+                const isBye = match.player2 === 'Bye';
                 return (
                   <g key={`box-${ri}-${mi}`}>
                     <rect
@@ -209,13 +217,15 @@ export function SheetBracketView({ sheet, results }: Props) {
                       filter="drop-shadow(2px 2px 3px rgba(0,0,0,0.10))"
                       rx="2"
                     />
-                    <line
-                      x1={x + 8} y1={y + BOX_H / 2}
-                      x2={x + BOX_W - 8} y2={y + BOX_H / 2}
-                      stroke="rgba(201,168,76,0.3)" strokeWidth="0.75"
-                    />
+                    {!isBye && (
+                      <line
+                        x1={x + 8} y1={y + BOX_H / 2}
+                        x2={x + BOX_W - 8} y2={y + BOX_H / 2}
+                        stroke="rgba(201,168,76,0.3)" strokeWidth="0.75"
+                      />
+                    )}
                     <text
-                      x={x + 10} y={y + BOX_H / 2 - 6}
+                      x={x + 10} y={isBye ? y + BOX_H / 2 + 5 : y + BOX_H / 2 - 6}
                       fontFamily="'Libre Baskerville', serif"
                       fontSize="11"
                       fill={p1Won ? GOLD : 'var(--green-deep, #2D5A3D)'}
@@ -224,16 +234,30 @@ export function SheetBracketView({ sheet, results }: Props) {
                     >
                       {match.player1 || '—'}
                     </text>
-                    <text
-                      x={x + 10} y={y + BOX_H / 2 + 16}
-                      fontFamily="'Libre Baskerville', serif"
-                      fontSize="11"
-                      fill={p2Won ? GOLD : 'var(--green-deep, #2D5A3D)'}
-                      fontWeight={p2Won ? '700' : '400'}
-                      clipPath={`url(#clip-${ri}-${mi})`}
-                    >
-                      {match.player2 || '—'}
-                    </text>
+                    {isBye ? (
+                      <text
+                        x={x + BOX_W - 10} y={y + BOX_H / 2 + 5}
+                        textAnchor="end"
+                        fontFamily="'DM Sans', sans-serif"
+                        fontSize="9"
+                        fontWeight="700"
+                        fill="var(--text-muted, #aaa)"
+                        letterSpacing="1"
+                      >
+                        BYE
+                      </text>
+                    ) : (
+                      <text
+                        x={x + 10} y={y + BOX_H / 2 + 16}
+                        fontFamily="'Libre Baskerville', serif"
+                        fontSize="11"
+                        fill={p2Won ? GOLD : 'var(--green-deep, #2D5A3D)'}
+                        fontWeight={p2Won ? '700' : '400'}
+                        clipPath={`url(#clip-${ri}-${mi})`}
+                      >
+                        {match.player2 || '—'}
+                      </text>
+                    )}
                     {p1Score !== null && (
                       <text
                         x={x + BOX_W - 10} y={y + BOX_H / 2 - 6}
@@ -300,6 +324,53 @@ export function SheetBracketView({ sheet, results }: Props) {
           }
 
           const matchCount = round.matches.length;
+
+          // Bye-entry structure: R1 has fewer matches than R2 (some pairs sit out R1).
+          // Draw direct lines from each R1 winner's box half to the correct R2 box half,
+          // found by matching the winner's name against R2 player slots.
+          if (matchCount < nextMatchCount) {
+            const winnerLines = round.matches.reduce<{ fromY: number; toY: number }[]>(
+              (acc, m, mi) => {
+                const winnerName =
+                  m.winner === 'player1' ? m.player1 :
+                  m.winner === 'player2' ? m.player2 : null;
+                if (!winnerName) return acc;
+                const nw = norm(winnerName);
+                for (let r2mi = 0; r2mi < nextRound.matches.length; r2mi++) {
+                  const r2m = nextRound.matches[r2mi];
+                  const np1 = norm(r2m.player1);
+                  const np2 = norm(r2m.player2);
+                  const inP1 = !!np1 && (np1.includes(nw) || nw.includes(np1));
+                  const inP2 = !!np2 && np2 !== 'bye' && (np2.includes(nw) || nw.includes(np2));
+                  if (inP1 || inP2) {
+                    const fromY =
+                      m.winner === 'player1' ? boxY(ri, mi) + BOX_H / 4 :
+                      m.winner === 'player2' ? boxY(ri, mi) + 3 * BOX_H / 4 :
+                      boxY(ri, mi) + BOX_H / 2;
+                    const toY = slotY(r2mi, nextMatchCount) + (inP1 ? BOX_H / 4 : 3 * BOX_H / 4);
+                    acc.push({ fromY, toY });
+                    break;
+                  }
+                }
+                return acc;
+              },
+              [],
+            );
+            if (winnerLines.length > 0) {
+              return (
+                <g key={`connectors-${ri}`}>
+                  {winnerLines.map(({ fromY, toY }, idx) => (
+                    <line
+                      key={`conn-winner-${ri}-${idx}`}
+                      x1={rightX} y1={fromY} x2={nextX} y2={toY}
+                      stroke={GOLD} strokeWidth={LINE_W}
+                    />
+                  ))}
+                </g>
+              );
+            }
+          }
+
           return (
             <g key={`connectors-${ri}`}>
               {Array.from({ length: Math.ceil(matchCount / 2) }, (_, pairIdx) => {

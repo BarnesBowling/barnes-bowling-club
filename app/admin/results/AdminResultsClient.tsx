@@ -72,15 +72,15 @@ const MEMBERS_2026 = [...MEMBERS]
   .filter(m => m.h[2026] !== undefined)
   .sort((a, b) => a.surname.localeCompare(b.surname));
 
-/** Plus players (h >= 0), sorted highest plus first (descending) */
+/** Plus players (h >= 0), sorted by surname */
 const PLUS_MEMBERS = [...MEMBERS]
   .filter(m => m.h[2026] !== undefined && (m.h[2026] as number) >= 0)
-  .sort((a, b) => (b.h[2026] as number) - (a.h[2026] as number));
+  .sort((a, b) => a.surname.localeCompare(b.surname));
 
-/** Minus players (h <= 0), sorted most minus first (ascending) */
+/** Minus players (h <= 0), sorted by surname */
 const MINUS_MEMBERS = [...MEMBERS]
   .filter(m => m.h[2026] !== undefined && (m.h[2026] as number) <= 0)
-  .sort((a, b) => (a.h[2026] as number) - (b.h[2026] as number));
+  .sort((a, b) => a.surname.localeCompare(b.surname));
 
 function formatDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00');
@@ -374,17 +374,22 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
     };
 
     startMatchTransition(async () => {
-      try {
-        if (editMatch) {
-          await updateMatch(editMatch.id, payload);
-          setMatchMsg({ ok: true, text: 'Match updated successfully.' });
+      if (editMatch) {
+        const result = await updateMatch(editMatch.id, payload);
+        if (result.error) {
+          setMatchMsg({ ok: false, text: result.error });
         } else {
-          await addMatch(payload);
-          setMatchMsg({ ok: true, text: 'Result saved successfully.' });
+          setMatchMsg({ ok: true, text: 'Match updated successfully.' });
+          resetMatchForm();
         }
-        resetMatchForm();
-      } catch (err: unknown) {
-        setMatchMsg({ ok: false, text: err instanceof Error ? err.message : 'An error occurred.' });
+      } else {
+        const result = await addMatch(payload);
+        if (result.error) {
+          setMatchMsg({ ok: false, text: result.error });
+        } else {
+          setMatchMsg({ ok: true, text: 'Result saved successfully.' });
+          resetMatchForm();
+        }
       }
     });
   }
@@ -394,18 +399,18 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
     e.preventDefault();
     if (combinedHcp === null || teamHcp === null) return;
     startPairTransition(async () => {
-      try {
-        await addPairTeam({
-          playerA: pairPlayerA,
-          playerB: pairPlayerB,
-          combinedHandicap: combinedHcp,
-          teamHandicap: teamHcp,
-        });
+      const result = await addPairTeam({
+        playerA: pairPlayerA,
+        playerB: pairPlayerB,
+        combinedHandicap: combinedHcp,
+        teamHandicap: teamHcp,
+      });
+      if (result.error) {
+        setPairMsg({ ok: false, text: result.error });
+      } else {
         setPairMsg({ ok: true, text: 'Pair team registered.' });
         setPairPlayerA('');
         setPairPlayerB('');
-      } catch (err: unknown) {
-        setPairMsg({ ok: false, text: err instanceof Error ? err.message : 'An error occurred.' });
       }
     });
   }
@@ -414,10 +419,9 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
   function handleDeleteMatch(id: string) {
     if (!confirm('Delete this match result? This cannot be undone.')) return;
     startMatchTransition(async () => {
-      try {
-        await deleteMatch(id);
-      } catch {
-        // silently ignore
+      const result = await deleteMatch(id);
+      if (result.error) {
+        setMatchMsg({ ok: false, text: result.error });
       }
     });
   }
@@ -426,11 +430,11 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
   function handleDeletePair(id: string) {
     if (!confirm('Delete this pair team?')) return;
     startPairTransition(async () => {
-      try {
-        await deletePairTeam(id);
+      const result = await deletePairTeam(id);
+      if (result.error) {
+        setPairMsg({ ok: false, text: result.error });
+      } else {
         setPairMsg({ ok: true, text: 'Pair deleted.' });
-      } catch (err: unknown) {
-        setPairMsg({ ok: false, text: err instanceof Error ? err.message : 'An error occurred.' });
       }
     });
   }
@@ -537,7 +541,7 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
                   <option value="">Select player…</option>
                   {MEMBERS_2026.map(m => {
                     const name = `${m.firstname} ${m.surname}`;
-                    return <option key={name} value={name}>{name}</option>;
+                    return <option key={name} value={name}>{m.surname}, {m.firstname}</option>;
                   })}
                 </select>
               )}
@@ -566,7 +570,7 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
                   <option value="">Select player…</option>
                   {MEMBERS_2026.map(m => {
                     const name = `${m.firstname} ${m.surname}`;
-                    return <option key={name} value={name}>{name}</option>;
+                    return <option key={name} value={name}>{m.surname}, {m.firstname}</option>;
                   })}
                 </select>
               )}
@@ -659,7 +663,7 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
                   <option value="">Select player A…</option>
                   {PLUS_MEMBERS.map(m => {
                     const name = `${m.firstname} ${m.surname}`;
-                    return <option key={name} value={name}>{name} ({fmtHcp(m.h[2026] as number)})</option>;
+                    return <option key={name} value={name}>{m.surname}, {m.firstname} ({fmtHcp(m.h[2026] as number)})</option>;
                   })}
                 </select>
               </div>
@@ -669,7 +673,7 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
                   <option value="">Select player B…</option>
                   {MINUS_MEMBERS.map(m => {
                     const name = `${m.firstname} ${m.surname}`;
-                    return <option key={name} value={name}>{name} ({fmtHcp(m.h[2026] as number)})</option>;
+                    return <option key={name} value={name}>{m.surname}, {m.firstname} ({fmtHcp(m.h[2026] as number)})</option>;
                   })}
                 </select>
               </div>

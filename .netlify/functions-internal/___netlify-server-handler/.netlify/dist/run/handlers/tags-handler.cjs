@@ -28,9 +28,22 @@ __export(tags_handler_exports, {
 module.exports = __toCommonJS(tags_handler_exports);
 
 // node_modules/@netlify/functions/dist/main.js
+var import_async_hooks = require("async_hooks");
 var import_process = require("process");
 var import_stream = require("stream");
 var import_util = require("util");
+var STORE_KEY = /* @__PURE__ */ Symbol.for("@netlify/functions/request-context-store");
+var getOrCreateStore = () => {
+  const globalRef = globalThis;
+  const existing = globalRef[STORE_KEY];
+  if (existing instanceof import_async_hooks.AsyncLocalStorage) {
+    return existing;
+  }
+  const store = new import_async_hooks.AsyncLocalStorage();
+  globalRef[STORE_KEY] = store;
+  return store;
+};
+var contextStore = getOrCreateStore();
 var purgeCache = async (options = {}) => {
   if (globalThis.fetch === void 0) {
     throw new Error(
@@ -86,7 +99,7 @@ var pipeline = (0, import_util.promisify)(import_stream.pipeline);
 
 // package.json
 var name = "@netlify/plugin-nextjs";
-var version = "5.15.11";
+var version = "5.15.13";
 
 // src/run/handlers/tags-handler.cts
 var import_storage = require("../storage/storage.cjs");

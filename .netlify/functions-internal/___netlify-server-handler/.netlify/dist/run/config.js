@@ -26,6 +26,11 @@ var setRunConfig = (config) => {
     incrementalCacheHandlerPath: cacheHandler
   };
   config.cacheHandler = cacheHandler;
+  config.images = {
+    ...config.images,
+    // @ts-expect-error `maximumDiskCacheSize` is not typed in min Next.js config type
+    maximumDiskCacheSize: 0
+  };
   setInMemoryCacheMaxSizeFromNextConfig(
     config.cacheMaxMemorySize ?? config.experimental?.isrMemoryCacheSize
   );

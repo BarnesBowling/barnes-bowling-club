@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { addClubMember, updateClubMember, deleteClubMember, inviteClubMember } from './actions';
+import { addClubMember, updateClubMember, deleteClubMember, inviteClubMember, savePhotoId, clearMemberPhoto, checkMemberHasLedger } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -16,6 +16,7 @@ export type ClubMember = {
   notes: string | null;
   created_at: string;
   auth_user_id: string | null;
+  photo_id_filename?: string | null;
 };
 
 type MemberPayload = {
@@ -48,6 +49,21 @@ function fmtHcp(n: number): string {
 function fmtDate(iso: string | null): string {
   if (!iso) return '—';
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// BBC + first initial of first name + first initial of surname + next consecutive number
+function generateMembershipNumber(name: string, existingMembers: ClubMember[]): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return '';
+  const firstInitial = parts[0][0].toUpperCase();
+  const surnameInitial = parts[parts.length - 1][0].toUpperCase();
+  let maxNum = 0;
+  for (const m of existingMembers) {
+    if (!m.membership_number) continue;
+    const digits = m.membership_number.replace(/\D/g, '');
+    if (digits) maxNum = Math.max(maxNum, parseInt(digits, 10));
+  }
+  return `BBC${firstInitial}${surnameInitial}${maxNum + 1}`;
 }
 
 const EMPTY: MemberPayload = {
@@ -136,6 +152,157 @@ const btnDanger: React.CSSProperties = {
   cursor: 'pointer',
 };
 
+const thStyle: React.CSSProperties = {
+  textAlign: 'left',
+  padding: '10px 12px',
+  fontFamily: "'DM Sans', sans-serif",
+  fontSize: '10px',
+  fontWeight: 600,
+  letterSpacing: '.1em',
+  textTransform: 'uppercase',
+  color: 'var(--text-muted)',
+  borderBottom: '2px solid rgba(45,90,61,.15)',
+  whiteSpace: 'nowrap',
+  verticalAlign: 'top',
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: '11px 12px',
+  fontFamily: "'DM Sans', sans-serif",
+  fontSize: '13px',
+  color: 'var(--text-muted)',
+  borderBottom: '1px solid rgba(45,90,61,.07)',
+  verticalAlign: 'middle',
+};
+
+// ── PhotoCell ─────────────────────────────────────────────────────────────────
+
+function PhotoCell({ memberId, initialFilename, onUpdate }: {
+  memberId: string;
+  initialFilename?: string | null;
+  onUpdate: (id: string, filename: string | null) => void;
+}) {
+  const [inputValue, setInputValue] = useState(initialFilename ?? '');
+  const [savedFilename, setSavedFilename] = useState(initialFilename ?? '');
+  const [saving, startSaveTransition] = useTransition();
+  const [savedOk, setSavedOk] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSavedFilename(initialFilename ?? '');
+    setInputValue(initialFilename ?? '');
+  }, [initialFilename]);
+
+  function handleSave() {
+    setSaveError(null);
+    startSaveTransition(async () => {
+      try {
+        await savePhotoId(memberId, inputValue.trim() || null);
+        const saved = inputValue.trim() || null;
+        setSavedFilename(saved ?? '');
+        onUpdate(memberId, saved);
+        setSavedOk(true);
+        setTimeout(() => setSavedOk(false), 2500);
+      } catch (err) {
+        setSaveError(err instanceof Error ? err.message : 'Save failed');
+      }
+    });
+  }
+
+  function handleDelete() {
+    if (!confirm('Remove this photo ID? This cannot be undone.')) return;
+    setSaveError(null);
+    startSaveTransition(async () => {
+      try {
+        await clearMemberPhoto(memberId);
+        setSavedFilename('');
+        setInputValue('');
+        onUpdate(memberId, null);
+      } catch (err) {
+        setSaveError(err instanceof Error ? err.message : 'Delete failed');
+      }
+    });
+  }
+
+  const thumbSrc = savedFilename.trim() ? `/member-photos/${savedFilename.trim()}` : null;
+
+  return (
+    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', minWidth: '190px' }}>
+      <div style={{
+        width: 50,
+        aspectRatio: '35/45',
+        background: '#e8e8e8',
+        flexShrink: 0,
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1px solid rgba(0,0,0,.1)',
+      }}>
+        {thumbSrc ? (
+          <img src={thumbSrc} alt="ID photo" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        )}
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <input
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          placeholder="e.g. jane-smith.jpg"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          style={{ ...inputStyle, height: '30px', fontSize: '12px' }}
+        />
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              ...btnPrimary,
+              height: '26px',
+              fontSize: '10px',
+              padding: '0 10px',
+              minWidth: 0,
+              opacity: saving ? .65 : 1,
+              background: savedOk ? '#2e7d32' : 'var(--green-mid)',
+            }}
+          >
+            {saving ? '…' : savedOk ? '✓ Saved' : 'Save'}
+          </button>
+          {savedFilename.trim() && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={saving}
+              style={{
+                ...btnDanger,
+                height: '26px',
+                fontSize: '10px',
+                padding: '0 10px',
+                minWidth: 0,
+                opacity: saving ? .65 : 1,
+              }}
+            >
+              Delete
+            </button>
+          )}
+        </div>
+        {saveError && (
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#b91c1c' }}>
+            {saveError}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── StatusBadge ───────────────────────────────────────────────────────────────
 
 function StatusBadge({ status, invited, hasAuth }: { status: string; invited?: boolean; hasAuth?: boolean }) {
@@ -176,29 +343,6 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-// ── Inline text input for edit rows ──────────────────────────────────────────
-
-function CellInput({ value, onChange, type = 'text', style, autoComplete = 'off' }: {
-  value: string | number;
-  onChange: (v: string) => void;
-  type?: string;
-  style?: React.CSSProperties;
-  autoComplete?: string;
-}) {
-  return (
-    <input
-      type={type}
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      autoComplete={autoComplete}
-      autoCorrect="off"
-      autoCapitalize="off"
-      spellCheck={false}
-      style={{ ...inputStyle, height: '34px', fontSize: '13px', ...style }}
-    />
-  );
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function AdminClubMembersClient({ initialMembers }: Props) {
@@ -207,11 +351,12 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<MemberPayload>(EMPTY);
   const [addForm, setAddForm] = useState<MemberPayload>(EMPTY);
+  const [addMemberNumManual, setAddMemberNumManual] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [addPending, startAddTransition] = useTransition();
   const [editPending, startEditTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
-  const [invitePending, setInvitePending] = useState<string | null>(null); // holds id of member being invited
+  const [invitePending, setInvitePending] = useState<string | null>(null);
   const [invitedIds, setInvitedIds] = useState<Set<string>>(
     new Set(initialMembers.filter(m => m.auth_user_id).map(m => m.id))
   );
@@ -272,6 +417,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
         };
         setMembers(prev => sortByName([...prev, newMember]));
         setAddForm(EMPTY);
+        setAddMemberNumManual(false);
         setMsg({ ok: true, text: `${newMember.full_name} added to the roster.` });
       } catch (err: unknown) {
         setMsg({ ok: false, text: err instanceof Error ? err.message : 'Failed to add member.' });
@@ -307,8 +453,15 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
 
   // ── Delete ────────────────────────────────────────────────────────────────
 
-  function handleDelete(id: string, name: string) {
-    if (!confirm(`Remove ${name} from the club roster? This cannot be undone.`)) return;
+  async function handleDelete(id: string, name: string) {
+    let hasLedger = false;
+    try { hasLedger = await checkMemberHasLedger(id); } catch { /* ignore */ }
+
+    const ledgerWarning = hasLedger
+      ? 'This member has transaction records. Deleting will also remove their account history.\n\n'
+      : '';
+    if (!confirm(`${ledgerWarning}Are you sure you want to delete ${name}? This cannot be undone.`)) return;
+
     startDeleteTransition(async () => {
       try {
         await deleteClubMember(id);
@@ -341,7 +494,16 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
     }
   }
 
+  // ── Photo update ──────────────────────────────────────────────────────────
+
+  function handlePhotoUpdate(id: string, filename: string | null) {
+    setMembers(prev => prev.map(m => m.id !== id ? m : { ...m, photo_id_filename: filename }));
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
+
+  const COLS = 8; // Memb. No. | Full Name | Email | Handicap | Status | Joined | Photo ID | Actions
+
   return (
     <div>
 
@@ -371,7 +533,16 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                 required
                 type="text"
                 value={addForm.full_name}
-                onChange={e => setAddForm(f => ({ ...f, full_name: e.target.value }))}
+                onChange={e => {
+                  const newName = e.target.value;
+                  setAddForm(f => ({
+                    ...f,
+                    full_name: newName,
+                    ...(!addMemberNumManual && {
+                      membership_number: generateMembershipNumber(newName, members),
+                    }),
+                  }));
+                }}
                 style={inputStyle}
                 placeholder="e.g. Jane Smith"
                 autoComplete="off"
@@ -399,11 +570,19 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
               <input
                 type="text"
                 value={addForm.membership_number}
-                onChange={e => setAddForm(f => ({ ...f, membership_number: e.target.value }))}
+                onChange={e => {
+                  setAddMemberNumManual(true);
+                  setAddForm(f => ({ ...f, membership_number: e.target.value }));
+                }}
                 style={inputStyle}
-                placeholder="e.g. 247"
+                placeholder={addForm.full_name.trim().split(/\s+/).length >= 2 ? 'Auto-generated from name' : 'e.g. BBCJS42'}
                 autoComplete="off"
               />
+              {!addMemberNumManual && addForm.membership_number && (
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(45,90,61,.5)', display: 'block', marginTop: '4px' }}>
+                  Auto-generated — edit to override
+                </span>
+              )}
             </div>
             <div>
               <label style={labelStyle}>Handicap</label>
@@ -490,23 +669,22 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
           </p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '760px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1020px' }}>
               <thead>
                 <tr>
-                  {['Full Name', 'Memb. No.', 'Handicap', 'Status', 'Email', 'Joined', ''].map(h => (
-                    <th key={h} style={{
-                      textAlign: 'left',
-                      padding: '10px 12px',
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      letterSpacing: '.1em',
-                      textTransform: 'uppercase',
-                      color: 'var(--text-muted)',
-                      borderBottom: '2px solid rgba(45,90,61,.15)',
-                      whiteSpace: 'nowrap',
-                    }}>{h}</th>
-                  ))}
+                  <th style={thStyle}>Memb. No.</th>
+                  <th style={thStyle}>Full Name</th>
+                  <th style={thStyle}>Email</th>
+                  <th style={{ ...thStyle, textAlign: 'center' }}>Handicap</th>
+                  <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Joined</th>
+                  <th style={thStyle}>
+                    Photo ID
+                    <span style={{ display: 'block', fontWeight: 400, fontSize: '9px', letterSpacing: '.04em', textTransform: 'none', fontStyle: 'italic', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'normal', maxWidth: '180px', lineHeight: 1.4 }}>
+                      Upload to public/member-photos/ then enter filename
+                    </span>
+                  </th>
+                  <th style={thStyle}></th>
                 </tr>
               </thead>
               <tbody>
@@ -516,45 +694,111 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
 
                   if (isEditing) {
                     return (
-                      <tr key={m.id} style={{ background: 'rgba(45,90,61,.04)', outline: '2px solid rgba(45,90,61,.2)' }}>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
-                          <CellInput value={editForm.full_name} onChange={v => setEditForm(f => ({ ...f, full_name: v }))} />
-                        </td>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
-                          <CellInput value={editForm.membership_number} onChange={v => setEditForm(f => ({ ...f, membership_number: v }))} style={{ width: '90px' }} />
-                        </td>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
-                          <CellInput type="number" value={editForm.handicap} onChange={v => setEditForm(f => ({ ...f, handicap: Number(v) }))} style={{ width: '72px' }} />
-                        </td>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
-                          <select
-                            value={editForm.status}
-                            onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))}
-                            style={{ ...inputStyle, height: '34px', fontSize: '13px', width: '130px', cursor: 'pointer' }}
-                          >
-                            <option value="active">Active</option>
-                            <option value="probationary">Probationary</option>
-                            <option value="inactive">Inactive</option>
-                          </select>
-                        </td>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
-                          <CellInput type="email" value={editForm.email} onChange={v => setEditForm(f => ({ ...f, email: v }))} autoComplete="new-email" />
-                        </td>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
-                          <CellInput type="date" value={editForm.joined_date} onChange={v => setEditForm(f => ({ ...f, joined_date: v }))} style={{ width: '140px' }} />
-                        </td>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid rgba(45,90,61,.07)', whiteSpace: 'nowrap' }}>
-                          <div style={{ display: 'flex', gap: '0.4rem' }}>
-                            <button
-                              onClick={() => handleSaveEdit(m.id)}
-                              style={{ ...btnPrimary, height: '32px', padding: '0 14px', fontSize: '11px', opacity: editPending ? .65 : 1 }}
-                              disabled={editPending}
-                            >
-                              {editPending ? 'Saving…' : 'Save'}
-                            </button>
-                            <button onClick={cancelEdit} style={btnSecondary}>
-                              Cancel
-                            </button>
+                      <tr key={m.id}>
+                        <td colSpan={COLS} style={{ padding: 0, background: 'rgba(45,90,61,.03)', borderBottom: '2px solid rgba(45,90,61,.18)', borderTop: '1px solid rgba(45,90,61,.12)' }}>
+                          <div style={{ padding: '1.25rem 1.5rem' }}>
+
+                            {/* Member label */}
+                            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, color: 'var(--green-deep)', marginBottom: '1rem' }}>
+                              Editing: {m.full_name}
+                            </div>
+
+                            {/* Edit grid */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                              <div style={{ gridColumn: 'span 2' }}>
+                                <label style={labelStyle}>Full Name</label>
+                                <input
+                                  type="text"
+                                  value={editForm.full_name}
+                                  onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))}
+                                  autoComplete="off"
+                                  autoCorrect="off"
+                                  spellCheck={false}
+                                  style={{ ...inputStyle, height: '36px', fontSize: '13px' }}
+                                />
+                              </div>
+                              <div style={{ gridColumn: 'span 2' }}>
+                                <label style={labelStyle}>Email</label>
+                                <input
+                                  type="email"
+                                  value={editForm.email}
+                                  onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+                                  autoComplete="new-email"
+                                  style={{ ...inputStyle, height: '36px', fontSize: '13px' }}
+                                />
+                              </div>
+                              <div>
+                                <label style={labelStyle}>Membership Number</label>
+                                <input
+                                  type="text"
+                                  value={editForm.membership_number}
+                                  onChange={e => setEditForm(f => ({ ...f, membership_number: e.target.value }))}
+                                  autoComplete="off"
+                                  style={{ ...inputStyle, height: '36px', fontSize: '13px' }}
+                                />
+                              </div>
+                              <div>
+                                <label style={labelStyle}>Handicap</label>
+                                <input
+                                  type="number"
+                                  min="-20"
+                                  max="20"
+                                  value={editForm.handicap}
+                                  onChange={e => setEditForm(f => ({ ...f, handicap: Number(e.target.value) }))}
+                                  style={{ ...inputStyle, height: '36px', fontSize: '13px', width: '80px' }}
+                                />
+                              </div>
+                              <div>
+                                <label style={labelStyle}>Status</label>
+                                <select
+                                  value={editForm.status}
+                                  onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))}
+                                  style={{ ...inputStyle, height: '36px', fontSize: '13px', cursor: 'pointer' }}
+                                >
+                                  <option value="active">Active</option>
+                                  <option value="probationary">Probationary</option>
+                                  <option value="inactive">Inactive</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label style={labelStyle}>Joined Date</label>
+                                <input
+                                  type="date"
+                                  value={editForm.joined_date}
+                                  onChange={e => setEditForm(f => ({ ...f, joined_date: e.target.value }))}
+                                  style={{ ...inputStyle, height: '36px', fontSize: '13px', width: '150px' }}
+                                />
+                              </div>
+                              <div style={{ gridColumn: '1 / -1' }}>
+                                <label style={labelStyle}>Notes</label>
+                                <textarea
+                                  value={editForm.notes}
+                                  onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))}
+                                  autoComplete="off"
+                                  autoCorrect="off"
+                                  spellCheck={false}
+                                  style={{ ...inputStyle, height: '64px', padding: '8px 10px', resize: 'vertical' }}
+                                  placeholder="Any relevant notes"
+                                />
+                              </div>
+                              <div style={{ gridColumn: '1 / -1' }}>
+                                <label style={labelStyle}>Photo ID</label>
+                                <PhotoCell memberId={m.id} initialFilename={m.photo_id_filename} onUpdate={handlePhotoUpdate} />
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <button
+                                onClick={() => handleSaveEdit(m.id)}
+                                disabled={editPending}
+                                style={{ ...btnPrimary, height: '36px', padding: '0 18px', fontSize: '11px', opacity: editPending ? .65 : 1 }}
+                              >
+                                {editPending ? 'Saving…' : 'Save'}
+                              </button>
+                              <button onClick={cancelEdit} style={{ ...btnSecondary, height: '36px', padding: '0 14px' }}>
+                                Cancel
+                              </button>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -563,25 +807,28 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
 
                   return (
                     <tr key={m.id} style={{ background: rowBg }}>
-                      <td style={{ padding: '11px 12px', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 500, color: 'var(--text-dark)', borderBottom: '1px solid rgba(45,90,61,.07)', whiteSpace: 'nowrap' }}>
-                        {m.full_name}
-                      </td>
-                      <td style={{ padding: '11px 12px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
+                      <td style={{ ...tdStyle, fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 500, color: 'var(--green-deep)', whiteSpace: 'nowrap' }}>
                         {m.membership_number || '—'}
                       </td>
-                      <td style={{ padding: '11px 12px', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 600, color: 'var(--green-mid)', borderBottom: '1px solid rgba(45,90,61,.07)', textAlign: 'center' }}>
-                        {fmtHcp(m.handicap)}
+                      <td style={{ ...tdStyle, fontSize: '14px', fontWeight: 500, color: 'var(--text-dark)', whiteSpace: 'nowrap' }}>
+                        {m.full_name}
                       </td>
-                      <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
-                        <StatusBadge status={m.status} invited={invitedIds.has(m.id)} hasAuth={!!m.auth_user_id} />
-                      </td>
-                      <td style={{ padding: '11px 12px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', borderBottom: '1px solid rgba(45,90,61,.07)' }}>
+                      <td style={tdStyle}>
                         {m.email || '—'}
                       </td>
-                      <td style={{ padding: '11px 12px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', borderBottom: '1px solid rgba(45,90,61,.07)', whiteSpace: 'nowrap' }}>
+                      <td style={{ ...tdStyle, fontSize: '14px', fontWeight: 600, color: 'var(--green-mid)', textAlign: 'center' }}>
+                        {fmtHcp(m.handicap)}
+                      </td>
+                      <td style={tdStyle}>
+                        <StatusBadge status={m.status} invited={invitedIds.has(m.id)} hasAuth={!!m.auth_user_id} />
+                      </td>
+                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                         {fmtDate(m.joined_date)}
                       </td>
-                      <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)', whiteSpace: 'nowrap' }}>
+                      <td style={{ ...tdStyle, padding: '8px 10px', verticalAlign: 'top' }}>
+                        <PhotoCell memberId={m.id} initialFilename={m.photo_id_filename} onUpdate={handlePhotoUpdate} />
+                      </td>
+                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', gap: '0.4rem' }}>
                           {!m.auth_user_id && (
                             <button

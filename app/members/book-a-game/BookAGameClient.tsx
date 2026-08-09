@@ -15,11 +15,13 @@ import {
   type MemberOption,
 } from './actions';
 import { MEMBERS } from '@/lib/handicapData';
+import { formatSurnameFirst, sortBySurname } from '@/utils/formatMemberName';
 
-const playerOptions: string[] = MEMBERS
-  .filter(m => m.h[2026] !== undefined)
-  .sort((a, b) => a.firstname.localeCompare(b.firstname))
-  .map(m => `${m.firstname} ${m.surname}`);
+const playerOptions: string[] = sortBySurname(
+  MEMBERS
+    .filter(m => m.h[2026] !== undefined)
+    .map(m => `${m.firstname} ${m.surname}`)
+);
 
 const COMPETITIONS = [
   { id: 'shield', label: 'The Shield', isPairs: false },
@@ -110,7 +112,7 @@ function PlayerCombobox({
   placeholder: string;
   style?: React.CSSProperties;
 }) {
-  const [inputText, setInputText] = useState(value);
+  const [inputText, setInputText] = useState(formatSurnameFirst(value));
   const [open, setOpen]           = useState(false);
   const [hiIdx, setHiIdx]         = useState(-1);
   const wrapRef  = useRef<HTMLDivElement>(null);
@@ -122,11 +124,11 @@ function PlayerCombobox({
   useEffect(() => { latestRef.current = { value, options, inputText }; });
 
   // Sync display text when parent resets the value
-  useEffect(() => { setInputText(value); }, [value]);
+  useEffect(() => { setInputText(formatSurnameFirst(value)); }, [value]);
 
   const filtered = useMemo(() => {
     const q = inputText.toLowerCase();
-    return q ? options.filter(n => n.toLowerCase().includes(q)) : options;
+    return q ? options.filter(n => formatSurnameFirst(n).toLowerCase().includes(q)) : options;
   }, [options, inputText]);
 
   // Close on click outside; revert to last confirmed selection if text is invalid
@@ -136,7 +138,7 @@ function PlayerCombobox({
         const { value: v, options: opts, inputText: txt } = latestRef.current;
         setOpen(false);
         setHiIdx(-1);
-        if (!opts.includes(txt)) setInputText(v);
+        if (opts.every(n => formatSurnameFirst(n) !== txt)) setInputText(formatSurnameFirst(v));
       }
     }
     document.addEventListener('mousedown', handle);
@@ -152,7 +154,7 @@ function PlayerCombobox({
   }, [hiIdx, open]);
 
   function select(name: string) {
-    setInputText(name);
+    setInputText(formatSurnameFirst(name));
     onChange(name);
     setOpen(false);
     setHiIdx(-1);
@@ -182,7 +184,7 @@ function PlayerCombobox({
           if (e.key === 'ArrowDown')  { e.preventDefault(); setHiIdx(i => Math.min(i + 1, filtered.length - 1)); }
           else if (e.key === 'ArrowUp')   { e.preventDefault(); setHiIdx(i => Math.max(i - 1, 0)); }
           else if (e.key === 'Enter')  { e.preventDefault(); if (hiIdx >= 0 && filtered[hiIdx]) select(filtered[hiIdx]); }
-          else if (e.key === 'Escape') { e.preventDefault(); setOpen(false); setInputText(latestRef.current.value); setHiIdx(-1); }
+          else if (e.key === 'Escape') { e.preventDefault(); setOpen(false); setInputText(formatSurnameFirst(latestRef.current.value)); setHiIdx(-1); }
           else if (e.key === 'Tab' && hiIdx >= 0 && filtered[hiIdx]) { select(filtered[hiIdx]); }
         }}
         style={{ ...inputStyle, width: '100%' }}
@@ -234,7 +236,7 @@ function PlayerCombobox({
                 borderBottom: i < filtered.length - 1 ? '1px solid rgba(45,90,61,.04)' : 'none',
               }}
             >
-              {name}
+              {formatSurnameFirst(name)}
             </li>
           ))}
         </ul>

@@ -5,6 +5,8 @@ import { requireAdminSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { AdminResultsClient } from './AdminResultsClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminResultsPage() {
   try {
     await requireAdminSession();

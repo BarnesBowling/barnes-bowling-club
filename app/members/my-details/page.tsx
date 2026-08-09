@@ -15,10 +15,13 @@ export default async function MyDetailsPage() {
 
   const email = session.email;
 
-  const [{ data: profile }, { data: balanceRow }] = await Promise.all([
+  const [{ data: profile }, { data: balanceRow }, { data: clubMemberRow }] = await Promise.all([
     supabaseAdmin.from('member_profiles').select('*').eq('member_email', email).maybeSingle(),
     supabaseAdmin.from('member_balances').select('membership_fee, guest_fee, manser_fee, wrong_bias_fee, event_fee').eq('member_email', email).maybeSingle(),
+    supabaseAdmin.from('club_members').select('photo_id_filename').eq('email', email).maybeSingle(),
   ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const photoIdFilename = (clubMemberRow as any)?.photo_id_filename as string | null ?? null;
 
   const memberNumber =
     getMemberNumber(profile?.first_name ?? '', profile?.last_name ?? '') ??
@@ -58,6 +61,7 @@ export default async function MyDetailsPage() {
             memberName={memberName}
             profile={profile}
             balance={balance}
+            photoIdFilename={photoIdFilename}
           />
         </div>
       </main>

@@ -70,53 +70,74 @@ function buildMatchRecord(data: MatchPayload) {
   };
 }
 
-export async function addMatch(data: MatchPayload): Promise<void> {
+// Return-based error pattern instead of throw — prevents React 19 startTransition
+// from propagating server action errors to the error boundary.
+
+export async function addMatch(data: MatchPayload): Promise<{ error?: string }> {
   try {
     await requireAdminSession();
+  } catch {
+    return { error: 'Not authorised. Please log in again.' };
+  }
+  try {
     const record = buildMatchRecord(data);
     const { error } = await supabaseAdmin.from('matches').insert({ ...record, created_by: 'admin' });
     if (error) {
       console.error('[addMatch] Supabase error:', JSON.stringify(error));
-      throw new Error(error.message);
+      return { error: error.message };
     }
     revalidatePath('/admin/results');
     revalidatePath('/members/results');
+    return {};
   } catch (err) {
-    console.error('[addMatch] failed:', err);
-    throw err;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[addMatch] unexpected error:', msg);
+    return { error: msg };
   }
 }
 
-export async function updateMatch(id: string, data: MatchPayload): Promise<void> {
+export async function updateMatch(id: string, data: MatchPayload): Promise<{ error?: string }> {
   try {
     await requireAdminSession();
+  } catch {
+    return { error: 'Not authorised. Please log in again.' };
+  }
+  try {
     const record = buildMatchRecord(data);
     const { error } = await supabaseAdmin.from('matches').update(record).eq('id', id);
     if (error) {
       console.error('[updateMatch] Supabase error:', JSON.stringify(error));
-      throw new Error(error.message);
+      return { error: error.message };
     }
     revalidatePath('/admin/results');
     revalidatePath('/members/results');
+    return {};
   } catch (err) {
-    console.error('[updateMatch] failed:', err);
-    throw err;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[updateMatch] unexpected error:', msg);
+    return { error: msg };
   }
 }
 
-export async function deleteMatch(id: string): Promise<void> {
+export async function deleteMatch(id: string): Promise<{ error?: string }> {
   try {
     await requireAdminSession();
+  } catch {
+    return { error: 'Not authorised. Please log in again.' };
+  }
+  try {
     const { error } = await supabaseAdmin.from('matches').delete().eq('id', id);
     if (error) {
       console.error('[deleteMatch] Supabase error:', JSON.stringify(error));
-      throw new Error(error.message);
+      return { error: error.message };
     }
     revalidatePath('/admin/results');
     revalidatePath('/members/results');
+    return {};
   } catch (err) {
-    console.error('[deleteMatch] failed:', err);
-    throw err;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[deleteMatch] unexpected error:', msg);
+    return { error: msg };
   }
 }
 
@@ -125,9 +146,13 @@ export async function addPairTeam(data: {
   playerB: string;
   combinedHandicap: number;
   teamHandicap: number;
-}): Promise<void> {
+}): Promise<{ error?: string }> {
   try {
     await requireAdminSession();
+  } catch {
+    return { error: 'Not authorised. Please log in again.' };
+  }
+  try {
     const { playerA, playerB, combinedHandicap, teamHandicap } = data;
     const { error } = await supabaseAdmin.from('pairs_teams').insert({
       season: 2026,
@@ -139,22 +164,34 @@ export async function addPairTeam(data: {
     });
     if (error) {
       console.error('[addPairTeam] Supabase error:', JSON.stringify(error));
-      throw new Error(error.message);
+      return { error: error.message };
     }
     revalidatePath('/admin/results');
+    return {};
   } catch (err) {
-    console.error('[addPairTeam] failed:', err);
-    throw err;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[addPairTeam] unexpected error:', msg);
+    return { error: msg };
   }
 }
 
-export async function deletePairTeam(id: string): Promise<void> {
+export async function deletePairTeam(id: string): Promise<{ error?: string }> {
   try {
     await requireAdminSession();
-    await supabaseAdmin.from('pairs_teams').delete().eq('id', id);
+  } catch {
+    return { error: 'Not authorised. Please log in again.' };
+  }
+  try {
+    const { error } = await supabaseAdmin.from('pairs_teams').delete().eq('id', id);
+    if (error) {
+      console.error('[deletePairTeam] Supabase error:', JSON.stringify(error));
+      return { error: error.message };
+    }
     revalidatePath('/admin/results');
+    return {};
   } catch (err) {
-    console.error('[deletePairTeam] failed:', err);
-    throw err;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[deletePairTeam] unexpected error:', msg);
+    return { error: msg };
   }
 }

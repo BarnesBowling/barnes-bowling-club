@@ -4,6 +4,61 @@ import { requireAdminSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 
+export async function updateTransaction(
+  id: string,
+  data: { date: string; description: string; category: string; amount: number; type: string },
+): Promise<{ error?: string }> {
+  try {
+    await requireAdminSession();
+    const { error } = await supabaseAdmin
+      .from('member_ledger')
+      .update(data)
+      .eq('id', id);
+    if (error) return { error: error.message };
+    revalidatePath('/admin/accounts');
+    revalidatePath('/members/account');
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Update failed' };
+  }
+}
+
+export async function deleteTransactionById(id: string): Promise<{ error?: string }> {
+  try {
+    await requireAdminSession();
+    const { error } = await supabaseAdmin.from('member_ledger').delete().eq('id', id);
+    if (error) return { error: error.message };
+    revalidatePath('/admin/accounts');
+    revalidatePath('/members/account');
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Delete failed' };
+  }
+}
+
+export async function updateMemberBasics(
+  id: string,
+  data: { email: string; membership_number: string; status: string },
+): Promise<{ error?: string }> {
+  try {
+    await requireAdminSession();
+    const { error } = await supabaseAdmin
+      .from('club_members')
+      .update({
+        email: data.email || null,
+        membership_number: data.membership_number || null,
+        status: data.status,
+      })
+      .eq('id', id);
+    if (error) return { error: error.message };
+    revalidatePath('/admin/accounts');
+    revalidatePath('/admin/club-members');
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Update failed' };
+  }
+}
+
 export async function addTransaction(formData: FormData): Promise<void> {
   const adminSession = await requireAdminSession();
 

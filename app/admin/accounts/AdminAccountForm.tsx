@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { addTransaction } from './actions';
+import { formatSurnameFirst } from '@/utils/formatMemberName';
 
 const GUEST_FEE_RATE = 5.00;
 
@@ -33,9 +34,16 @@ function MemberCombobox({ members, inputStyle }: { members: ClubMemberOption[]; 
   const [selected, setSelected] = useState<ClubMemberOption | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  const sorted = [...members].sort((a, b) => {
+    const sA = a.full_name.trim().split(' ').pop()?.toLowerCase() ?? '';
+    const sB = b.full_name.trim().split(' ').pop()?.toLowerCase() ?? '';
+    return sA.localeCompare(sB);
+  });
+
   const filtered = query.trim().length === 0
-    ? members
-    : members.filter(m =>
+    ? sorted
+    : sorted.filter(m =>
+        formatSurnameFirst(m.full_name).toLowerCase().includes(query.toLowerCase()) ||
         m.full_name.toLowerCase().includes(query.toLowerCase()) ||
         (m.membership_number ?? '').toLowerCase().includes(query.toLowerCase())
       );
@@ -50,7 +58,7 @@ function MemberCombobox({ members, inputStyle }: { members: ClubMemberOption[]; 
 
   function choose(m: ClubMemberOption) {
     setSelected(m);
-    setQuery(`${m.full_name}${m.membership_number ? ` — ${m.membership_number}` : ''}`);
+    setQuery(`${formatSurnameFirst(m.full_name)}${m.membership_number ? ` — ${m.membership_number}` : ''}`);
     setOpen(false);
   }
 
@@ -101,7 +109,7 @@ function MemberCombobox({ members, inputStyle }: { members: ClubMemberOption[]; 
               onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(45,90,61,.06)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = selected?.id === m.id ? 'rgba(45,90,61,.08)' : 'transparent'; }}
             >
-              <span style={{ fontWeight: 500 }}>{m.full_name}</span>
+              <span style={{ fontWeight: 500 }}>{formatSurnameFirst(m.full_name)}</span>
               {m.membership_number && (
                 <span style={{ marginLeft: '8px', fontSize: '11px', color: 'rgba(45,90,61,.5)', fontFamily: 'monospace' }}>
                   {m.membership_number}

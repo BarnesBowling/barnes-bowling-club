@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
-const TICKER_ITEMS = [
+const TICKER_FALLBACK = [
   'Season 2026 · 25th April to early October',
   'Playing Membership £215 · Joining Fee £100',
   'International Day — 28 June · Guests Welcome',
@@ -10,12 +11,19 @@ const TICKER_ITEMS = [
 
 export async function GreenBanner() {
   const supabase = await createClient();
-  const { data: green } = await supabase
-    .from('green_status')
-    .select('*')
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [{ data: green }, { data: tickerRows }] = await Promise.all([
+    supabase
+      .from('green_status')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabaseAdmin
+      .from('ticker_messages')
+      .select('message')
+      .eq('active', true)
+      .order('sort_order'),
+  ]);
 
   const status = green?.status ?? 'open_good';
   const condition = green?.message ?? 'Green open — please check conditions before play';
@@ -24,7 +32,11 @@ export async function GreenBanner() {
     status === 'open_good' ? 'Green Open' :
     status === 'open_fair' ? 'Open — Fair' : 'Green Closed';
 
-  const allItems = [`Conditions: ${condition}`, ...TICKER_ITEMS];
+  const tickerItems = tickerRows && tickerRows.length > 0
+    ? tickerRows.map((r) => r.message)
+    : TICKER_FALLBACK;
+
+  const allItems = [`Conditions: ${condition}`, ...tickerItems];
   const doubled = [...allItems, ...allItems];
 
   return (

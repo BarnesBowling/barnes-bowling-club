@@ -10,7 +10,9 @@ const FILTERS: { value: 'all' | Competition; label: string }[] = [
   { value: 'cup',    label: 'Cup'    },
   { value: 'shield', label: 'Shield' },
   { value: 'pairs',  label: 'Pairs'  },
-  { value: 'manser', label: 'Manser' },
+  { value: 'manser',   label: 'Manser'   },
+  { value: 'plus_cup',   label: 'Plus Cup'   },
+  { value: 'ladies_day', label: 'Ladies Day' },
 ];
 
 interface Props {
@@ -81,17 +83,17 @@ export function CompetitionSheetsClient({ sheets, results }: Props) {
       </div>
 
       {/* ── Brackets / Grids ── */}
-      {(active === 'all' ? (['cup', 'shield', 'pairs', 'manser'] as Competition[]) : [active]).flatMap(comp =>
+      {(active === 'all' ? (['cup', 'shield', 'pairs', 'plus_cup', 'ladies_day', 'manser'] as Competition[]) : [active]).flatMap(comp =>
         sheets
           .filter(s => s.competition === comp)
           .map(sheet => {
             const sheetResults = results.filter(
-              r => r.competition_slug === sheet.id || r.competition_slug === sheet.competition,
+              r => r.competition_slug === sheet.id || r.competition_slug === sheet.competition || (sheet.slug !== undefined && r.competition_slug === sheet.slug),
             );
             return (
               <div key={sheet.id} style={{ marginBottom: '3rem' }}>
                 {sheet.type === 'round-robin' && sheet.players ? (
-                  <ManserRoundRobinGrid players={sheet.players} rules={sheet.rules} results={sheetResults} />
+                  <ManserRoundRobinGrid players={sheet.players} rules={sheet.rules} results={sheetResults} scale={sheet.competition === 'plus_cup' || sheet.competition === 'ladies_day' ? 1.75 : 1} showAverage={sheet.competition === 'ladies_day'} />
                 ) : (
                   <SheetBracketView sheet={sheet} results={sheetResults} />
                 )}

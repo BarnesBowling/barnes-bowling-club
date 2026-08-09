@@ -261,7 +261,7 @@ export default function CalendarPage() {
                               {hasBookedMatch && (
                                 <div style={{
                                   width: '5px', height: '5px', borderRadius: '50%',
-                                  background: isToday ? 'rgba(255,255,255,0.7)' : CATEGORY_META.match.dot,
+                                  background: isToday ? 'rgba(255,255,255,0.7)' : CATEGORY_META.competition.dot,
                                   flexShrink: 0,
                                 }} />
                               )}
@@ -399,9 +399,9 @@ export default function CalendarPage() {
                     );
                   }
 
-                  // Booked match row — rendered as a standard Match category entry
+                  // Booked match row — rendered as a Competition entry (gold)
                   const bm = item.bm;
-                  const matchMeta = CATEGORY_META.match;
+                  const matchMeta = CATEGORY_META.competition;
                   const dayStr = String(item.sortDay);
                   const weekday = new Date(bm.date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase();
                   return (
@@ -594,7 +594,7 @@ export default function CalendarPage() {
                       );
                     })}
                     {dayBookedMatches.map((bm, i) => {
-                      const matchMeta = CATEGORY_META.match;
+                      const matchMeta = CATEGORY_META.competition;
                       return (
                         <div key={`bm-${i}`} style={{ background: 'var(--cream)', padding: '1.1rem 1.5rem' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.45rem' }}>

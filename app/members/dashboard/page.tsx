@@ -9,6 +9,7 @@ import { MyDetailsDropdown } from './MyDetailsDropdown';
 import { CompDatesCard } from './CompDatesCard';
 import { ResultsDropdown } from './ResultsDropdown';
 import { ResultsNavDropdown } from './ResultsNavDropdown';
+import { CalendarModal } from './CalendarModal';
 
 const TOP_HANDICAPS = [...MEMBERS]
   .filter(m => m.h[2026] !== undefined)
@@ -26,13 +27,22 @@ export default async function Dashboard() {
 
   const email = session.email;
 
-  const [{ data: events }, { data: notices }, { data: officers }, { data: green }, { data: memberProfile }] =
+  const today          = new Date().toISOString().split('T')[0];
+  const oneMonthLater  = new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  const [{ data: events }, { data: notices }, { data: officers }, { data: green }, { data: memberProfile }, { data: upcomingMatches }] =
     await Promise.all([
       supabaseAdmin.from('events').select('*').gte('event_date', new Date().toISOString()).order('event_date').limit(8),
       supabaseAdmin.from('notices').select('*').order('published_at', { ascending: false }).limit(5),
       supabaseAdmin.from('officers').select('*').eq('group_name', 'Committee').order('sort_order'),
       supabaseAdmin.from('green_status').select('*').order('updated_at', { ascending: false }).limit(1).maybeSingle(),
       supabaseAdmin.from('member_profiles').select('first_name').eq('member_email', email).maybeSingle(),
+      supabaseAdmin.from('fixture_bookings')
+        .select('competition, player1, player2, player3, player4, date, time_slot')
+        .gte('date', today)
+        .lte('date', oneMonthLater)
+        .order('date')
+        .order('time_slot'),
     ]);
 
   const firstName = memberProfile?.first_name;
@@ -125,7 +135,6 @@ export default async function Dashboard() {
             <MyDetailsDropdown />
             {[
               { label: 'Handicap standings', href: '/members/handicaps' },
-              { label: 'Season Calendar', href: '/members/calendar' },
               { label: 'Competition Dates', href: '/members/competitions' },
             ].map(({ label, href }) => (
               <a key={href} href={href} style={{
@@ -143,6 +152,7 @@ export default async function Dashboard() {
                 {label}
               </a>
             ))}
+            <CalendarModal upcomingMatches={upcomingMatches ?? []} />
             <ResultsNavDropdown />
             {[
               { label: 'Notices', href: '/notices' },

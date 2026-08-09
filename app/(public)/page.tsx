@@ -45,16 +45,16 @@ export default async function LandingPage() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          padding: 18px 48px;
+          padding: 13px 34px;
           background: transparent;
           color: #c9a84c;
           font-family: 'Cinzel', 'Playfair Display', serif;
-          font-size: 24px;
+          font-size: 17px;
           font-weight: 400;
           letter-spacing: 0.15em;
           text-transform: uppercase;
           text-decoration: none;
-          border: 1.5px solid #c9a84c;
+          border: 1px solid #c9a84c;
           cursor: pointer;
           transition: background 0.25s, color 0.25s;
           white-space: nowrap;
@@ -66,8 +66,8 @@ export default async function LandingPage() {
         }
         @media (max-width: 600px) {
           .bbc-btn {
-            font-size: 16px;
-            padding: 14px 24px;
+            font-size: 11px;
+            padding: 10px 17px;
           }
         }
 

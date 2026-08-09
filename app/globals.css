@@ -48,9 +48,9 @@ p { margin: 0; }
 .nav-brand-sub { display: block; font-family: 'DM Sans', sans-serif; font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
 .nav-brand-sup { font-size: 7px; vertical-align: super; line-height: 0; letter-spacing: 0; font-style: italic; }
 .navlinks { display: flex; flex: 1; align-items: center; justify-content: space-between; position: relative; top: 20px; }
-.navlinks > a { font-family: 'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #272727; font-size: 14px; font-weight: 400; text-decoration: none; padding: 6px 17px; opacity: 1; transition: color .15s; white-space: nowrap; }
+.navlinks > a { font-family: 'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #212121; font-size: 16px; font-weight: 400; text-decoration: none; padding: 6px 17px; opacity: 1; transition: color .15s; white-space: nowrap; }
 .navlinks > a:hover { color: var(--green-deep); }
-.navlinks > .nav-has-dropdown > a { font-family: 'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #272727; font-size: 14px; font-weight: 400; text-decoration: none; padding: 6px 17px; opacity: 1; transition: color .15s; white-space: nowrap; display: block; }
+.navlinks > .nav-has-dropdown > a { font-family: 'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #212121; font-size: 16px; font-weight: 400; text-decoration: none; padding: 6px 17px; opacity: 1; transition: color .15s; white-space: nowrap; display: block; }
 .navlinks > .nav-has-dropdown > a:hover { color: var(--green-deep); }
 .nav-right { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; margin-left: 1rem; position: relative; top: -14px; }
 .nav-members-btn { display: inline-block; padding: 8px 19px; border: none; border-radius: 4px; background: #A89560; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; transition: background .15s; white-space: nowrap; }

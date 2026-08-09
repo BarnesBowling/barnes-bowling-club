@@ -598,7 +598,7 @@ export function BookAGameClient() {
         {/* Header */}
         <div style={{ background: 'var(--green-deep)', padding: '1rem 2rem 4rem', color: 'var(--cream)' }}>
           <div className="section-inner">
-            <a href="/members/dashboard" className="section-tag" style={{ color: '#c9a84c', borderTopColor: '#c9a84c', textDecoration: 'none' }}>
+            <a href="/members/dashboard" className="section-tag" style={{ color: 'var(--gold)', borderTopColor: 'var(--gold)', textDecoration: 'none' }}>
               Members Area
             </a>
             <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>

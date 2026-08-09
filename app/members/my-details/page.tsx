@@ -1,7 +1,6 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { getMemberNumber } from '@/lib/memberNumber';
 import { MyDetailsClient } from './MyDetailsClient';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -18,7 +17,7 @@ export default async function MyDetailsPage() {
   const [{ data: profile }, { data: balanceRow }, { data: clubMemberRow }] = await Promise.all([
     supabaseAdmin.from('member_profiles').select('*').eq('member_email', email).maybeSingle(),
     supabaseAdmin.from('member_balances').select('membership_fee, guest_fee, manser_fee, wrong_bias_fee, event_fee').eq('member_email', email).maybeSingle(),
-    supabaseAdmin.from('club_members').select('id, photo_id_filename').eq('email', email).maybeSingle(),
+    supabaseAdmin.from('club_members').select('id, membership_number, photo_id_filename').eq('email', email).maybeSingle(),
   ]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const photoIdFilename = (clubMemberRow as any)?.photo_id_filename as string | null ?? null;
@@ -32,9 +31,7 @@ export default async function MyDetailsPage() {
   const ledgerCredits = (ledgerRows ?? []).filter(r => r.type === 'credit').reduce((s, r) => s + Number(r.amount), 0);
   const ledgerBalance = { debits: ledgerDebits, credits: ledgerCredits, balance: ledgerDebits - ledgerCredits };
 
-  const memberNumber =
-    getMemberNumber(profile?.first_name ?? '', profile?.last_name ?? '') ??
-    `BBC${email.slice(0, 6).toUpperCase().replace(/[^A-Z]/g, '')}`;
+  const memberNumber = (clubMemberRow as { membership_number?: string | null } | null)?.membership_number ?? null;
 
   const memberName = profile?.first_name && profile?.last_name
     ? `${profile.first_name} ${profile.last_name}`

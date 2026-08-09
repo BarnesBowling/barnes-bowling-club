@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect, useActionState } from 'react';
+import { useState, useEffect } from 'react';
+import { saveName, saveMobile, saveAddress, saveEmergencyContact, saveEmail, changePassword } from './actions';
+import Link from 'next/link';
 
 // ── Bookings (localStorage) ───────────────────────────────────────────────────
 
@@ -29,8 +31,26 @@ function cancelBooking(date: string, time: string): void {
 }
 
 const DEFAULT_PREFS = { newsletters: true, events: true, bookings: true };
-import { savePersonalDetails, saveEmergencyContact } from './actions';
-import { createClient } from '@/lib/supabase/client';
+
+function PencilIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ width: 14, height: 14, display: 'block', flexShrink: 0 }}
+      aria-hidden="true"
+    >
+      <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+      <path d="m15 5 4 4" />
+    </svg>
+  );
+}
+
+// ── Design tokens ─────────────────────────────────────────────────────────────
 
 const GOLD = '#A89560';
 
@@ -84,8 +104,34 @@ const saveBtn: React.CSSProperties = {
   letterSpacing: '.08em',
   textTransform: 'uppercase',
   cursor: 'pointer',
-  marginTop: '1.25rem',
   transition: 'background .15s',
+};
+
+const cancelBtnStyle: React.CSSProperties = {
+  display: 'inline-block',
+  padding: '9px 20px',
+  background: 'none',
+  color: 'rgba(27,59,38,.6)',
+  border: '1px solid rgba(27,59,38,.2)',
+  borderRadius: '4px',
+  fontFamily: "'DM Sans', sans-serif",
+  fontSize: '12px',
+  fontWeight: 600,
+  letterSpacing: '.08em',
+  textTransform: 'uppercase',
+  cursor: 'pointer',
+};
+
+const pencilBtnStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  padding: '3px 5px',
+  color: GOLD,
+  display: 'inline-flex',
+  alignItems: 'center',
+  flexShrink: 0,
+  opacity: 0.8,
 };
 
 const fieldGroup = (cols = 1): React.CSSProperties => ({
@@ -101,6 +147,22 @@ const statusMsg = (ok: boolean): React.CSSProperties => ({
   color: ok ? '#2e7d32' : '#c0392b',
   marginTop: '0.5rem',
 });
+
+const displayVal: React.CSSProperties = {
+  fontFamily: "'DM Sans', sans-serif",
+  fontSize: '14px',
+  color: '#1a2e1f',
+  lineHeight: 1.5,
+};
+
+const displayEmpty: React.CSSProperties = {
+  fontFamily: "'DM Sans', sans-serif",
+  fontSize: '14px',
+  color: 'rgba(27,59,38,.4)',
+  fontStyle: 'italic',
+};
+
+// ── Shared layout ─────────────────────────────────────────────────────────────
 
 function Chevron({ open }: { open: boolean }) {
   return (
@@ -159,6 +221,20 @@ function AccordionRow({
   );
 }
 
+function EditActions({ onSave, onCancel, pending }: { onSave: () => void; onCancel: () => void; pending: boolean }) {
+  return (
+    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+      <button type="button" onClick={onSave} disabled={pending}
+        style={{ ...saveBtn, opacity: pending ? .7 : 1, cursor: pending ? 'default' : 'pointer' }}>
+        {pending ? 'Saving…' : 'Save'}
+      </button>
+      <button type="button" onClick={onCancel} style={cancelBtnStyle}>Cancel</button>
+    </div>
+  );
+}
+
+// ── Interfaces ────────────────────────────────────────────────────────────────
+
 interface Profile {
   title?: string;
   first_name?: string;
@@ -182,20 +258,432 @@ interface Balance {
   eventFee: number;
 }
 
+interface LedgerBalance {
+  debits: number;
+  credits: number;
+  balance: number;
+}
+
 interface Props {
   email: string;
-  memberId: string;
+  memberId: string | null;
   memberName: string;
   profile: Profile | null;
   balance: Balance | null;
   photoIdFilename?: string | null;
+  ledgerBalance: LedgerBalance;
 }
 
-export function MyDetailsClient({ email, memberId, memberName, profile, balance, photoIdFilename }: Props) {
-  const [openSection, setOpenSection] = useState<string | null>('details');
+// ── Inline-edit sections ──────────────────────────────────────────────────────
 
-  const [detailsState, detailsAction] = useActionState(savePersonalDetails, null);
-  const [ecState,      ecAction]      = useActionState(saveEmergencyContact, null);
+function NameSection({ profile, onNameChange }: {
+  profile: Profile | null;
+  onNameChange?: (firstName: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle]         = useState(profile?.title      ?? '');
+  const [firstName, setFirstName] = useState(profile?.first_name ?? '');
+  const [lastName, setLastName]   = useState(profile?.last_name  ?? '');
+  const [saved, setSaved] = useState({
+    title:     profile?.title      ?? '',
+    firstName: profile?.first_name ?? '',
+    lastName:  profile?.last_name  ?? '',
+  });
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const displayName = [saved.title, saved.firstName, saved.lastName].filter(Boolean).join(' ');
+
+  async function handleSave() {
+    if (!firstName.trim() || !lastName.trim()) {
+      setStatus({ ok: false, text: 'First and last name are required.' });
+      return;
+    }
+    setPending(true);
+    setStatus(null);
+    const fd = new FormData();
+    fd.set('title', title);
+    fd.set('first_name', firstName.trim());
+    fd.set('last_name', lastName.trim());
+    const result = await saveName(null, fd);
+    setPending(false);
+    if (result?.error) {
+      setStatus({ ok: false, text: result.error });
+    } else {
+      const next = { title, firstName: firstName.trim(), lastName: lastName.trim() };
+      setSaved(next);
+      onNameChange?.(firstName.trim());
+      setStatus({ ok: true, text: 'Name updated.' });
+      setTimeout(() => { setEditing(false); setStatus(null); }, 800);
+    }
+  }
+
+  function handleCancel() {
+    setTitle(saved.title);
+    setFirstName(saved.firstName);
+    setLastName(saved.lastName);
+    setEditing(false);
+    setStatus(null);
+  }
+
+  if (!editing) {
+    return (
+      <div style={{ marginBottom: '1.25rem' }}>
+        <div style={labelStyle}>Full Name</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '2px' }}>
+          <span style={displayName ? displayVal : displayEmpty}>{displayName || 'Not provided'}</span>
+          <button type="button" onClick={() => setEditing(true)} style={pencilBtnStyle} title="Edit name">
+            <PencilIcon />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <div style={{ marginBottom: '0.75rem' }}>
+        <label style={labelStyle}>Title</label>
+        <div style={{ position: 'relative' }}>
+          <select value={title} onChange={e => setTitle(e.target.value)} style={selectStyle}>
+            <option value="">Select…</option>
+            {['Mr','Mrs','Ms','Miss','Dr','Prof','Rev','Other'].map(t => <option key={t}>{t}</option>)}
+          </select>
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(27,59,38,.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 13, height: 13, pointerEvents: 'none' }}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+      </div>
+      <div style={fieldGroup(2)}>
+        <div>
+          <label style={labelStyle}>First Name <span style={{ color: '#c0392b' }}>*</span></label>
+          <input style={inputStyle} value={firstName} onChange={e => setFirstName(e.target.value)} autoComplete="given-name" />
+        </div>
+        <div>
+          <label style={labelStyle}>Last Name <span style={{ color: '#c0392b' }}>*</span></label>
+          <input style={inputStyle} value={lastName} onChange={e => setLastName(e.target.value)} autoComplete="family-name" />
+        </div>
+      </div>
+      {status && <p style={statusMsg(status.ok)}>{status.text}</p>}
+      <EditActions onSave={handleSave} onCancel={handleCancel} pending={pending} />
+    </div>
+  );
+}
+
+function MobileSection({ profile }: { profile: Profile | null }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(profile?.mobile ?? '');
+  const [saved, setSaved] = useState(profile?.mobile ?? '');
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSave() {
+    setPending(true);
+    setStatus(null);
+    const fd = new FormData();
+    fd.set('mobile', value.trim());
+    const result = await saveMobile(null, fd);
+    setPending(false);
+    if (result?.error) {
+      setStatus({ ok: false, text: result.error });
+    } else {
+      setSaved(value.trim());
+      setStatus({ ok: true, text: 'Mobile number updated.' });
+      setTimeout(() => { setEditing(false); setStatus(null); }, 800);
+    }
+  }
+
+  function handleCancel() {
+    setValue(saved);
+    setEditing(false);
+    setStatus(null);
+  }
+
+  if (!editing) {
+    return (
+      <div style={{ marginBottom: '1.25rem' }}>
+        <div style={labelStyle}>Mobile</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '2px' }}>
+          <span style={saved ? displayVal : displayEmpty}>{saved || 'Not provided'}</span>
+          <button type="button" onClick={() => setEditing(true)} style={pencilBtnStyle} title="Edit mobile number">
+            <PencilIcon />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <label style={labelStyle}>Mobile</label>
+      <input type="tel" style={inputStyle} value={value} onChange={e => setValue(e.target.value)} autoComplete="tel" />
+      {status && <p style={statusMsg(status.ok)}>{status.text}</p>}
+      <EditActions onSave={handleSave} onCancel={handleCancel} pending={pending} />
+    </div>
+  );
+}
+
+function AddressSection({ profile }: { profile: Profile | null }) {
+  const [editing, setEditing] = useState(false);
+  const [line1, setLine1]         = useState(profile?.address_line1 ?? '');
+  const [line2, setLine2]         = useState(profile?.address_line2 ?? '');
+  const [city, setCity]           = useState(profile?.city          ?? '');
+  const [postcode, setPostcode]   = useState(profile?.postcode      ?? '');
+  const [saved, setSaved] = useState({
+    line1:    profile?.address_line1 ?? '',
+    line2:    profile?.address_line2 ?? '',
+    city:     profile?.city          ?? '',
+    postcode: profile?.postcode      ?? '',
+  });
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const displayAddress = [saved.line1, saved.line2, saved.city, saved.postcode].filter(Boolean).join(', ');
+
+  async function handleSave() {
+    setPending(true);
+    setStatus(null);
+    const fd = new FormData();
+    fd.set('address_line1', line1);
+    fd.set('address_line2', line2);
+    fd.set('city', city);
+    fd.set('postcode', postcode);
+    const result = await saveAddress(null, fd);
+    setPending(false);
+    if (result?.error) {
+      setStatus({ ok: false, text: result.error });
+    } else {
+      setSaved({ line1: line1.trim(), line2: line2.trim(), city: city.trim(), postcode: postcode.trim() });
+      setStatus({ ok: true, text: 'Address updated.' });
+      setTimeout(() => { setEditing(false); setStatus(null); }, 800);
+    }
+  }
+
+  function handleCancel() {
+    setLine1(saved.line1);
+    setLine2(saved.line2);
+    setCity(saved.city);
+    setPostcode(saved.postcode);
+    setEditing(false);
+    setStatus(null);
+  }
+
+  if (!editing) {
+    return (
+      <div style={{ marginBottom: '1.25rem' }}>
+        <div style={labelStyle}>Home Address</div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', paddingTop: '2px' }}>
+          <span style={displayAddress ? displayVal : displayEmpty}>{displayAddress || 'Not provided'}</span>
+          <button type="button" onClick={() => setEditing(true)} style={pencilBtnStyle} title="Edit home address">
+            <PencilIcon />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <div style={{ marginBottom: '0.75rem' }}>
+        <label style={labelStyle}>Address Line 1</label>
+        <input style={inputStyle} value={line1} onChange={e => setLine1(e.target.value)} autoComplete="address-line1" />
+      </div>
+      <div style={{ marginBottom: '0.75rem' }}>
+        <label style={labelStyle}>Address Line 2</label>
+        <input style={inputStyle} value={line2} onChange={e => setLine2(e.target.value)} autoComplete="address-line2" />
+      </div>
+      <div style={fieldGroup(2)}>
+        <div>
+          <label style={labelStyle}>City</label>
+          <input style={inputStyle} value={city} onChange={e => setCity(e.target.value)} autoComplete="address-level2" />
+        </div>
+        <div>
+          <label style={labelStyle}>Postcode</label>
+          <input style={inputStyle} value={postcode} onChange={e => setPostcode(e.target.value)} autoComplete="postal-code" />
+        </div>
+      </div>
+      {status && <p style={statusMsg(status.ok)}>{status.text}</p>}
+      <EditActions onSave={handleSave} onCancel={handleCancel} pending={pending} />
+    </div>
+  );
+}
+
+function ECSection({ profile }: { profile: Profile | null }) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName]       = useState(profile?.emergency_contact_name         ?? '');
+  const [rel, setRel]         = useState(profile?.emergency_contact_relationship ?? '');
+  const [phone, setPhone]     = useState(profile?.emergency_contact_phone        ?? '');
+  const [ecEmail, setEcEmail] = useState(profile?.emergency_contact_email        ?? '');
+  const [saved, setSaved] = useState({
+    name:    profile?.emergency_contact_name         ?? '',
+    rel:     profile?.emergency_contact_relationship ?? '',
+    phone:   profile?.emergency_contact_phone        ?? '',
+    email:   profile?.emergency_contact_email        ?? '',
+  });
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const displayLine1 = saved.name
+    ? (saved.rel ? `${saved.name} (${saved.rel})` : saved.name)
+    : '';
+  const displayLine2 = [saved.phone, saved.email].filter(Boolean).join(' · ');
+  const hasData = displayLine1 || displayLine2;
+
+  async function handleSave() {
+    setPending(true);
+    setStatus(null);
+    const fd = new FormData();
+    fd.set('ec_name', name);
+    fd.set('ec_relationship', rel);
+    fd.set('ec_phone', phone);
+    fd.set('ec_email', ecEmail);
+    const result = await saveEmergencyContact(null, fd);
+    setPending(false);
+    if (result?.error) {
+      setStatus({ ok: false, text: result.error });
+    } else {
+      setSaved({ name: name.trim(), rel: rel.trim(), phone: phone.trim(), email: ecEmail.trim() });
+      setStatus({ ok: true, text: 'Emergency contact updated.' });
+      setTimeout(() => { setEditing(false); setStatus(null); }, 800);
+    }
+  }
+
+  function handleCancel() {
+    setName(saved.name);
+    setRel(saved.rel);
+    setPhone(saved.phone);
+    setEcEmail(saved.email);
+    setEditing(false);
+    setStatus(null);
+  }
+
+  if (!editing) {
+    return (
+      <div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+          <div>
+            {hasData ? (
+              <>
+                {displayLine1 && <div style={displayVal}>{displayLine1}</div>}
+                {displayLine2 && (
+                  <div style={{ ...displayVal, color: 'rgba(27,59,38,.6)', fontSize: '13px', marginTop: '2px' }}>
+                    {displayLine2}
+                  </div>
+                )}
+              </>
+            ) : (
+              <span style={displayEmpty}>Not provided</span>
+            )}
+          </div>
+          <button type="button" onClick={() => setEditing(true)} style={pencilBtnStyle} title="Edit emergency contact">
+            <PencilIcon />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={fieldGroup(2)}>
+        <div>
+          <label style={labelStyle}>Contact Name</label>
+          <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} />
+        </div>
+        <div>
+          <label style={labelStyle}>Relationship</label>
+          <input style={inputStyle} value={rel} onChange={e => setRel(e.target.value)} placeholder="e.g. Spouse, Sibling" />
+        </div>
+      </div>
+      <div style={fieldGroup(2)}>
+        <div>
+          <label style={labelStyle}>Phone Number</label>
+          <input type="tel" style={inputStyle} value={phone} onChange={e => setPhone(e.target.value)} />
+        </div>
+        <div>
+          <label style={labelStyle}>Email</label>
+          <input type="email" style={inputStyle} value={ecEmail} onChange={e => setEcEmail(e.target.value)} />
+        </div>
+      </div>
+      {status && <p style={statusMsg(status.ok)}>{status.text}</p>}
+      <EditActions onSave={handleSave} onCancel={handleCancel} pending={pending} />
+    </div>
+  );
+}
+
+function EmailSection({ initialEmail, onEmailChange }: {
+  initialEmail: string;
+  onEmailChange?: (email: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(initialEmail);
+  const [saved, setSaved] = useState(initialEmail);
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSave() {
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed) { setStatus({ ok: false, text: 'Email address is required.' }); return; }
+    setPending(true);
+    setStatus(null);
+    const fd = new FormData();
+    fd.set('email', trimmed);
+    const result = await saveEmail(null, fd);
+    setPending(false);
+    if (result?.error) {
+      setStatus({ ok: false, text: result.error });
+    } else {
+      setSaved(trimmed);
+      onEmailChange?.(trimmed);
+      setStatus({ ok: true, text: 'Email updated. Use your new address to log in next time.' });
+      setTimeout(() => { setEditing(false); setStatus(null); }, 1500);
+    }
+  }
+
+  function handleCancel() {
+    setValue(saved);
+    setEditing(false);
+    setStatus(null);
+  }
+
+  if (!editing) {
+    return (
+      <div style={{ marginBottom: '1.25rem' }}>
+        <div style={labelStyle}>Email Address</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '2px' }}>
+          <span style={displayVal}>{saved}</span>
+          <button type="button" onClick={() => setEditing(true)} style={pencilBtnStyle} title="Edit email address">
+            <PencilIcon />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <label style={labelStyle}>Email Address</label>
+      <input
+        type="email"
+        style={inputStyle}
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        autoComplete="email"
+      />
+      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'rgba(27,59,38,.5)', marginTop: '6px' }}>
+        This is also your login email. You will need to use the new address next time you sign in.
+      </p>
+      {status && <p style={statusMsg(status.ok)}>{status.text}</p>}
+      <EditActions onSave={handleSave} onCancel={handleCancel} pending={pending} />
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
+export function MyDetailsClient({ email, memberId, memberName, profile, balance, photoIdFilename, ledgerBalance }: Props) {
+  const [openSection, setOpenSection] = useState<string | null>('details');
 
   const [pwCurrent,   setPwCurrent]   = useState('');
   const [pwNew,       setPwNew]       = useState('');
@@ -206,6 +694,10 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
   const [prefsSaved, setPrefsSaved] = useState(false);
   const [bookings, setBookings] = useState<BookedMatch[]>([]);
+
+  const initialFirstName = profile?.first_name || memberName.split(' ')[0] || 'Member';
+  const [liveFirstName, setLiveFirstName] = useState(initialFirstName);
+  const [liveEmail, setLiveEmail] = useState(email);
 
   useEffect(() => {
     try {
@@ -232,14 +724,11 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
     if (pwNew !== pwConfirm) { setPwMsg({ ok: false, text: 'Passwords do not match.' }); return; }
     setPwPending(true);
     try {
-      const supabase = createClient();
-      // Re-authenticate with current password first
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) throw new Error('No authenticated session found. Please log in again.');
-      const { error: signInErr } = await supabase.auth.signInWithPassword({ email: user.email, password: pwCurrent });
-      if (signInErr) throw new Error('Current password is incorrect.');
-      const { error: updateErr } = await supabase.auth.updateUser({ password: pwNew });
-      if (updateErr) throw new Error(updateErr.message);
+      const fd = new FormData();
+      fd.append('current_password', pwCurrent);
+      fd.append('new_password', pwNew);
+      const result = await changePassword(null, fd);
+      if (result?.error) throw new Error(result.error);
       setPwMsg({ ok: true, text: 'Password changed successfully.' });
       setPwCurrent(''); setPwNew(''); setPwConfirm('');
     } catch (err: unknown) {
@@ -255,13 +744,10 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
 
   const fmtGBP = (n: number) => `£${n.toFixed(2)}`;
 
-  const firstName = profile?.first_name || memberName.split(' ')[0] || 'Member';
-
   return (
     <div>
-      {/* Profile header — LRC style */}
+      {/* Profile header */}
       <div style={{ textAlign: 'center', marginBottom: '3rem', paddingBottom: '2.5rem', borderBottom: '1px solid #e0e0e0' }}>
-        {/* Avatar */}
         <div style={{
           width: 80, height: 80, borderRadius: '50%',
           background: '#f5f0e8',
@@ -276,7 +762,6 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
           </svg>
         </div>
 
-        {/* Welcome heading */}
         <h2 style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
@@ -285,10 +770,9 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
           margin: '0 0 0.5rem',
           letterSpacing: '-.01em',
         }}>
-          Welcome, {firstName}
+          Welcome, {liveFirstName}
         </h2>
 
-        {/* Member number */}
         <div style={{
           fontFamily: "'DM Sans', sans-serif",
           fontSize: '14px',
@@ -298,20 +782,19 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
           marginBottom: '0.35rem',
         }}>
           <span style={{ color: GOLD }}>Member No. </span>
-          <span style={{ color: 'var(--green-deep)' }}>{memberId}</span>
+          <span style={{ color: 'var(--green-deep)' }}>{memberId ?? '—'}</span>
         </div>
 
-        {/* Email */}
         <div style={{
           fontFamily: "'DM Sans', sans-serif",
           fontSize: '13px',
           color: 'rgba(27,59,38,.45)',
         }}>
-          {email}
+          {liveEmail}
         </div>
       </div>
 
-      {/* ── Member Photo ID ── */}
+      {/* Member Photo ID */}
       {photoIdFilename && (
         <div style={{
           display: 'flex',
@@ -349,107 +832,120 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
         </div>
       )}
 
-      {/* ── Accordion 1: Member Details ── */}
-      <AccordionRow title="Member Details" open={openSection === 'details'} onToggle={() => toggle('details')}>
-        <form action={detailsAction}>
-          <div style={fieldGroup()}>
-            <div>
-              <label style={labelStyle}>Title</label>
-              <div style={{ position: 'relative' }}>
-                <select name="title" defaultValue={profile?.title ?? ''} style={selectStyle}>
-                  <option value="">Select…</option>
-                  {['Mr','Mrs','Ms','Miss','Dr','Prof','Rev','Other'].map(t => (
-                    <option key={t}>{t}</option>
-                  ))}
-                </select>
-                <svg viewBox="0 0 24 24" fill="none" stroke="rgba(27,59,38,.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 13, height: 13, pointerEvents: 'none' }}>
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+      {/* Account Balance Card — read-only, no edit affordance */}
+      {(() => {
+        const bal = ledgerBalance.balance;
+        const isZero   = Math.abs(bal) < 0.005;
+        const isOwed   = bal >  0.005;
+        const color    = isOwed ? '#c0392b' : '#2e7d32';
+        const label    = isZero ? 'Account Clear' : isOwed ? 'Outstanding' : 'In Credit';
+        const amount   = isZero ? '£0.00' : `£${Math.abs(bal).toFixed(2)}`;
+
+        return (
+          <Link
+            href="/members/account"
+            style={{ textDecoration: 'none', display: 'block', marginBottom: '2rem' }}
+          >
+            <div
+              style={{
+                padding: '1.25rem 1.5rem',
+                background: '#fff',
+                border: `1.5px solid ${isOwed ? 'rgba(192,57,43,.25)' : 'rgba(45,90,61,.15)'}`,
+                cursor: 'pointer',
+                transition: 'border-color .15s, box-shadow .15s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '1rem',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 10px rgba(0,0,0,.07)';
+                (e.currentTarget as HTMLDivElement).style.borderColor = isOwed ? 'rgba(192,57,43,.5)' : 'rgba(45,90,61,.35)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLDivElement).style.boxShadow = '';
+                (e.currentTarget as HTMLDivElement).style.borderColor = isOwed ? 'rgba(192,57,43,.25)' : 'rgba(45,90,61,.15)';
+              }}
+            >
+              <div>
+                <div style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  letterSpacing: '.14em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(27,59,38,.45)',
+                  marginBottom: '6px',
+                }}>
+                  {isZero ? 'Account Balance' : isOwed ? 'Outstanding Balance' : 'Account Balance'}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                  <span style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: '24px',
+                    fontWeight: 500,
+                    color,
+                    letterSpacing: '-.01em',
+                  }}>
+                    {amount}
+                  </span>
+                  <span style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    letterSpacing: '.1em',
+                    textTransform: 'uppercase',
+                    color,
+                    opacity: 0.85,
+                  }}>
+                    {label}
+                  </span>
+                </div>
+                {!isZero && (
+                  <div style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '11px',
+                    color: 'rgba(27,59,38,.4)',
+                    marginTop: '4px',
+                  }}>
+                    Debits {fmtGBP(ledgerBalance.debits)} · Payments {fmtGBP(ledgerBalance.credits)}
+                  </div>
+                )}
+              </div>
+              <div style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: '12px',
+                fontWeight: 600,
+                letterSpacing: '.05em',
+                color: GOLD,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}>
+                View Statement
+                <span style={{ fontSize: '14px' }}>→</span>
               </div>
             </div>
-          </div>
+          </Link>
+        );
+      })()}
 
-          <div style={fieldGroup(2)}>
-            <div>
-              <label style={labelStyle}>First Name <span style={{ color: '#c0392b' }}>*</span></label>
-              <input name="first_name" required style={inputStyle} defaultValue={profile?.first_name ?? ''} autoComplete="given-name" />
-            </div>
-            <div>
-              <label style={labelStyle}>Last Name <span style={{ color: '#c0392b' }}>*</span></label>
-              <input name="last_name" required style={inputStyle} defaultValue={profile?.last_name ?? ''} autoComplete="family-name" />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={labelStyle}>Email Address</label>
-            <input style={readOnlyStyle} readOnly value={email} />
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={labelStyle}>Mobile</label>
-            <input name="mobile" type="tel" style={inputStyle} defaultValue={profile?.mobile ?? ''} autoComplete="tel" />
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={labelStyle}>Address Line 1</label>
-            <input name="address_line1" style={inputStyle} defaultValue={profile?.address_line1 ?? ''} autoComplete="address-line1" />
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={labelStyle}>Address Line 2</label>
-            <input name="address_line2" style={inputStyle} defaultValue={profile?.address_line2 ?? ''} autoComplete="address-line2" />
-          </div>
-
-          <div style={fieldGroup(2)}>
-            <div>
-              <label style={labelStyle}>City</label>
-              <input name="city" style={inputStyle} defaultValue={profile?.city ?? ''} autoComplete="address-level2" />
-            </div>
-            <div>
-              <label style={labelStyle}>Postcode</label>
-              <input name="postcode" style={inputStyle} defaultValue={profile?.postcode ?? ''} autoComplete="postal-code" />
-            </div>
-          </div>
-
-          {detailsState?.error   && <p style={statusMsg(false)}>{detailsState.error}</p>}
-          {detailsState?.success && <p style={statusMsg(true)}>Details saved successfully.</p>}
-
-          <button type="submit" style={saveBtn}>Save Details</button>
-        </form>
+      {/* ── Accordion 1: Member Details ── */}
+      <AccordionRow title="Member Details" open={openSection === 'details'} onToggle={() => toggle('details')}>
+        <NameSection profile={profile} onNameChange={setLiveFirstName} />
+        <EmailSection initialEmail={email} onEmailChange={setLiveEmail} />
+        <MobileSection profile={profile} />
+        <AddressSection profile={profile} />
       </AccordionRow>
 
       {/* ── Accordion 2: Emergency Contact ── */}
       <AccordionRow title="Emergency Contact" open={openSection === 'emergency'} onToggle={() => toggle('emergency')}>
-        <form action={ecAction}>
-          <div style={fieldGroup(2)}>
-            <div>
-              <label style={labelStyle}>Contact Name</label>
-              <input name="ec_name" style={inputStyle} defaultValue={profile?.emergency_contact_name ?? ''} />
-            </div>
-            <div>
-              <label style={labelStyle}>Relationship</label>
-              <input name="ec_relationship" style={inputStyle} defaultValue={profile?.emergency_contact_relationship ?? ''} placeholder="e.g. Spouse, Sibling" />
-            </div>
-          </div>
-          <div style={fieldGroup(2)}>
-            <div>
-              <label style={labelStyle}>Phone Number</label>
-              <input name="ec_phone" type="tel" style={inputStyle} defaultValue={profile?.emergency_contact_phone ?? ''} />
-            </div>
-            <div>
-              <label style={labelStyle}>Email</label>
-              <input name="ec_email" type="email" style={inputStyle} defaultValue={profile?.emergency_contact_email ?? ''} />
-            </div>
-          </div>
-
-          {ecState?.error   && <p style={statusMsg(false)}>{ecState.error}</p>}
-          {ecState?.success && <p style={statusMsg(true)}>Emergency contact saved successfully.</p>}
-
-          <button type="submit" style={saveBtn}>Save Contact</button>
-        </form>
+        <ECSection profile={profile} />
       </AccordionRow>
 
-      {/* ── Accordion 4: Account Statement ── */}
+      {/* ── Accordion 3: Account Statement ── */}
       <AccordionRow title="Account Statement" open={openSection === 'statement'} onToggle={() => toggle('statement')}>
         {balance ? (
           <div>
@@ -501,7 +997,7 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
         )}
       </AccordionRow>
 
-      {/* ── Accordion 5: Email Preferences ── */}
+      {/* ── Accordion 4: Email Preferences ── */}
       <AccordionRow title="Email Preferences" open={openSection === 'prefs'} onToggle={() => toggle('prefs')}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {([
@@ -526,7 +1022,7 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
         </div>
       </AccordionRow>
 
-      {/* ── Accordion 6: My Bookings ── */}
+      {/* ── Accordion 5: My Bookings ── */}
       <AccordionRow title="My Bookings" open={openSection === 'bookings'} onToggle={() => toggle('bookings')}>
         {bookings.length === 0 ? (
           <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', color: 'rgba(27,59,38,.55)', fontStyle: 'italic' }}>
@@ -568,7 +1064,7 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
         )}
       </AccordionRow>
 
-      {/* ── Change Password ─────────────────────────────────────────────── */}
+      {/* ── Change Password ── */}
       <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(45,90,61,.12)' }}>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '18px', fontWeight: 500, color: '#1a2e1f', margin: '0 0 1.5rem' }}>
           Change Password
@@ -608,7 +1104,6 @@ export function MyDetailsClient({ email, memberId, memberName, profile, balance,
           Sign out
         </a>
       </div>
-
     </div>
   );
 }

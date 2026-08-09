@@ -855,7 +855,9 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                         {m.full_name}
                       </td>
                       <td style={tdStyle}>
-                        {m.email || '—'}
+                        {m.email
+                          ? <a href={`mailto:${m.email}`} style={{ color: 'var(--green-deep)', textDecoration: 'underline' }}>{m.email}</a>
+                          : '—'}
                       </td>
                       <td style={{ ...tdStyle, fontSize: '14px', fontWeight: 600, color: 'var(--green-mid)', textAlign: 'center' }}>
                         {fmtHcp(m.handicap)}

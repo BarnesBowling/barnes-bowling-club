@@ -18,10 +18,19 @@ export default async function MyDetailsPage() {
   const [{ data: profile }, { data: balanceRow }, { data: clubMemberRow }] = await Promise.all([
     supabaseAdmin.from('member_profiles').select('*').eq('member_email', email).maybeSingle(),
     supabaseAdmin.from('member_balances').select('membership_fee, guest_fee, manser_fee, wrong_bias_fee, event_fee').eq('member_email', email).maybeSingle(),
-    supabaseAdmin.from('club_members').select('photo_id_filename').eq('email', email).maybeSingle(),
+    supabaseAdmin.from('club_members').select('id, photo_id_filename').eq('email', email).maybeSingle(),
   ]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const photoIdFilename = (clubMemberRow as any)?.photo_id_filename as string | null ?? null;
+
+  // Fetch ledger balance from member_ledger
+  const clubMemberId = (clubMemberRow as { id?: string } | null)?.id ?? null;
+  const { data: ledgerRows } = clubMemberId
+    ? await supabaseAdmin.from('member_ledger').select('amount, type').eq('member_id', clubMemberId)
+    : { data: [] };
+  const ledgerDebits  = (ledgerRows ?? []).filter(r => r.type === 'debit').reduce((s, r) => s + Number(r.amount), 0);
+  const ledgerCredits = (ledgerRows ?? []).filter(r => r.type === 'credit').reduce((s, r) => s + Number(r.amount), 0);
+  const ledgerBalance = { debits: ledgerDebits, credits: ledgerCredits, balance: ledgerDebits - ledgerCredits };
 
   const memberNumber =
     getMemberNumber(profile?.first_name ?? '', profile?.last_name ?? '') ??
@@ -47,7 +56,7 @@ export default async function MyDetailsPage() {
       <main>
         <div style={{ background: 'var(--green-deep)', padding: '1rem 2rem 4rem', color: 'var(--cream)' }}>
           <div className="section-inner">
-            <div className="section-tag" style={{ color: 'var(--gold)', borderTopColor: 'var(--gold)' }}>Members Area</div>
+            <a href="/members/dashboard" className="section-tag" style={{ color: 'var(--gold)', borderTopColor: 'var(--gold)', textDecoration: 'none' }}>Members Area</a>
             <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>
               My <em style={{ color: '#c9a84c', fontStyle: 'italic' }}>Details</em>
             </h1>
@@ -62,6 +71,7 @@ export default async function MyDetailsPage() {
             profile={profile}
             balance={balance}
             photoIdFilename={photoIdFilename}
+            ledgerBalance={ledgerBalance}
           />
         </div>
       </main>

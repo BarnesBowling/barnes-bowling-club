@@ -432,7 +432,7 @@ export default function AdminBookAGamePage() {
           ← Back to Admin
         </a>
         <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '28px', color: 'var(--green-deep)', margin: '0.5rem 0 0.25rem' }}>
-          Book a Match Game
+          Book a Match
         </h1>
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
           Book a fixture on behalf of any member.

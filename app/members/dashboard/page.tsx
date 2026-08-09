@@ -61,7 +61,7 @@ export default async function Dashboard() {
             background: 'transparent',
             transition: 'background .15s, color .15s',
           }}>
-            Book a Match Game
+            Book a Match
           </a>
           <div className="section-inner">
             <div className="section-tag" style={{ color: '#c9a84c', borderTopColor: '#c9a84c' }}>Members Area</div>

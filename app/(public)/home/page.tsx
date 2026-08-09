@@ -142,7 +142,7 @@ export default async function Home() {
               <div className="activity-card-img-overlay" />
             </div>
             <div className="activity-card-body">
-              <div className="activity-card-title">Book a Match Game</div>
+              <div className="activity-card-title">Book a Match</div>
               <p className="activity-card-desc">
                 Play a friendly match on our historic undulating green. Open to members
                 and visitors — turn up any Wednesday evening for a roll-up.

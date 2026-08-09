@@ -9,7 +9,7 @@ import { MyDetailsDropdown } from './MyDetailsDropdown';
 import { CompDatesCard } from './CompDatesCard';
 import { ResultsDropdown } from './ResultsDropdown';
 import { ResultsNavDropdown } from './ResultsNavDropdown';
-import { BannerCalendar } from './BannerCalendar';
+import { MiniCalendar } from '../_components/MiniCalendar';
 
 const TOP_HANDICAPS = [...MEMBERS]
   .filter(m => m.h[2026] !== undefined)
@@ -27,22 +27,13 @@ export default async function Dashboard() {
 
   const email = session.email;
 
-  const today          = new Date().toISOString().split('T')[0];
-  const oneMonthLater  = new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-  const [{ data: events }, { data: notices }, { data: officers }, { data: green }, { data: memberProfile }, { data: upcomingMatches }] =
+  const [{ data: events }, { data: notices }, { data: officers }, { data: green }, { data: memberProfile }] =
     await Promise.all([
       supabaseAdmin.from('events').select('*').gte('event_date', new Date().toISOString()).order('event_date').limit(8),
       supabaseAdmin.from('notices').select('*').order('published_at', { ascending: false }).limit(5),
       supabaseAdmin.from('officers').select('*').eq('group_name', 'Committee').order('sort_order'),
       supabaseAdmin.from('green_status').select('*').order('updated_at', { ascending: false }).limit(1).maybeSingle(),
       supabaseAdmin.from('member_profiles').select('first_name').eq('member_email', email).maybeSingle(),
-      supabaseAdmin.from('fixture_bookings')
-        .select('competition, player1, player2, player3, player4, date, time_slot')
-        .gte('date', today)
-        .lte('date', oneMonthLater)
-        .order('date')
-        .order('time_slot'),
     ]);
 
   const firstName = memberProfile?.first_name;
@@ -61,10 +52,10 @@ export default async function Dashboard() {
             bottom: '1rem',
             display: 'flex',
             flexDirection: 'row',
-            alignItems: 'stretch',
+            alignItems: 'flex-end',
             gap: '16px',
           }}>
-            <BannerCalendar upcomingMatches={upcomingMatches ?? []} />
+            <MiniCalendar />
             <a href="/members/book-a-game" className="dashboard-book-btn" style={{
               display: 'inline-block',
               padding: '15px 34px',
@@ -80,7 +71,6 @@ export default async function Dashboard() {
               background: 'transparent',
               transition: 'background .15s, color .15s',
               flexShrink: 0,
-              alignSelf: 'flex-end',
             }}>
               Book a Match
             </a>

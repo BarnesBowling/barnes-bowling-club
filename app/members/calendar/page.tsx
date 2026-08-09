@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { getMyUpcomingBookings, type FixtureBooking } from '../book-a-game/actions';
+import { getAllUpcomingBookings, type FixtureBooking } from '../book-a-game/actions';
 import { EVENTS, TBC_EVENTS, type Category, type CalEvent } from '@/data/season-calendar-2026';
 import { MiniCalendar } from '../_components/MiniCalendar';
 
@@ -47,7 +47,7 @@ function groupByMonth(events: CalEvent[]) {
 export default function CalendarPage() {
   const [bookedMatches, setBookedMatches] = useState<FixtureBooking[]>([]);
   useEffect(() => {
-    getMyUpcomingBookings().then(setBookedMatches).catch(() => setBookedMatches([]));
+    getAllUpcomingBookings().then(setBookedMatches).catch(() => setBookedMatches([]));
   }, []);
 
   const [filterCategory, setFilterCategory] = useState<Category | null>(null);

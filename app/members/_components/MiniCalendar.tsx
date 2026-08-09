@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getMyUpcomingBookings, type FixtureBooking } from '../book-a-game/actions';
+import { getAllUpcomingBookings, type FixtureBooking } from '../book-a-game/actions';
 import { EVENTS, type Category, type CalEvent } from '@/data/season-calendar-2026';
 
 const CATEGORY_META: Record<Category, { label: string; dot: string; badge: string; text: string }> = {
@@ -52,7 +52,7 @@ export function MiniCalendar() {
   const [selectedDay, setSelectedDay] = useState<{ day: number; month: number; year: number } | null>(null);
 
   useEffect(() => {
-    getMyUpcomingBookings().then(setBookedMatches).catch(() => setBookedMatches([]));
+    getAllUpcomingBookings().then(setBookedMatches).catch(() => setBookedMatches([]));
   }, []);
 
   function prevMonth() {

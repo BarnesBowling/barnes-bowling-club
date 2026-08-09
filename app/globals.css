@@ -45,8 +45,8 @@ p { margin: 0; }
 .nav-main-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; height: 54px; gap: 1.5rem; }
 .nav-brand { flex-shrink: 0; text-decoration: none; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; position: relative; top: 0; margin-left: -2px; }
 .nav-brand-name { display: block; font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 700; color: var(--green-deep); line-height: 1.2; letter-spacing: .02em; white-space: nowrap; }
-.nav-brand-sub { display: block; font-family: 'DM Sans', sans-serif; font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
-.nav-brand-sup { font-size: 7px; vertical-align: super; line-height: 0; letter-spacing: 0; font-style: italic; }
+.nav-brand-sub { display: block; font-family: 'DM Sans', sans-serif; font-size: 14px; letter-spacing: .22em; text-transform: uppercase; color: #AF9859; margin-top: 2px; }
+.nav-brand-sup { font-size: 8px; vertical-align: super; line-height: 0; letter-spacing: 0; font-style: italic; }
 .navlinks { display: flex; flex: 1; align-items: center; justify-content: space-between; position: relative; top: 20px; }
 .navlinks > a { font-family: 'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #212121; font-size: 16px; font-weight: 400; text-decoration: none; padding: 6px 17px; opacity: 1; transition: color .15s; white-space: nowrap; }
 .navlinks > a:hover { color: var(--green-deep); }
@@ -346,7 +346,7 @@ textarea { min-height: 110px; }
   .nav-main-inner { padding: 0 1rem; height: 62px; }
   .nav-right { display: flex !important; }
   .nav-brand-name { font-size: 31px !important; }
-  .nav-brand-sub { display: block !important; font-size: 11px !important; }
+  .nav-brand-sub { display: block !important; font-size: 13px !important; }
   .nav-members-btn { padding: 6px 10px !important; font-size: 10px !important; }
 }
 @media (max-width: 800px) {

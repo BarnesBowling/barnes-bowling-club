@@ -61,7 +61,7 @@ export default async function Dashboard() {
             bottom: '1rem',
             display: 'flex',
             flexDirection: 'row',
-            alignItems: 'flex-end',
+            alignItems: 'stretch',
             gap: '16px',
           }}>
             <BannerCalendar upcomingMatches={upcomingMatches ?? []} />
@@ -80,6 +80,7 @@ export default async function Dashboard() {
               background: 'transparent',
               transition: 'background .15s, color .15s',
               flexShrink: 0,
+              alignSelf: 'flex-end',
             }}>
               Book a Match
             </a>

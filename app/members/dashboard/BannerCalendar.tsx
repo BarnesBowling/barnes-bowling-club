@@ -26,19 +26,14 @@ export interface CompMatch {
 
 interface Props { upcomingMatches: CompMatch[] }
 
-const CELL_W = 26;
-const CELL_H = 24;
-const GAP    = 2;
-
 export function BannerCalendar({ upcomingMatches }: Props) {
   const [zoomed,     setZoomed]     = useState(false);
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
 
   const now   = new Date();
   const year  = now.getFullYear();
-  const month = now.getMonth(); // 0-indexed
+  const month = now.getMonth();
 
-  // day → matches for the current calendar month only
   const matchMap = new Map<number, CompMatch[]>();
   for (const m of upcomingMatches) {
     const [y, mo, d] = m.date.split('-').map(Number);
@@ -48,30 +43,34 @@ export function BannerCalendar({ upcomingMatches }: Props) {
     }
   }
 
-  // Build Mon-first grid cells
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDow    = new Date(year, month, 1).getDay(); // 0=Sun
+  const firstDow    = new Date(year, month, 1).getDay();
   const startOffset = firstDow === 0 ? 6 : firstDow - 1;
   const cells: (number | null)[] = Array(startOffset).fill(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const today = now.getDate();
+  const numRows = cells.length / 7;
+  const today   = now.getDate();
 
   return (
     <>
       <style>{`
-        .banner-cal { display: block; }
+        .banner-cal { display: flex; flex-direction: column; }
         @media (max-width: 740px) { .banner-cal { display: none !important; } }
       `}</style>
+
+      {/*
+        align-self: stretch → takes the full height of the flex wrapper (banner - 2rem margin)
+        aspect-ratio: 1/1  → width = height → perfect square
+      */}
       <div
         className="banner-cal"
         onMouseEnter={() => setZoomed(true)}
         onMouseLeave={() => { setZoomed(false); setHoveredDay(null); }}
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'stretch',
+          alignSelf: 'stretch',
+          aspectRatio: '1 / 1',
           transform: zoomed ? 'scale(1.8)' : 'scale(1)',
           transformOrigin: 'bottom right',
           transition: 'transform 0.2s ease',
@@ -80,51 +79,61 @@ export function BannerCalendar({ upcomingMatches }: Props) {
           cursor: 'default',
         }}
       >
-        {/* Month label — floats above the white card on the dark green banner */}
+        {/* Month label — white text on the dark green banner above the white card */}
         <div style={{
           fontFamily: "'DM Sans', sans-serif",
-          fontSize: '8px',
+          fontSize: '10px',
           fontWeight: 600,
-          letterSpacing: '.14em',
+          letterSpacing: '.12em',
           textTransform: 'uppercase',
           color: '#ffffff',
           textAlign: 'center',
-          marginBottom: '4px',
+          flexShrink: 0,
+          paddingBottom: '4px',
         }}>
           {MONTH_NAMES[month]} {year}
         </div>
 
-        {/* White calendar card */}
-        <div style={{ background: '#fff', padding: '6px 8px 6px' }}>
-
+        {/* White card — fills remaining height */}
+        <div style={{
+          flex: 1,
+          minHeight: 0,
+          background: '#fff',
+          padding: '8px',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
           {/* Day-of-week headers */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: `repeat(7, ${CELL_W}px)`,
-            gap: `${GAP}px`,
-            marginBottom: '3px',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            gap: '2px',
+            flexShrink: 0,
+            marginBottom: '4px',
           }}>
             {DAY_INITIALS.map((d, i) => (
               <div key={i} style={{
                 textAlign: 'center',
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: '7px',
+                fontSize: '9px',
                 fontWeight: 600,
                 color: 'rgba(27,59,38,.45)',
               }}>{d}</div>
             ))}
           </div>
 
-          {/* Calendar grid */}
+          {/* Calendar grid — fills remaining height with equal rows */}
           <div style={{
+            flex: 1,
+            minHeight: 0,
             display: 'grid',
-            gridTemplateColumns: `repeat(7, ${CELL_W}px)`,
-            gap: `${GAP}px`,
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            gridTemplateRows: `repeat(${numRows}, 1fr)`,
+            gap: '2px',
           }}>
             {cells.map((day, i) => {
-              if (day === null) {
-                return <div key={i} style={{ width: CELL_W, height: CELL_H }} />;
-              }
+              if (day === null) return <div key={i} />;
+
               const matches  = matchMap.get(day) ?? [];
               const hasMatch = matches.length > 0;
               const isToday  = day === today;
@@ -135,13 +144,11 @@ export function BannerCalendar({ upcomingMatches }: Props) {
                   key={i}
                   style={{
                     position: 'relative',
-                    width:  CELL_W,
-                    height: CELL_H,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '2px',
+                    gap: '3px',
                     borderRadius: '2px',
                     background: isToday ? 'rgba(201,168,76,.15)' : 'transparent',
                     border: isToday
@@ -152,7 +159,7 @@ export function BannerCalendar({ upcomingMatches }: Props) {
                 >
                   <span style={{
                     fontFamily: "'DM Sans', sans-serif",
-                    fontSize: '8px',
+                    fontSize: '11px',
                     fontWeight: isToday ? 700 : 400,
                     color: isToday ? GOLD : GREEN_DEEP,
                     lineHeight: 1,
@@ -160,12 +167,11 @@ export function BannerCalendar({ upcomingMatches }: Props) {
                     {day}
                   </span>
 
-                  {/* Gold dots — one per match, capped at 3 */}
                   {hasMatch && (
                     <div style={{ display: 'flex', gap: '2px' }}>
                       {matches.slice(0, 3).map((_, j) => (
                         <div key={j} style={{
-                          width: '3px', height: '3px',
+                          width: '4px', height: '4px',
                           borderRadius: '50%',
                           background: GOLD,
                         }} />
@@ -173,13 +179,12 @@ export function BannerCalendar({ upcomingMatches }: Props) {
                     </div>
                   )}
 
-                  {/* Day popover (only when zoomed, only for match days) */}
                   {isHov && (
                     <div style={{
                       position: 'absolute',
                       top: 'calc(100% + 3px)',
                       right: 0,
-                      width: '185px',
+                      width: '160px',
                       background: GREEN_DEEP,
                       border: '1px solid rgba(201,168,76,.4)',
                       padding: '8px 10px',

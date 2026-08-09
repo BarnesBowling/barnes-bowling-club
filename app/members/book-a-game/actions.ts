@@ -67,11 +67,9 @@ export async function getMyUpcomingBookings(): Promise<FixtureBooking[]> {
 }
 
 export async function getAllUpcomingBookings(): Promise<FixtureBooking[]> {
-  const today = new Date().toISOString().split('T')[0];
   const { data } = await supabaseAdmin
     .from('fixture_bookings')
     .select('id, competition, player1, player2, player3, player4, date, time_slot, member_email')
-    .gte('date', today)
     .order('date')
     .order('time_slot');
   return (data ?? []) as FixtureBooking[];

@@ -46,80 +46,88 @@ export default async function Dashboard() {
         <div style={{ background: 'var(--green-deep)', padding: '1rem 2rem', color: 'var(--cream)' }}>
           <div className="section-inner">
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '3rem', flexWrap: 'wrap' }}>
-              <div style={{ flex: '1 1 280px' }}>
-            <div className="section-tag" style={{ color: '#c9a84c', borderTopColor: '#c9a84c' }}>Members Area</div>
-            {firstName && (
-              <p style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: 'clamp(1.4rem, 3vw, 2rem)',
-                fontWeight: 400,
-                color: 'rgba(245,240,232,.75)',
-                margin: '0 0 0.15rem',
-                letterSpacing: '-.01em',
-              }}>
-                Welcome, {firstName}
-              </p>
-            )}
-            <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>
-              Members <em style={{ color: '#c9a84c', fontStyle: 'italic' }}>Dashboard</em>
-            </h1>
-            {green && (
-              <div style={{
-                marginTop: '1.5rem',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '8px 16px',
-                background: 'rgba(255,255,255,.07)',
-                border: '1px solid rgba(255,255,255,.12)',
-              }}>
-                <span style={{
-                  width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
-                  background: green.status === 'open_good' ? '#4caf50' : green.status === 'open_fair' ? '#ff9800' : '#f44336',
-                }} />
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'rgba(245,240,232,.85)' }}>
-                  {green.message}
-                </span>
+
+              {/* Left: title + actions */}
+              <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column' }}>
+                <div className="section-tag" style={{ color: '#c9a84c', borderTopColor: '#c9a84c' }}>Members Area</div>
+                {firstName && (
+                  <p style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: 'clamp(1.4rem, 3vw, 2rem)',
+                    fontWeight: 400,
+                    color: 'rgba(245,240,232,.75)',
+                    margin: '0 0 0.15rem',
+                    letterSpacing: '-.01em',
+                  }}>
+                    Welcome, {firstName}
+                  </p>
+                )}
+                <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>
+                  Members <em style={{ color: '#c9a84c', fontStyle: 'italic' }}>Dashboard</em>
+                </h1>
+                <div style={{ marginTop: '1.5rem' }}>
+                  <a href="/members/book-a-game" className="dashboard-book-btn" style={{
+                    display: 'inline-block',
+                    padding: '15px 34px',
+                    border: '3px solid #c9a84c',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '17px',
+                    fontWeight: 700,
+                    letterSpacing: '.08em',
+                    textTransform: 'uppercase',
+                    color: '#c9a84c',
+                    textDecoration: 'none',
+                    whiteSpace: 'nowrap',
+                    background: 'transparent',
+                    transition: 'background .15s, color .15s',
+                  }}>
+                    Book a Match
+                  </a>
+                </div>
+                <div style={{ flex: 1 }} />
+                {green && (
+                  <div style={{
+                    marginTop: '2rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px 16px',
+                    background: 'rgba(255,255,255,.07)',
+                    border: '1px solid rgba(255,255,255,.12)',
+                    alignSelf: 'flex-start',
+                  }}>
+                    <span style={{
+                      width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
+                      background: green.status === 'open_good' ? '#4caf50' : green.status === 'open_fair' ? '#ff9800' : '#f44336',
+                    }} />
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'rgba(245,240,232,.85)' }}>
+                      {green.message}
+                    </span>
+                  </div>
+                )}
+                <div style={{ marginTop: '1rem' }}>
+                  <a href="/members/logout" style={{
+                    display: 'inline-block',
+                    padding: '7px 14px',
+                    border: '1px solid rgba(192,57,43,.35)',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    letterSpacing: '.08em',
+                    textTransform: 'uppercase',
+                    color: 'rgba(230,100,85,.95)',
+                    textDecoration: 'none',
+                  }}>
+                    Sign out
+                  </a>
+                </div>
               </div>
-            )}
-            <div style={{ marginTop: '2rem' }}>
-              <a href="/members/logout" style={{
-                display: 'inline-block',
-                padding: '7px 14px',
-                border: '1px solid rgba(192,57,43,.35)',
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: '11px',
-                fontWeight: 500,
-                letterSpacing: '.08em',
-                textTransform: 'uppercase',
-                color: 'rgba(230,100,85,.95)',
-                textDecoration: 'none',
-              }}>
-                Sign out
-              </a>
-            </div>
-              </div>
-              <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
+
+              {/* Right: calendar only */}
+              <div style={{ flexShrink: 0 }}>
                 <MiniCalendar />
-                <a href="/members/book-a-game" className="dashboard-book-btn" style={{
-                  display: 'inline-block',
-                  padding: '15px 34px',
-                  border: '3px solid #c9a84c',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: '17px',
-                  fontWeight: 700,
-                  letterSpacing: '.08em',
-                  textTransform: 'uppercase',
-                  color: '#c9a84c',
-                  textDecoration: 'none',
-                  whiteSpace: 'nowrap',
-                  background: 'transparent',
-                  transition: 'background .15s, color .15s',
-                  flexShrink: 0,
-                }}>
-                  Book a Match
-                </a>
               </div>
+
             </div>
           </div>
         </div>

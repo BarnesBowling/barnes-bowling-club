@@ -7,6 +7,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import { AdminLinkCard } from './AdminLinkCard';
 import { TickerAdmin } from './TickerAdmin';
 import { EventsAdmin } from './EventsAdmin';
+import { AccountsOverview } from './AccountsOverview';
 
 async function updateGreen(formData: FormData) {
   'use server';
@@ -15,6 +16,8 @@ async function updateGreen(formData: FormData) {
     status: String(formData.get('status')),
     message: String(formData.get('message')),
   });
+  revalidatePath('/members/dashboard');
+  redirect('/admin#green');
 }
 
 async function addNotice(formData: FormData) {
@@ -213,7 +216,7 @@ async function updateMembershipAppClubUse(formData: FormData) {
 export default async function Admin() {
   try { await requireAdminSession(); } catch { redirect('/login?redirect=/admin'); }
 
-  const [{ data: apps }, { data: membershipApps }, { data: notices }, { data: sections }, { data: historySections }, { data: timelineEntries }, { data: tickerMessages }, { data: adminOfficers }, { data: adminEvents }] = await Promise.all([
+  const [{ data: apps }, { data: membershipApps }, { data: notices }, { data: sections }, { data: historySections }, { data: timelineEntries }, { data: tickerMessages }, { data: adminOfficers }, { data: adminEvents }, { data: ledgerRows }, { data: stripePayments }, { data: currentGreen }] = await Promise.all([
     supabaseAdmin.from('applications').select('*').order('created_at', { ascending: false }).limit(20),
     supabaseAdmin.from('membership_applications').select('*').order('created_at', { ascending: false }).limit(50),
     supabaseAdmin.from('notices').select('*').order('published_at', { ascending: false }),
@@ -223,7 +226,28 @@ export default async function Admin() {
     supabaseAdmin.from('ticker_messages').select('id, message, sort_order, active').order('sort_order'),
     supabaseAdmin.from('officers').select('id, name, role, sort_order, photo_filename').eq('group_name', 'Committee').order('sort_order'),
     supabaseAdmin.from('events').select('id, title, event_date, description, category, is_tbc, bank_holiday, day_label, location, visibility').order('event_date', { nullsFirst: false }),
+    supabaseAdmin.from('member_ledger').select('member_id, amount, type, club_members(full_name, membership_number)'),
+    supabaseAdmin.from('member_transactions').select('id, member_email, date, description, amount, created_at').lt('amount', 0).order('date', { ascending: false }).limit(20),
+    supabaseAdmin.from('green_status').select('status, message').order('updated_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
+
+  // Compute per-member ledger balances (positive = owes, negative = in credit)
+  const balanceMap = new Map<string, { full_name: string; membership_number: string | null; balance: number }>();
+  for (const row of ledgerRows ?? []) {
+    const cmRaw = row.club_members;
+    const cm = Array.isArray(cmRaw) ? cmRaw[0] as { full_name: string; membership_number: string | null } | undefined : cmRaw as { full_name: string; membership_number: string | null } | null;
+    if (!cm) continue;
+    const signed = row.type === 'credit' ? -Number(row.amount) : Number(row.amount);
+    const existing = balanceMap.get(row.member_id);
+    if (existing) {
+      existing.balance += signed;
+    } else {
+      balanceMap.set(row.member_id, { full_name: cm.full_name, membership_number: cm.membership_number ?? null, balance: signed });
+    }
+  }
+  const ledgerBalances = Array.from(balanceMap.entries())
+    .filter(([, v]) => Math.abs(v.balance) > 0.005)
+    .map(([member_id, v]) => ({ member_id, ...v }));
 
   const inputStyle = { padding: '.7rem', border: '1px solid rgba(45,90,61,.2)', fontFamily: 'inherit', fontSize: '14px', width: '100%' };
   const labelStyle = { fontSize: '10px', fontWeight: 600 as const, letterSpacing: '.12em', textTransform: 'uppercase' as const, color: 'var(--gold)', display: 'block' as const, marginBottom: '6px' };
@@ -249,7 +273,7 @@ export default async function Admin() {
               />
               <AdminLinkCard
                 href="/admin/members"
-                title="Member Accounts"
+                title="Member Management"
                 description="Invite members, resend invitations, remove login accounts"
               />
               <AdminLinkCard
@@ -280,19 +304,31 @@ export default async function Admin() {
             </div>
           </section>
 
-          {/* GREEN STATUS */}
+          {/* ACCOUNTS OVERVIEW */}
           <section>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', marginBottom: '1.5rem' }}>Green condition banner</h2>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', marginBottom: '1.5rem' }}>Accounts overview</h2>
+            <AccountsOverview
+              balances={ledgerBalances}
+              recentPayments={stripePayments ?? []}
+            />
+          </section>
+
+          {/* GREEN STATUS */}
+          <section id="green">
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', marginBottom: '0.5rem' }}>Green condition banner</h2>
+            <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.5rem' }}>
+              The banner text is displayed exactly as written on the members dashboard. The status controls the colour of the dot.
+            </p>
             <form action={updateGreen} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '560px', background: 'white', padding: '2rem', border: '1px solid rgba(45,90,61,.12)' }}>
-              <div><label style={labelStyle}>Status</label>
-                <select name="status" style={inputStyle}>
-                  <option value="open_good">Open — Good conditions</option>
-                  <option value="open_fair">Open — Fair conditions</option>
-                  <option value="closed">Closed</option>
+              <div><label style={labelStyle}>Status (dot colour)</label>
+                <select name="status" defaultValue={currentGreen?.status ?? 'open_good'} style={inputStyle}>
+                  <option value="open_good">Open — Good conditions (green dot)</option>
+                  <option value="open_fair">Open — Fair conditions (amber dot)</option>
+                  <option value="closed">Closed (red dot)</option>
                 </select>
               </div>
-              <div><label style={labelStyle}>Message (shown in ticker)</label>
-                <input name="message" required style={inputStyle} placeholder="e.g. Conditions excellent — firm and true" />
+              <div><label style={labelStyle}>Banner text (shown on members dashboard)</label>
+                <input name="message" required style={inputStyle} defaultValue={currentGreen?.message ?? ''} placeholder="e.g. Green condition: Good — firm and true" />
               </div>
               <button className="btn" style={{ alignSelf: 'flex-start' }}>Update banner</button>
             </form>

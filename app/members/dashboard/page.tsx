@@ -95,7 +95,7 @@ export default async function Dashboard() {
                   background: green.status === 'open_good' ? '#4caf50' : green.status === 'open_fair' ? '#ff9800' : '#f44336',
                 }} />
                 <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'rgba(245,240,232,.85)' }}>
-                  Green: {green.status.replace('_', ' ')} — {green.message}
+                  {green.message}
                 </span>
               </div>
             )}

@@ -1,6 +1,7 @@
 'use client';
 import { useActionState } from 'react';
 import { signIn } from './actions';
+import Link from 'next/link';
 
 const GOLD = '#A89560';
 
@@ -23,6 +24,13 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
   width: '100%',
   boxSizing: 'border-box',
+};
+
+const linkStyle: React.CSSProperties = {
+  fontFamily: "'DM Sans', sans-serif",
+  fontSize: '13px',
+  color: GOLD,
+  textDecoration: 'none',
 };
 
 interface Props {
@@ -52,14 +60,17 @@ export function LoginForm({ redirectPath = '' }: Props) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <label style={labelStyle}>Email Address</label>
+        <label style={labelStyle}>Password</label>
         <input
-          name="email"
-          type="email"
+          name="password"
+          type="password"
           required
-          autoComplete="email"
+          autoComplete="current-password"
           style={inputStyle}
         />
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(27,59,38,.4)', marginTop: '2px' }}>
+          First time logging in? Use your registered email address as your password.
+        </span>
       </div>
 
       {state?.error && (
@@ -93,8 +104,17 @@ export function LoginForm({ redirectPath = '' }: Props) {
             cursor: 'pointer',
           }}
         >
-          Sign In →
+          Log In
         </button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '0.5rem', borderTop: '1px solid rgba(45,90,61,.1)' }}>
+        <Link href="/auth/first-login" style={linkStyle}>
+          Logging on for the first time?
+        </Link>
+        <Link href="/auth/forgot-password" style={{ ...linkStyle, color: 'rgba(27,59,38,.55)' }}>
+          Forgot my password?
+        </Link>
       </div>
     </form>
   );

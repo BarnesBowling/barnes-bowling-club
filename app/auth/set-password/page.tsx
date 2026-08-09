@@ -1,106 +1,69 @@
-'use client';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import { SetPasswordForm } from './SetPasswordForm';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+const GREEN_DEEP = '#1b3b26';
+const GOLD       = '#c9a84c';
 
-export default function SetPasswordPage() {
-  const [password,  setPassword]  = useState('');
-  const [confirm,   setConfirm]   = useState('');
-  const [error,     setError]     = useState('');
-  const [loading,   setLoading]   = useState(false);
-  const [memberNo,  setMemberNo]  = useState<string | null>(null);
-  const [memberName, setMemberName] = useState<string | null>(null);
-  const supabase = createClient();
-  const router   = useRouter();
+export default async function SetPasswordPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  useEffect(() => {
-    // Fetch club_members record for the current Supabase auth user
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data } = await supabase
-        .from('club_members')
-        .select('membership_number, full_name')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
-      if (data) {
-        setMemberNo(data.membership_number);
-        setMemberName(data.full_name);
-      }
-    });
-  }, []);
+  if (!user?.email) redirect('/auth/forgot-password');
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
-    if (password !== confirm) { setError('Passwords do not match.'); return; }
-    setLoading(true);
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    if (updateError) { setError(updateError.message); setLoading(false); return; }
-    // Create custom member session via API route
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.email) {
-      await fetch('/api/auth/member-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email }),
-      });
-    }
-    router.push('/members/dashboard');
-  }
+  const { data: member } = await supabaseAdmin
+    .from('club_members')
+    .select('membership_number, full_name')
+    .eq('email', user.email)
+    .maybeSingle();
 
-  const inp: React.CSSProperties = {
-    width: '100%', padding: '12px 14px',
-    border: '1px solid rgba(45,90,61,.25)',
-    fontFamily: "'DM Sans', sans-serif", fontSize: '14px',
-    color: '#1a2e1f', background: '#fff', boxSizing: 'border-box',
-  };
+  const firstName = member?.full_name?.split(' ')[0] ?? null;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--cream)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-      <div style={{ width: '100%', maxWidth: '440px', background: '#fff', padding: '2.5rem', boxShadow: '0 4px 24px rgba(0,0,0,.07)' }}>
-        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '10px', fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: '0.75rem' }}>
-          Barnes Bowling Club
+    <div style={{ minHeight: '100vh', background: '#f5f0e8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+      <div style={{ width: '100%', maxWidth: '460px' }}>
+
+        <div style={{ background: GREEN_DEEP, padding: '28px 36px' }}>
+          <p style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '10px', letterSpacing: '.18em', textTransform: 'uppercase', color: `rgba(201,168,76,.85)` }}>
+            Barnes Bowling Club
+          </p>
+          <h1 style={{ margin: '8px 0 0', fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: 400, color: '#f5f0e8', letterSpacing: '-.01em' }}>
+            {firstName ? `Welcome back, ${firstName}` : 'Set Your New Password'}
+          </h1>
         </div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.75rem', color: 'var(--green-deep)', margin: '0 0 0.5rem' }}>
-          Welcome{memberName ? `, ${memberName.split(' ')[0]}` : ''}
-        </h1>
-        {memberNo && (
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'rgba(27,59,38,.6)', marginBottom: '1.5rem' }}>
-            Your membership number is{' '}
-            <strong style={{ color: 'var(--green-deep)', fontWeight: 700, letterSpacing: '.04em' }}>{memberNo}</strong>
-          </div>
-        )}
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'rgba(27,59,38,.7)', marginBottom: '2rem', lineHeight: 1.6 }}>
-          Please set a password to activate your account.
-        </p>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div>
-            <label style={{ display: 'block', fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(27,59,38,.5)', marginBottom: '6px' }}>
-              New Password
-            </label>
-            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} style={inp} placeholder="Minimum 8 characters" />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(27,59,38,.5)', marginBottom: '6px' }}>
-              Confirm Password
-            </label>
-            <input type="password" required value={confirm} onChange={e => setConfirm(e.target.value)} style={inp} placeholder="Repeat your password" />
-          </div>
-          {error && (
-            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#c0392b', padding: '10px 14px', background: 'rgba(192,57,43,.06)', borderLeft: '3px solid #c0392b' }}>
-              {error}
+
+        <div style={{ background: '#fff', padding: '36px' }}>
+          {member?.membership_number && (
+            <div style={{
+              display: 'inline-block',
+              marginBottom: '1.5rem',
+              padding: '6px 14px',
+              background: 'rgba(201,168,76,.08)',
+              border: `1px solid rgba(201,168,76,.3)`,
+            }}>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: 'rgba(27,59,38,.45)' }}>
+                Membership No.{' '}
+              </span>
+              <span style={{ fontFamily: 'Georgia, serif', fontSize: '14px', fontWeight: 500, color: GREEN_DEEP, letterSpacing: '.04em' }}>
+                {member.membership_number}
+              </span>
             </div>
           )}
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ padding: '13px', background: 'var(--green-deep)', color: '#fff', border: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', cursor: loading ? 'default' : 'pointer', opacity: loading ? .7 : 1 }}
-          >
-            {loading ? 'Activating…' : 'Set Password & Continue'}
-          </button>
-        </form>
+
+          <p style={{ margin: '0 0 2rem', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', lineHeight: 1.7, color: 'rgba(27,59,38,.7)' }}>
+            Choose a new password for your account. You&rsquo;ll use this the next time you log in.
+          </p>
+
+          <SetPasswordForm />
+        </div>
+
+        <div style={{ padding: '16px 36px', background: '#f5f0e8', borderTop: '1px solid #e8e4dc' }}>
+          <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#9ca3af' }}>
+            Barnes Bowling Club · The Sun Inn, Church Road, Barnes, London SW13&nbsp;9HE
+          </p>
+        </div>
+
       </div>
     </div>
   );

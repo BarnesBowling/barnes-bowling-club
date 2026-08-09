@@ -53,27 +53,37 @@ export default async function Dashboard() {
       <main>
         {/* Header */}
         <div style={{ background: 'var(--green-deep)', padding: '1rem 2rem 4rem', color: 'var(--cream)', position: 'relative' }}>
-          <a href="/members/book-a-game" className="dashboard-book-btn" style={{
+          {/* Calendar + Book a Match — flex row, right-aligned, bottom of banner */}
+          <div style={{
             position: 'absolute',
             right: 'clamp(1.5rem, 5vw, 4rem)',
-            bottom: '15%',
-            display: 'inline-block',
-            padding: '15px 34px',
-            border: '3px solid #c9a84c',
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: '17px',
-            fontWeight: 700,
-            letterSpacing: '.08em',
-            textTransform: 'uppercase',
-            color: '#c9a84c',
-            textDecoration: 'none',
-            whiteSpace: 'nowrap',
-            background: 'transparent',
-            transition: 'background .15s, color .15s',
+            top: '1rem',
+            bottom: '1rem',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'flex-end',
+            gap: '16px',
           }}>
-            Book a Match
-          </a>
-          <BannerCalendar upcomingMatches={upcomingMatches ?? []} />
+            <BannerCalendar upcomingMatches={upcomingMatches ?? []} />
+            <a href="/members/book-a-game" className="dashboard-book-btn" style={{
+              display: 'inline-block',
+              padding: '15px 34px',
+              border: '3px solid #c9a84c',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '17px',
+              fontWeight: 700,
+              letterSpacing: '.08em',
+              textTransform: 'uppercase',
+              color: '#c9a84c',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+              background: 'transparent',
+              transition: 'background .15s, color .15s',
+              flexShrink: 0,
+            }}>
+              Book a Match
+            </a>
+          </div>
           <div className="section-inner">
             <div className="section-tag" style={{ color: '#c9a84c', borderTopColor: '#c9a84c' }}>Members Area</div>
             {firstName && (

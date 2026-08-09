@@ -294,8 +294,10 @@ export default async function Home() {
           <div className="section-tag">Join the Club</div>
           <h2 className="section-h2">Join a <em>living piece</em><br />of London history</h2>
           <p className="section-lead">
-            Membership is open to all. New members must be nominated by an existing member of
-            12 months&apos; standing. We welcome players of all abilities — beginners very much included.
+            We may be a small private club, but we&apos;re a friendly, sociable one with a wonderfully colourful history. Over the years, our green has welcomed generations of Barnes residents, including musicians, artists and writers.
+          </p>
+          <p className="section-lead">
+            Whether you&apos;re an experienced player or completely new to bowls, we encourage you to come down, meet us and give it a go.
           </p>
           <div style={{ marginTop: '3rem', display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'stretch', justifyContent: 'center' }}>
 

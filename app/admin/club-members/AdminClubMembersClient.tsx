@@ -360,6 +360,8 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
   const [invitedIds, setInvitedIds] = useState<Set<string>>(
     new Set(initialMembers.filter(m => m.auth_user_id).map(m => m.id))
   );
+  const [sortKey, setSortKey] = useState<'name' | 'membership_number'>('membership_number');
+  const [sortAsc, setSortAsc] = useState(false);
 
   useEffect(() => {
     if (msg?.ok) {
@@ -370,13 +372,29 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
 
   const activeCount = members.filter(m => m.status === 'active').length;
 
-  const filtered = search.trim()
+  const baseFiltered = search.trim()
     ? members.filter(m =>
         m.full_name.toLowerCase().includes(search.toLowerCase()) ||
         (m.email ?? '').toLowerCase().includes(search.toLowerCase()) ||
         (m.membership_number ?? '').toLowerCase().includes(search.toLowerCase())
       )
     : members;
+
+  const filtered = [...baseFiltered].sort((a, b) => {
+    let cmp = 0;
+    if (sortKey === 'name') {
+      cmp = surnameKey(a.full_name).localeCompare(surnameKey(b.full_name));
+      if (cmp === 0) cmp = a.full_name.localeCompare(b.full_name);
+    } else {
+      const aDigits = a.membership_number?.replace(/\D/g, '') ?? '';
+      const bDigits = b.membership_number?.replace(/\D/g, '') ?? '';
+      if (!aDigits && !bDigits) cmp = 0;
+      else if (!aDigits) cmp = 1;
+      else if (!bDigits) cmp = -1;
+      else cmp = parseInt(aDigits, 10) - parseInt(bDigits, 10);
+    }
+    return sortAsc ? cmp : -cmp;
+  });
 
   function startEdit(m: ClubMember) {
     setEditId(m.id);
@@ -394,6 +412,15 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
   function cancelEdit() {
     setEditId(null);
     setEditForm(EMPTY);
+  }
+
+  function handleHeaderSort(key: 'name' | 'membership_number') {
+    if (sortKey === key) {
+      setSortAsc(a => !a);
+    } else {
+      setSortKey(key);
+      setSortAsc(true);
+    }
   }
 
   // ── Add ──────────────────────────────────────────────────────────────────
@@ -672,8 +699,22 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1020px' }}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Memb. No.</th>
-                  <th style={thStyle}>Full Name</th>
+                  <th
+                    onClick={() => handleHeaderSort('membership_number')}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(45,90,61,.04)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = '')}
+                    style={{ ...thStyle, cursor: 'pointer', userSelect: 'none', color: sortKey === 'membership_number' ? 'var(--green-deep)' : undefined }}
+                  >
+                    Memb. No.{sortKey === 'membership_number' ? (sortAsc ? ' ↑' : ' ↓') : ' ↕'}
+                  </th>
+                  <th
+                    onClick={() => handleHeaderSort('name')}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(45,90,61,.04)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = '')}
+                    style={{ ...thStyle, cursor: 'pointer', userSelect: 'none', color: sortKey === 'name' ? 'var(--green-deep)' : undefined }}
+                  >
+                    Full Name{sortKey === 'name' ? (sortAsc ? ' ↑' : ' ↓') : ' ↕'}
+                  </th>
                   <th style={thStyle}>Email</th>
                   <th style={{ ...thStyle, textAlign: 'center' }}>Handicap</th>
                   <th style={thStyle}>Status</th>

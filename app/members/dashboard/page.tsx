@@ -9,7 +9,7 @@ import { MyDetailsDropdown } from './MyDetailsDropdown';
 import { CompDatesCard } from './CompDatesCard';
 import { ResultsDropdown } from './ResultsDropdown';
 import { ResultsNavDropdown } from './ResultsNavDropdown';
-import { CalendarModal } from './CalendarModal';
+import { BannerCalendar } from './BannerCalendar';
 
 const TOP_HANDICAPS = [...MEMBERS]
   .filter(m => m.h[2026] !== undefined)
@@ -73,6 +73,7 @@ export default async function Dashboard() {
           }}>
             Book a Match
           </a>
+          <BannerCalendar upcomingMatches={upcomingMatches ?? []} />
           <div className="section-inner">
             <div className="section-tag" style={{ color: '#c9a84c', borderTopColor: '#c9a84c' }}>Members Area</div>
             {firstName && (
@@ -136,6 +137,7 @@ export default async function Dashboard() {
             {[
               { label: 'Handicap standings', href: '/members/handicaps' },
               { label: 'Competition Dates', href: '/members/competitions' },
+              { label: 'Season Calendar', href: '/members/calendar' },
             ].map(({ label, href }) => (
               <a key={href} href={href} style={{
                 padding: '6px 11px',
@@ -152,7 +154,6 @@ export default async function Dashboard() {
                 {label}
               </a>
             ))}
-            <CalendarModal upcomingMatches={upcomingMatches ?? []} />
             <ResultsNavDropdown />
             {[
               { label: 'Notices', href: '/notices' },

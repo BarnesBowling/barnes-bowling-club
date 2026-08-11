@@ -1,6 +1,7 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import Link from 'next/link';
+import { ContactForm } from './ContactForm';
 
 export default function Contact() {
   return (
@@ -10,66 +11,14 @@ export default function Contact() {
         <div style={{ background: 'var(--green-deep)', padding: '1rem 2rem 4rem', color: 'var(--cream)' }}>
           <div className="section-inner">
             <div className="section-tag" style={{ color: 'var(--gold)', borderTopColor: 'var(--gold)' }}>Get in Touch</div>
-            <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(2rem,5vw,3.5rem)' }}>
-              Contact <em style={{ color: 'var(--gold-light)' }}>the club</em>
+            <h1 className="section-h2" style={{ color: '#ffffff', fontSize: 'clamp(2rem,5vw,3.5rem)' }}>
+              Get In <em style={{ color: '#c9a84c' }}>Touch</em>
             </h1>
           </div>
         </div>
 
         <div className="section-inner" style={{ padding: '4rem 2rem' }}>
           <div className="contact-grid">
-            <div>
-              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '24px', fontWeight: 500, color: 'var(--green-deep)', marginBottom: '2rem' }}>
-                Barnes Bowling Club
-              </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-                <div>
-                  <div className="section-tag">Address</div>
-                  <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '16px', lineHeight: 1.7, color: 'var(--text-mid)' }}>
-                    Sun Inn, Church Road<br />
-                    Barnes, London<br />
-                    SW13 9HE
-                  </p>
-                </div>
-                <div>
-                  <div className="section-tag">Email</div>
-                  <a href="mailto:info@barnesbowling.com" style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-mid)' }}>
-                    info@barnesbowling.com
-                  </a>
-                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '6px', fontFamily: "'Libre Baskerville', serif", fontStyle: 'italic' }}>
-                    We aim to respond within 48 hours
-                  </p>
-                </div>
-                <div>
-                  <div className="section-tag">Season</div>
-                  <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '16px', lineHeight: 1.7, color: 'var(--text-mid)' }}>
-                    25th April to early October<br />
-                    Play 7 days a week 11am - 11pm weather permitting
-                  </p>
-                </div>
-                <div>
-                  <div className="section-tag">Social</div>
-                  <div style={{ display: 'flex', gap: '1rem', marginTop: '.5rem' }}>
-                    <a href="https://www.instagram.com/barnesbowlingclub" target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--green-mid)', fontWeight: 500 }}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 18, height: 18 }}>
-                        <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" />
-                        <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
-                      </svg>
-                      Instagram
-                    </a>
-                    <a href="https://www.facebook.com/barnesbowlingclub" target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--green-mid)', fontWeight: 500 }}>
-                      <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 18, height: 18 }}>
-                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                      </svg>
-                      Facebook
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div style={{ background: 'var(--cream-warm)', padding: '2.5rem' }}>
               <Link href="/apply" className="section-tag" style={{ textDecoration: 'none' }}>Membership enquiry</Link>
               <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '24px', fontWeight: 500, color: 'var(--green-deep)', marginBottom: '1rem' }}>
@@ -93,6 +42,10 @@ export default function Contact() {
               <Link href="/apply" className="btn-gold" style={{ display: 'inline-block', color: '#ffffff' }}>
                 Submit a membership enquiry →
               </Link>
+            </div>
+
+            <div style={{ background: 'var(--cream-warm)', padding: '2.5rem' }}>
+              <ContactForm />
             </div>
           </div>
         </div>

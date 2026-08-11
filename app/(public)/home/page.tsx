@@ -402,7 +402,7 @@ export default async function Home() {
         <div className="find-grid">
           <div>
             <div className="section-tag">Find Us</div>
-            <h2 className="section-h2"><span style={{ color: '#ffffff' }}>Get In</span><br /><em style={{ color: '#c9a84c' }}>Touch</em></h2>
+            <h2 className="section-h2">Get In<br /><em>Touch</em></h2>
             <div className="find-details">
               <div className="find-item">
                 <div className="find-icon">
@@ -413,7 +413,7 @@ export default async function Home() {
                 </div>
                 <div>
                   <div className="find-label">Address</div>
-                  <div className="find-value">Barnes Bowling Club<br />Sun Inn, Church Road<br />Barnes, London SW13 9HE</div>
+                  <div className="find-value">Sun Inn, Church Road, SW13 9HE</div>
                 </div>
               </div>
               <div className="find-item">
@@ -436,18 +436,7 @@ export default async function Home() {
                 </div>
                 <div>
                   <div className="find-label">Contact</div>
-                  <div className="find-value">info@barnesbowling.com<br />Membership enquiries welcome</div>
-                </div>
-              </div>
-              <div className="find-item">
-                <div className="find-icon">
-                  <svg viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" stroke="currentColor" fill="none">
-                    <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="find-label">Joining</div>
-                  <div className="find-value">Nomination required from<br />an existing member of 12 months</div>
+                  <div className="find-value">info@barnesbowling.com</div>
                 </div>
               </div>
             </div>

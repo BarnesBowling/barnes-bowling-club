@@ -15,12 +15,12 @@ const colHeading: React.CSSProperties = {
   fontFamily:    OPTIMA,
   fontSize:      '14px',
   fontWeight:    700,
-  color:         'var(--green-deep)',
+  color:         '#ffffff',
   letterSpacing: '.01em',
   marginBottom:  '14px',
 };
 
-const BODY_COLOR = '#2a5a35';
+const BODY_COLOR = 'rgba(255,255,255,0.75)';
 
 const bodyText: React.CSSProperties = {
   fontFamily:  OPTIMA,
@@ -44,7 +44,7 @@ export function Footer() {
     <>
       {/* ── Upper grey section ── */}
       <footer style={{
-        background: '#f4f4f4',
+        background: 'var(--green-deep)',
       }}>
         <div className="footer-main-grid" style={{
           maxWidth:   '1200px',
@@ -59,19 +59,15 @@ export function Footer() {
           {/* ── Col 1: Brand ── */}
           <div style={{ justifySelf: 'start' }}>
             <Link href="/" className="nav-brand" style={{ marginLeft: '-2px', top: 0 }}>
-              <span className="nav-brand-name">BBC</span>
+              <span className="nav-brand-name" style={{ color: '#ffffff', fontSize: '44px' }}>BBC</span>
               <span className="nav-brand-sub">Est.&nbsp;<span className="nav-brand-sup">c</span>1725</span>
             </Link>
           </div>
 
           {/* ── Col 2: Address ── */}
           <div>
-            <div style={colHeading}>Address</div>
-            <address style={{ ...bodyText, fontStyle: 'normal', marginBottom: '10px' }}>
-              Barnes Bowling Club<br />
-              The Sun Inn<br />
-              Church Road<br />
-              Barnes SW13
+            <address style={{ ...bodyText, fontSize: '15px', fontStyle: 'normal', marginBottom: '10px' }}>
+              <span style={{ color: '#ffffff' }}>Get In </span><span style={{ color: '#c9a84c', fontStyle: 'italic' }}>Touch</span>
             </address>
             <a
               href="https://maps.google.com/?q=The+Sun+Inn+Church+Road+Barnes+London+SW13+9HE"
@@ -83,9 +79,9 @@ export function Footer() {
             </a>
           </div>
 
-          {/* ── Col 3: Contact + Members' Area ── */}
+          {/* ── Col 3: Contact ── */}
           <div>
-            <div style={colHeading}>Contact Us</div>
+            <Link href="/contact" style={{ ...colHeading, fontSize: '17px', textDecoration: 'none', display: 'block' }}>Contact Us</Link>
 
             {/* Email with envelope icon */}
             <a
@@ -100,7 +96,7 @@ export function Footer() {
                 fontSize:       '13px',
                 marginBottom:   '18px',
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--green-deep)')}
+              onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
               onMouseLeave={e => (e.currentTarget.style.color = BODY_COLOR)}
             >
               <svg viewBox="0 0 512 512" fill="#A89560" stroke="none" style={{ width: 15, height: 15, flexShrink: 0 }}>
@@ -109,35 +105,11 @@ export function Footer() {
               info@barnesbowling.com
             </a>
 
-            {/* Members' Area button */}
-            <Link
-              href="/members/dashboard"
-              style={{
-                display:        'inline-block',
-                background:     '#A89560',
-                color:          '#fff',
-                fontFamily:     "'DM Sans', sans-serif",
-                fontSize:       '12px',
-                fontWeight:     600,
-                letterSpacing:  '.07em',
-                textTransform:  'uppercase',
-                padding:        '11px 24px',
-                marginTop:      '8px',
-                textDecoration: 'none',
-                borderRadius:   '4px',
-                whiteSpace:     'nowrap',
-                transition:     'background .15s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#6E6338')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#A89560')}
-            >
-              Members&apos; Area
-            </Link>
           </div>
 
           {/* ── Col 4: Social ── */}
           <div style={{ paddingLeft: '4rem' }}>
-            <div style={colHeading}>Follow Us</div>
+            <div style={{ ...colHeading, fontSize: '17px' }}>Follow Us</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
               {/* Facebook */}
@@ -155,7 +127,7 @@ export function Footer() {
                   fontSize:       '13px',
                   transition:     'color .15s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'var(--green-deep)')}
+                onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
                 onMouseLeave={e => (e.currentTarget.style.color = BODY_COLOR)}
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 20, height: 20, flexShrink: 0 }}>
@@ -179,7 +151,7 @@ export function Footer() {
                   fontSize:       '13px',
                   transition:     'color .15s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'var(--green-deep)')}
+                onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
                 onMouseLeave={e => (e.currentTarget.style.color = BODY_COLOR)}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
@@ -200,18 +172,27 @@ export function Footer() {
 
       {/* ── White bottom bar ── */}
       <div style={{
-        background:     '#fff',
-        borderTop:      '1px solid rgba(0,0,0,.09)',
-        minHeight:      '90px',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        padding:        '25px 40px',
+        background:  'var(--green-deep)',
+        borderTop:   '1px solid #ffffff',
+        minHeight:   '90px',
+        display:     'flex',
+        alignItems:  'center',
+        padding:     '25px 40px',
       }}>
-        <div className="footer-bottom-inner" style={{ textAlign: 'center' }}>
+        <div className="footer-bottom-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '1200px', margin: '0 auto', flexWrap: 'wrap', gap: '1rem' }}>
 
-          {/* Privacy links — spaced, no separators */}
-          <div className="footer-privacy-links" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '3rem', marginBottom: '14px', flexWrap: 'wrap' }}>
+          {/* Copyright — far left */}
+          <p style={{
+            fontFamily: OPTIMA,
+            fontSize:   '14px',
+            color:      'rgba(255,255,255,0.6)',
+            margin:     0,
+          }}>
+            © 2026 Barnes Bowling Club. All rights reserved.
+          </p>
+
+          {/* Privacy links — far right */}
+          <div className="footer-privacy-links" style={{ display: 'flex', alignItems: 'center', gap: '3rem', flexWrap: 'wrap' }}>
             {PRIVACY_LINKS.map(l => (
               <Link
                 key={l.label}
@@ -219,7 +200,7 @@ export function Footer() {
                 style={{
                   fontFamily:     OPTIMA,
                   fontSize:       '14px',
-                  color:          'var(--green-deep)',
+                  color:          'rgba(255,255,255,0.75)',
                   textDecoration: 'none',
                   opacity:        0.75,
                   transition:     'opacity .15s',
@@ -231,16 +212,6 @@ export function Footer() {
               </Link>
             ))}
           </div>
-
-          {/* Copyright */}
-          <p style={{
-            fontFamily: OPTIMA,
-            fontSize:   '14px',
-            color:      'var(--green-deep)',
-            margin:     0,
-          }}>
-            © 2026 Barnes Bowling Club. All rights reserved.
-          </p>
 
         </div>
       </div>

@@ -66,8 +66,8 @@ export function Footer() {
 
           {/* ── Col 2: Address ── */}
           <div>
-            <address style={{ ...bodyText, fontSize: '15px', fontStyle: 'normal', marginBottom: '10px' }}>
-              <span style={{ color: '#ffffff' }}>Get In </span><span style={{ color: '#c9a84c', fontStyle: 'italic' }}>Touch</span>
+            <address style={{ ...bodyText, fontSize: '17px', fontStyle: 'normal', color: '#ffffff', marginBottom: '10px' }}>
+              Behind the <em style={{ color: '#c9a84c' }}>Sun Inn</em>, 7 Church Road, SW13
             </address>
             <a
               href="https://maps.google.com/?q=The+Sun+Inn+Church+Road+Barnes+London+SW13+9HE"

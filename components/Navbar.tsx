@@ -19,7 +19,7 @@ const SEARCH_PAGES = [
   { title: 'Membership Enquiry',     href: '/apply',               keywords: 'apply enquiry membership enquire interested joining' },
   { title: 'Membership Application', href: '/membership-application', keywords: 'membership application form apply join formal' },
   { title: 'Opening Hours',         href: '/opening-hours',       keywords: 'opening hours visit season winter daily hours green' },
-  { title: "Members' Area Area",      href: '/members/dashboard',   keywords: 'members dashboard portal login sign in account' },
+  { title: "Members Area",      href: '/members/dashboard',   keywords: 'members dashboard portal login sign in account' },
   { title: 'Make a Payment',        href: '/members/payment',     keywords: 'payment subscription fee pay stripe guest' },
   { title: 'Results & Leaderboard', href: '/members/results',     keywords: 'results leaderboard manser shield cup pairs match scores winners fixtures standings' },
 ];
@@ -146,12 +146,9 @@ export function Navbar() {
       <div className="nav-topbar">
         <div className="nav-topbar-inner">
 
-          {/* Email */}
+          {/* Get in Touch */}
           <a href="mailto:info@barnesbowling.com" className="nav-topbar-email">
-            <svg viewBox="0 0 512 512" fill="currentColor" stroke="none">
-              <path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48H48zM0 176V384c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V176L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/>
-            </svg>
-            info@barnesbowling.com
+            Get in <em>Touch</em>
           </a>
 
           {/* Search */}
@@ -233,13 +230,16 @@ export function Navbar() {
               </div>
             </div>
             <Link href="/community">Community</Link>
-            <Link href="/corporate-hire">Corporate Hire</Link>
+            <div className="nav-corporate-group">
+              <Link className="nav-members-btn" href="/members/dashboard">Members Area</Link>
+              <Link href="/corporate-hire">Corporate Hire</Link>
+            </div>
             <Link href="/contact">Contact</Link>
           </div>
 
-          {/* Members' Area */}
+          {/* Members Area */}
           <div className="nav-right">
-            <Link className="nav-members-btn" href="/members/dashboard">Members' Area</Link>
+            <Link className="nav-members-btn" href="/members/dashboard">Members Area</Link>
           </div>
 
           {/* Hamburger — mobile only */}
@@ -311,7 +311,7 @@ export function Navbar() {
 
           <div className="nav-mobile-bottom">
             <Link className="nav-members-btn" href="/members/dashboard" onClick={() => setMenuOpen(false)}>
-              Members' Area
+              Members Area
             </Link>
           </div>
 

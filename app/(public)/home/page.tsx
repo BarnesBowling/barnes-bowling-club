@@ -402,7 +402,7 @@ export default async function Home() {
         <div className="find-grid">
           <div>
             <div className="section-tag">Find Us</div>
-            <h2 className="section-h2">Behind the<br /><em>Sun Inn</em></h2>
+            <h2 className="section-h2"><span style={{ color: '#ffffff' }}>Get In</span><br /><em style={{ color: '#c9a84c' }}>Touch</em></h2>
             <div className="find-details">
               <div className="find-item">
                 <div className="find-icon">

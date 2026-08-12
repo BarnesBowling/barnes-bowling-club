@@ -426,7 +426,7 @@ export default async function Home() {
                 </div>
                 <div>
                   <div className="find-label">Contact</div>
-                  <div className="find-value">info@barnesbowling.com</div>
+                  <div className="find-value">info@barnesbowling.club</div>
                 </div>
               </div>
             </div>

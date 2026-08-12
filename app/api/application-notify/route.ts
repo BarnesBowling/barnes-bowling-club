@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
   await resend.emails.send({
     from: 'Barnes Bowling Club <noreply@barnesbowling.com>',
-    to: 'info@barnesbowling.com',
+    to: 'info@barnesbowling.club',
     subject: `New membership enquiry — ${app.name}`,
     html: `
       <h2 style="font-family:Georgia,serif;color:#1b3b26">New membership enquiry</h2>

@@ -214,7 +214,7 @@ export default async function PaymentPage({
             <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', lineHeight: 1.8, color: 'var(--text-mid)', margin: '0 0 .75rem' }}>
               Payments can also be made directly by bank transfer. Please contact the Treasurer for account details and use your full name as the payment reference.
             </p>
-            <a href="mailto:info@barnesbowling.com" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-mid)', textDecoration: 'none', letterSpacing: '.05em' }}>
+            <a href="mailto:info@barnesbowling.club" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-mid)', textDecoration: 'none', letterSpacing: '.05em' }}>
               Contact the Treasurer →
             </a>
           </div>

@@ -148,7 +148,7 @@ export function Navbar() {
         <div className="nav-topbar-inner">
 
           {/* Get in Touch */}
-          <a href="mailto:info@barnesbowling.com" className="nav-topbar-email">
+          <a href="mailto:info@barnesbowling.club" className="nav-topbar-email">
             Get in Touch
           </a>
 

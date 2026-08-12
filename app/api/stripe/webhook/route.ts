@@ -127,7 +127,7 @@ export async function POST(req: Request) {
             </table>
             <p style="font-size:14px;line-height:1.8;color:#4a5568;margin:24px 0 0">
               ${recipient === 'member'
-                ? 'If you have any questions please contact us at <a href="mailto:info@barnesbowling.com" style="color:#2d5a3d">info@barnesbowling.com</a>.'
+                ? 'If you have any questions please contact us at <a href="mailto:info@barnesbowling.club" style="color:#2d5a3d">info@barnesbowling.club</a>.'
                 : 'The member\'s account statement has been updated automatically.'
               }
             </p>
@@ -153,7 +153,7 @@ export async function POST(req: Request) {
       // Send admin notification
       await resend.emails.send({
         from:    'Barnes Bowling Club <noreply@barnesbowling.com>',
-        to:      'info@barnesbowling.com',
+        to:      'info@barnesbowling.club',
         subject: `Payment received — ${memberName} — ${amountFormatted}`,
         html:    emailHtml('admin'),
       }).then(undefined, () => {});

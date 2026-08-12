@@ -91,7 +91,7 @@ export async function POST(req: Request) {
 
         <tr>
           <td style="padding:20px 36px;font-size:11px;color:#999;line-height:1.6">
-            Barnes Bowling Club · info@barnesbowling.com · The Sun Inn, Church Road, Barnes, London SW13 9HE
+            Barnes Bowling Club · info@barnesbowling.club · The Sun Inn, Church Road, Barnes, London SW13 9HE
           </td>
         </tr>
 

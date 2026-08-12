@@ -119,7 +119,7 @@ export function ContactForm() {
           color: '#c0392b',
           borderRadius: '2px',
         }}>
-          {errMsg || 'Something went wrong. Please try again or email info@barnesbowling.com directly.'}
+          {errMsg || 'Something went wrong. Please try again or email info@barnesbowling.club directly.'}
         </div>
       )}
 

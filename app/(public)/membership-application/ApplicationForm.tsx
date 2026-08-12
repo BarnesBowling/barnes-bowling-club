@@ -223,7 +223,7 @@ export function ApplicationForm() {
           color: '#c0392b',
           borderRadius: '2px',
         }}>
-          {errMsg || 'Something went wrong. Please try again or email us directly at info@barnesbowling.com.'}
+          {errMsg || 'Something went wrong. Please try again or email us directly at info@barnesbowling.club.'}
         </div>
       )}
 

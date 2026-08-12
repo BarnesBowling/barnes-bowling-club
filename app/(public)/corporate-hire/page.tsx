@@ -65,10 +65,10 @@ export default function CorporateHirePage() {
               <p style={{ margin: 0 }}>
                 For enquiries about corporate hire, please contact us at{' '}
                 <a
-                  href="mailto:info@barnesbowling.com"
+                  href="mailto:info@barnesbowling.club"
                   style={{ color: 'var(--green-mid)', textDecoration: 'underline' }}
                 >
-                  info@barnesbowling.com
+                  info@barnesbowling.club
                 </a>{' '}
                 or use the enquiry form below.
               </p>

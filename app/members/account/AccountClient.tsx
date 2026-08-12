@@ -382,7 +382,7 @@ function StatementSheet({
 
             <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', color: '#aaa', letterSpacing: '.04em', lineHeight: 1.6 }}>
               Barnes Bowling Club · Sun Inn, Church Road, Barnes SW13 9HE<br />
-              info@barnesbowling.com · Est. c.1725
+              info@barnesbowling.club · Est. c.1725
             </div>
           </div>
 

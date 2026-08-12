@@ -74,7 +74,7 @@ export default function PrivacyPolicyPage() {
             </P>
             <P>
               If you would like your data to be deleted earlier, please contact us at{' '}
-              <a href="mailto:info@barnesbowling.com" style={{ color: 'var(--green-mid)' }}>info@barnesbowling.com</a>.
+              <a href="mailto:info@barnesbowling.club" style={{ color: 'var(--green-mid)' }}>info@barnesbowling.club</a>.
             </P>
           </Section>
 
@@ -134,7 +134,7 @@ export default function PrivacyPolicyPage() {
             <div style={{ background: 'rgba(45,90,61,.05)', padding: '1.25rem 1.5rem', borderLeft: '3px solid rgba(45,90,61,.2)', marginTop: '8px' }}>
               <strong>Barnes Bowling Club</strong><br />
               The Sun Inn, Church Road, Barnes, London SW13 9HE<br />
-              <a href="mailto:info@barnesbowling.com" style={{ color: 'var(--green-mid)' }}>info@barnesbowling.com</a>
+              <a href="mailto:info@barnesbowling.club" style={{ color: 'var(--green-mid)' }}>info@barnesbowling.club</a>
             </div>
           </Section>
 

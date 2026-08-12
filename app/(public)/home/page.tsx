@@ -308,8 +308,7 @@ export default async function Home() {
               <div className="membership-price-note">per season</div>
               <ul className="membership-features" style={{ flex: 1 }}>
                 <li>Unlimited green access, Apr–Oct</li>
-                <li>All club competitions &amp; trophies</li>
-                <li>International Day participation</li>
+                <li>All club competitions</li>
                 <li>Equipment provided for beginners</li>
                 <li>Coaching from experienced members</li>
                 <li>Club newsletter &amp; social events</li>

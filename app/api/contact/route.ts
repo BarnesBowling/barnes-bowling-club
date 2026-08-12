@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   const submittedAt = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' });
 
   const { error: emailError } = await resend.emails.send({
-    from:    'Barnes Bowling Club <noreply@barnesbowling.com>',
+    from:    'Barnes Bowling Club <noreply@barnesbowlingclub.com>',
     to:      'info@barnesbowling.com',
     replyTo: email,
     subject: `New message from ${fullName}`,

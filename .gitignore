@@ -1,7 +1,6 @@
 .next
 node_modules
 .env.local
-.env.local
-.next
-node_modules
 .claude
+resetpw.js
+scripts/

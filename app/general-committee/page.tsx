@@ -154,13 +154,11 @@ export default async function GeneralCommitteePage() {
               <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>Committee</em>
             </h1>
             <p className="section-lead" style={{ color: 'rgba(245,240,232,.65)' }}>
-              The Committee of volunteers who run Barnes Bowling Club.
+              The member-led committee works to steer the Club&apos;s direction and uphold standards. Practical and forward-looking, the team delivers good governance, and an excellent member experience.
             </p>
             <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '15px', lineHeight: 1.75, color: 'rgba(245,240,232,.7)', maxWidth: '580px', marginTop: '1.25rem', marginBottom: 0 }}>
-              <span style={{ color: '#A89560' }}>Elected annually at the AGM</span>{' '}
-              — the committee meets monthly throughout the playing season. Members are welcome
-              to raise issues directly with a committee member or via the suggestions box in
-              the clubhouse.
+              <span style={{ color: '#A89560' }}>Elected annually by member vote, which is ratified at the AGM in November</span>{' '}
+              — the committee meets monthly throughout the playing season. Members are encouraged to raise suggestions or issues for discussion either with a committee member or by email.
             </p>
           </div>
         </div>

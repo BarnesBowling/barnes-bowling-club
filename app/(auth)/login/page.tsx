@@ -4,10 +4,11 @@ import { LoginForm } from './LoginForm';
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ redirect?: string }>;
+  searchParams: Promise<{ redirect?: string; reset?: string }>;
 }) {
   const params       = await searchParams;
   const redirectPath = params.redirect ?? '';
+  const passwordReset = params.reset === '1';
 
   return (
     <>
@@ -20,12 +21,26 @@ export default async function LoginPage({
               Sign in
             </h1>
             <p className="section-lead" style={{ color: 'rgba(245,240,232,.65)' }}>
-              Enter your membership number and email address to access your account.
+              Enter your membership number and password to access your account.
             </p>
           </div>
         </div>
 
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem', maxWidth: '480px' }}>
+          {passwordReset && (
+            <div style={{
+              marginBottom: '1.5rem',
+              padding: '0.875rem 1.125rem',
+              background: 'rgba(46,125,50,.06)',
+              border: '1px solid rgba(46,125,50,.22)',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '14px',
+              color: '#2e7d32',
+              lineHeight: 1.5,
+            }}>
+              Password updated — please log in with your new password.
+            </div>
+          )}
           <LoginForm redirectPath={redirectPath} />
         </div>
       </main>

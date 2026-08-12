@@ -383,7 +383,7 @@ export function ResultsClient({ matches: initialMatches, competitions }: Props) 
               <tbody>
                 {playerMatches.map(m => (
                   <tr key={m.id}>
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatDate(m.match_date)}</td>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{m.competition_slug === 'manser' ? null : formatDate(m.match_date)}</td>
                     <td style={tdStyle}>
                       <div>{compName(m.competition_slug)}</div>
                       {compRules(m.competition_slug, compName(m.competition_slug)) && (
@@ -513,7 +513,7 @@ export function ResultsClient({ matches: initialMatches, competitions }: Props) 
                         onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = 'transparent'; }}
                       >
                         <td style={{ ...tdStyle, whiteSpace: 'nowrap', borderBottom: isSelected ? 'none' : tdStyle.borderBottom }}>
-                          {formatDate(m.match_date)}
+                          {isManser ? null : formatDate(m.match_date)}
                         </td>
                         <td style={{ ...tdStyle, borderBottom: isSelected ? 'none' : tdStyle.borderBottom }}>
                           <div>{compName(m.competition_slug)}</div>

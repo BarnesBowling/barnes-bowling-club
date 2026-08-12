@@ -17,6 +17,13 @@ export type ClubMember = {
   created_at: string;
   auth_user_id: string | null;
   photo_id_filename?: string | null;
+  phone?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  postcode?: string | null;
 };
 
 type MemberPayload = {
@@ -529,7 +536,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const COLS = 8; // Memb. No. | Full Name | Email | Handicap | Status | Joined | Photo ID | Actions
+  const COLS = 11; // Memb. No. | Full Name | Email | Phone | Status | Joined | Address | EC Name | EC Phone | Photo ID | Actions
 
   return (
     <div>
@@ -696,7 +703,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
           </p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1020px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1300px' }}>
               <thead>
                 <tr>
                   <th
@@ -716,9 +723,12 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                     Full Name{sortKey === 'name' ? (sortAsc ? ' ↑' : ' ↓') : ' ↕'}
                   </th>
                   <th style={thStyle}>Email</th>
-                  <th style={{ ...thStyle, textAlign: 'center' }}>Handicap</th>
+                  <th style={thStyle}>Phone</th>
                   <th style={thStyle}>Status</th>
                   <th style={thStyle}>Joined</th>
+                  <th style={thStyle}>Address</th>
+                  <th style={thStyle}>Emergency Contact</th>
+                  <th style={thStyle}>EC Phone</th>
                   <th style={thStyle}>
                     Photo ID
                     <span style={{ display: 'block', fontWeight: 400, fontSize: '9px', letterSpacing: '.04em', textTransform: 'none', fontStyle: 'italic', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'normal', maxWidth: '180px', lineHeight: 1.4 }}>
@@ -859,14 +869,35 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                           ? <a href={`mailto:${m.email}`} style={{ color: 'var(--green-deep)', textDecoration: 'underline' }}>{m.email}</a>
                           : '—'}
                       </td>
-                      <td style={{ ...tdStyle, fontSize: '14px', fontWeight: 600, color: 'var(--green-mid)', textAlign: 'center' }}>
-                        {fmtHcp(m.handicap)}
+                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                        {m.phone
+                          ? <a href={`tel:${m.phone}`} style={{ color: 'var(--green-deep)', textDecoration: 'none' }}>{m.phone}</a>
+                          : <span style={{ color: 'rgba(45,90,61,.3)' }}>—</span>}
                       </td>
                       <td style={tdStyle}>
                         <StatusBadge status={m.status} invited={invitedIds.has(m.id)} hasAuth={!!m.auth_user_id} />
                       </td>
                       <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                         {fmtDate(m.joined_date)}
+                      </td>
+                      <td style={{ ...tdStyle, fontSize: '12px', lineHeight: 1.5 }}>
+                        {(m.address_line1 || m.address_line2 || m.city || m.postcode) ? (
+                          <div>
+                            {m.address_line1 && <div>{m.address_line1}</div>}
+                            {m.address_line2 && <div>{m.address_line2}</div>}
+                            {(m.city || m.postcode) && (
+                              <div>{[m.city, m.postcode].filter(Boolean).join(' ')}</div>
+                            )}
+                          </div>
+                        ) : <span style={{ color: 'rgba(45,90,61,.3)' }}>—</span>}
+                      </td>
+                      <td style={tdStyle}>
+                        {m.emergency_contact_name || <span style={{ color: 'rgba(45,90,61,.3)' }}>—</span>}
+                      </td>
+                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                        {m.emergency_contact_phone
+                          ? <a href={`tel:${m.emergency_contact_phone}`} style={{ color: 'var(--green-deep)', textDecoration: 'none' }}>{m.emergency_contact_phone}</a>
+                          : <span style={{ color: 'rgba(45,90,61,.3)' }}>—</span>}
                       </td>
                       <td style={{ ...tdStyle, padding: '8px 10px', verticalAlign: 'top' }}>
                         <PhotoCell memberId={m.id} initialFilename={m.photo_id_filename} onUpdate={handlePhotoUpdate} />

@@ -1,23 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase/admin';
-
-export const revalidate = 60;
-
-const TICKER_FALLBACK =
-  'Season 2026 ·  25th April to early October  ✶  Playing Membership £215 · Joining Fee £100  ✶  Wednesday nights 6–8pm open to all  ✶  International Day 28 June · Guests Welcome  ';
-
-export default async function LandingPage() {
-  const { data: rows } = await supabaseAdmin
-    .from('ticker_messages')
-    .select('message')
-    .eq('active', true)
-    .order('sort_order');
-
-  const tickerText = rows && rows.length > 0
-    ? rows.map((r) => r.message).join('  ✶  ') + '  '
-    : TICKER_FALLBACK;
-
-  const doubled = tickerText + tickerText;
-
+export default function LandingPage() {
   return (
     <main
       style={{
@@ -31,20 +12,11 @@ export default async function LandingPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Libre+Caslon+Display&display=swap');
 
-        @keyframes bbc-ticker {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-        .bbc-ticker-track {
-          display: inline-flex;
-          white-space: nowrap;
-          animation: bbc-ticker 40s linear infinite;
-          will-change: transform;
-        }
         .bbc-btn {
           display: inline-flex;
           align-items: center;
           justify-content: center;
+          min-width: 260px;
           padding: 13px 34px;
           background: transparent;
           color: #c9a84c;
@@ -66,6 +38,8 @@ export default async function LandingPage() {
         }
         @media (max-width: 600px) {
           .bbc-btn {
+            min-width: 0;
+            width: 100%;
             font-size: 11px;
             padding: 10px 17px;
           }
@@ -213,6 +187,13 @@ export default async function LandingPage() {
           mixBlendMode: 'overlay',
           pointerEvents: 'none',
         }} />
+        {/* Centre-only lightening — 20% white at core, fades to zero before edges */}
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'radial-gradient(ellipse at 50% 46%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 35%, transparent 62%)',
+          pointerEvents: 'none',
+        }} />
         <div style={{
           position: 'fixed',
           inset: 0,
@@ -351,43 +332,14 @@ export default async function LandingPage() {
           }}
         >
           <a href="/home" className="bbc-btn">
-            View Main Website
+            The Club
           </a>
           <a href="/members/dashboard" className="bbc-btn">
-            Visit Members&rsquo; Area
+            Member&rsquo;s Area
           </a>
         </div>
       </div>
 
-      {/* ── Ticker ── */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 2,
-          borderTop: '1px solid rgba(181,146,74,0.2)',
-          padding: '12px 0',
-          overflow: 'hidden',
-          background: 'rgba(0,0,0,0.15)',
-        }}
-      >
-        <div className="bbc-ticker-track">
-          <span
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: '11px',
-              fontWeight: 400,
-              letterSpacing: '0.12em',
-              color: '#ffffff',
-              textTransform: 'uppercase',
-            }}
-          >
-            {doubled}
-          </span>
-        </div>
-      </div>
     </main>
   );
 }

@@ -55,8 +55,43 @@ export async function verifyMemberSession(cookieValue: string): Promise<{ email:
       new TextEncoder().encode(b64),
     );
     if (!valid) return null;
-    const data = JSON.parse(b64uDecode(b64)) as { email: string; exp: number };
-    if (!data.email || data.exp < Date.now()) return null;
+    const data = JSON.parse(b64uDecode(b64)) as { email: string; exp: number; purpose?: string };
+    // Reject setup tokens that were accidentally placed in the session cookie
+    if (!data.email || data.exp < Date.now() || data.purpose) return null;
+    return { email: data.email };
+  } catch {
+    return null;
+  }
+}
+
+// ── Setup token (1-hour, purpose-scoped — used for first-time password setup) ──
+
+export const SETUP_COOKIE  = 'members_setup';
+export const SETUP_MAX_AGE = 60 * 60; // 1 hour in seconds
+
+export async function createSetupToken(email: string): Promise<string> {
+  const payload = JSON.stringify({ email, exp: Date.now() + SETUP_MAX_AGE * 1000, purpose: 'setup' });
+  const b64 = b64uEncode(payload);
+  const key = await getKey();
+  const sigBytes = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(b64));
+  return `${b64}.${b64uEncode(sigBytes)}`;
+}
+
+export async function verifySetupToken(cookieValue: string): Promise<{ email: string } | null> {
+  const dot = cookieValue.lastIndexOf('.');
+  if (dot < 1) return null;
+  const b64 = cookieValue.slice(0, dot);
+  const sig = cookieValue.slice(dot + 1);
+  try {
+    const key = await getKey();
+    const valid = await crypto.subtle.verify(
+      'HMAC', key,
+      b64uToBytes(sig).buffer as ArrayBuffer,
+      new TextEncoder().encode(b64),
+    );
+    if (!valid) return null;
+    const data = JSON.parse(b64uDecode(b64)) as { email: string; exp: number; purpose?: string };
+    if (!data.email || data.exp < Date.now() || data.purpose !== 'setup') return null;
     return { email: data.email };
   } catch {
     return null;

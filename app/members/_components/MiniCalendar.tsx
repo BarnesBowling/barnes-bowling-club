@@ -82,7 +82,15 @@ export function MiniCalendar() {
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const eventCount = Object.values(eventsForMonth).flat().length;
+  // Today's activity — independent of which month is displayed
+  const todayMonthOrder  = now.getMonth() + 1;
+  const todayDay         = now.getDate();
+  const todayCalEvents   = CAL_MAP[todayMonthOrder]?.[todayDay] ?? [];
+  const todayBooked      = bookedMatches.filter(bm => {
+    const [y, mo, d] = bm.date.split('-').map(Number);
+    return y === now.getFullYear() && mo === todayMonthOrder && d === todayDay;
+  });
+  const hasTodayActivity = todayCalEvents.length > 0 || todayBooked.length > 0;
 
   return (
     <>
@@ -90,115 +98,134 @@ export function MiniCalendar() {
       <div style={{
         background: 'white',
         borderRadius: '4px',
-        padding: '18px 18px 16px',
+        padding: 0,
         width: '328px',
         boxShadow: '0 4px 24px rgba(0,0,0,.18)',
         flexShrink: 0,
+        overflow: 'hidden',
       }}>
-        {/* Month navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '13px' }}>
-          <button
-            onClick={prevMonth}
-            aria-label="Previous month"
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              width: '34px', height: '34px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--green-deep)', fontSize: '18px', borderRadius: '3px', padding: 0,
-            }}
-          >‹</button>
-          <div style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: '16px', fontWeight: 700, letterSpacing: '.06em',
-            textTransform: 'uppercase', color: 'var(--green-deep)',
-          }}>
-            {MONTH_NAMES[calMonth]} {calYear}
-          </div>
-          <button
-            onClick={nextMonth}
-            aria-label="Next month"
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              width: '34px', height: '34px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--green-deep)', fontSize: '18px', borderRadius: '3px', padding: 0,
-            }}
-          >›</button>
-        </div>
 
-        {/* Day-name headers */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '3px' }}>
-          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-            <div key={i} style={{
-              textAlign: 'center',
+        {/* ── Main content area (nav + grid) ── */}
+        <div style={{ padding: '18px 18px 13px' }}>
+
+          {/* Month navigation */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '13px' }}>
+            <button
+              onClick={prevMonth}
+              aria-label="Previous month"
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                width: '34px', height: '34px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--green-deep)', fontSize: '18px', borderRadius: '3px', padding: 0,
+              }}
+            >‹</button>
+            <div style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontSize: '12px', fontWeight: 700, letterSpacing: '.06em',
-              color: i >= 5 ? 'rgba(45,90,61,.4)' : 'rgba(45,90,61,.55)',
-              paddingBottom: '5px',
-            }}>{d}</div>
-          ))}
-        </div>
-
-        {/* Day grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', rowGap: '1px' }}>
-          {cells.map((day, i) => {
-            if (!day) return <div key={i} />;
-            const dayEvents     = eventsForMonth[day] ?? [];
-            const isToday       = isCurrentMonth && day === todayDate;
-            const hasEvents     = dayEvents.length > 0;
-            const hasBookedMatch = bookedMatchDaysInView.has(day);
-            return (
-              <div
-                key={i}
-                onClick={() => setSelectedDay({ day, month: calMonth, year: calYear })}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '3px', cursor: 'pointer' }}
-              >
-                <div style={{
-                  width: '34px', height: '34px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  borderRadius: '50%',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: '14px',
-                  fontWeight: isToday ? 700 : (hasEvents || hasBookedMatch) ? 600 : 400,
-                  color: isToday ? 'white' : (hasEvents || hasBookedMatch) ? 'var(--green-deep)' : 'rgba(45,90,61,.5)',
-                  background: isToday ? 'var(--green-deep)' : 'transparent',
-                }}>
-                  {day}
-                </div>
-                {(hasEvents || hasBookedMatch) && (
-                  <div style={{ display: 'flex', gap: '3px', marginTop: '1px', height: '5px' }}>
-                    {dayEvents.slice(0, 2).map((ev, j) => (
-                      <div key={j} style={{
-                        width: '5px', height: '5px', borderRadius: '50%',
-                        background: isToday ? 'rgba(255,255,255,0.7)' : CATEGORY_META[ev.category].dot,
-                        flexShrink: 0,
-                      }} />
-                    ))}
-                    {hasBookedMatch && (
-                      <div style={{
-                        width: '5px', height: '5px', borderRadius: '50%',
-                        background: isToday ? 'rgba(255,255,255,0.7)' : CATEGORY_META.competition.dot,
-                        flexShrink: 0,
-                      }} />
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Event count footer */}
-        {eventCount > 0 && (
-          <div style={{
-            marginTop: '13px', paddingTop: '10px',
-            borderTop: '1px solid rgba(45,90,61,.1)',
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: '13px', color: 'rgba(45,90,61,.55)', letterSpacing: '.04em',
-          }}>
-            {eventCount} event{eventCount !== 1 ? 's' : ''} this month
+              fontSize: '16px', fontWeight: 700, letterSpacing: '.06em',
+              textTransform: 'uppercase', color: 'var(--green-deep)',
+            }}>
+              {MONTH_NAMES[calMonth]} {calYear}
+            </div>
+            <button
+              onClick={nextMonth}
+              aria-label="Next month"
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                width: '34px', height: '34px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--green-deep)', fontSize: '18px', borderRadius: '3px', padding: 0,
+              }}
+            >›</button>
           </div>
-        )}
+
+          {/* Day-name headers */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '3px' }}>
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+              <div key={i} style={{
+                textAlign: 'center',
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: '12px', fontWeight: 700, letterSpacing: '.06em',
+                color: i >= 5 ? 'rgba(45,90,61,.4)' : 'rgba(45,90,61,.55)',
+                paddingBottom: '5px',
+              }}>{d}</div>
+            ))}
+          </div>
+
+          {/* Day grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', rowGap: '1px' }}>
+            {cells.map((day, i) => {
+              if (!day) return <div key={i} />;
+              const dayEvents     = eventsForMonth[day] ?? [];
+              const isToday       = isCurrentMonth && day === todayDate;
+              const hasEvents     = dayEvents.length > 0;
+              const hasBookedMatch = bookedMatchDaysInView.has(day);
+              return (
+                <div
+                  key={i}
+                  onClick={() => setSelectedDay({ day, month: calMonth, year: calYear })}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '3px', cursor: 'pointer' }}
+                >
+                  <div style={{
+                    width: '34px', height: '34px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    borderRadius: '50%',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '14px',
+                    fontWeight: isToday ? 700 : (hasEvents || hasBookedMatch) ? 600 : 400,
+                    color: isToday ? 'white' : (hasEvents || hasBookedMatch) ? 'var(--green-deep)' : 'rgba(45,90,61,.5)',
+                    background: isToday ? 'var(--green-deep)' : 'transparent',
+                  }}>
+                    {day}
+                  </div>
+                  {(hasEvents || hasBookedMatch) && (
+                    <div style={{ display: 'flex', gap: '3px', marginTop: '1px', height: '5px' }}>
+                      {dayEvents.slice(0, 2).map((ev, j) => (
+                        <div key={j} style={{
+                          width: '5px', height: '5px', borderRadius: '50%',
+                          background: isToday ? 'rgba(255,255,255,0.7)' : CATEGORY_META[ev.category].dot,
+                          flexShrink: 0,
+                        }} />
+                      ))}
+                      {hasBookedMatch && (
+                        <div style={{
+                          width: '5px', height: '5px', borderRadius: '50%',
+                          background: isToday ? 'rgba(255,255,255,0.7)' : CATEGORY_META.competition.dot,
+                          flexShrink: 0,
+                        }} />
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+        </div>{/* end content area */}
+
+        {/* ── Footer — last child inside the card div, clipped by its border-radius ── */}
+        <div style={{
+          padding: '10px 18px 13px',
+          borderTop: '1.5px solid rgba(45,90,61,.28)',
+          background: '#eef3ef',
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '13px',
+          letterSpacing: '.04em',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}>
+          <span style={{
+            width: '7px', height: '7px', borderRadius: '50%', flexShrink: 0,
+            background: hasTodayActivity ? '#c9a84c' : 'rgba(45,90,61,.35)',
+          }} />
+          <span style={{ color: hasTodayActivity ? '#1b3b26' : 'rgba(45,90,61,.6)' }}>
+            {hasTodayActivity ? 'Matches today' : 'No matches today'}
+            <span style={{ margin: '0 6px', opacity: 0.4 }}>•</span>
+            Click date to view
+          </span>
+        </div>
+
       </div>
 
       {/* ── Day detail popup ── */}

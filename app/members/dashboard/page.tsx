@@ -27,16 +27,20 @@ export default async function Dashboard() {
 
   const email = session.email;
 
-  const [{ data: events }, { data: notices }, { data: officers }, { data: green }, { data: memberProfile }] =
+  const [{ data: events }, { data: notices }, { data: officers }, { data: memberProfile }, { data: memberRecord }] =
     await Promise.all([
       supabaseAdmin.from('events').select('*').gte('event_date', new Date().toISOString()).order('event_date').limit(8),
       supabaseAdmin.from('notices').select('*').order('published_at', { ascending: false }).limit(5),
       supabaseAdmin.from('officers').select('*').eq('group_name', 'Committee').order('sort_order'),
-      supabaseAdmin.from('green_status').select('*').order('updated_at', { ascending: false }).limit(1).maybeSingle(),
       supabaseAdmin.from('member_profiles').select('first_name').eq('member_email', email).maybeSingle(),
+      supabaseAdmin.from('club_members').select('full_name').eq('email', email).maybeSingle(),
     ]);
 
-  const firstName = memberProfile?.first_name;
+  // member_profiles.first_name is the preferred source; fall back to the
+  // first word of club_members.full_name if the profile row is missing.
+  const firstName = memberProfile?.first_name
+    ?? memberRecord?.full_name?.split(' ')[0]
+    ?? null;
 
   return (
     <>
@@ -45,85 +49,84 @@ export default async function Dashboard() {
         {/* Header */}
         <div style={{ background: 'var(--green-deep)', padding: '1rem 2rem', color: 'var(--cream)' }}>
           <div className="section-inner">
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '3rem', flexWrap: 'wrap' }}>
+            {/* alignItems:flex-end makes right column bottom-anchor the calendar;
+                left column with alignSelf:stretch grows to match that height so
+                the Log Out button sits at exactly the same bottom edge. */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3rem', flexWrap: 'wrap' }}>
 
-              {/* Left: title + actions */}
-              <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column' }}>
-                <div className="section-tag" style={{ color: '#c9a84c', borderTopColor: '#c9a84c' }}>Members Area</div>
-                {firstName && (
-                  <p style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize: 'clamp(1.4rem, 3vw, 2rem)',
-                    fontWeight: 400,
-                    color: 'rgba(245,240,232,.75)',
-                    margin: '0 0 0.15rem',
-                    letterSpacing: '-.01em',
-                  }}>
-                    Welcome, {firstName}
-                  </p>
-                )}
-                <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>
-                  Members <em style={{ color: '#c9a84c', fontStyle: 'italic' }}>Dashboard</em>
-                </h1>
-                <div style={{ marginTop: '1.5rem' }}>
-                  <a href="/members/book-a-game" className="dashboard-book-btn" style={{
-                    display: 'inline-block',
-                    padding: '15px 34px',
-                    border: '3px solid #c9a84c',
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: '17px',
-                    fontWeight: 700,
-                    letterSpacing: '.08em',
-                    textTransform: 'uppercase',
-                    color: '#c9a84c',
-                    textDecoration: 'none',
-                    whiteSpace: 'nowrap',
-                    background: 'transparent',
-                    transition: 'background .15s, color .15s',
-                  }}>
-                    Book a Match
-                  </a>
-                </div>
-                <div style={{ flex: 1 }} />
-                {green && (
-                  <div style={{
-                    marginTop: '2rem',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '8px 16px',
-                    background: 'rgba(255,255,255,.07)',
-                    border: '1px solid rgba(255,255,255,.12)',
-                    alignSelf: 'flex-start',
-                  }}>
-                    <span style={{
-                      width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
-                      background: green.status === 'open_good' ? '#4caf50' : green.status === 'open_fair' ? '#ff9800' : '#f44336',
-                    }} />
-                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'rgba(245,240,232,.85)' }}>
-                      {green.message}
-                    </span>
+              {/* Left: title + actions + Log Out anchored to bottom */}
+              <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', alignSelf: 'stretch' }}>
+
+                {/* Inner content — grows to fill space, pushing Log Out to bottom */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <div className="section-tag" style={{ color: '#c9a84c', borderTopColor: '#c9a84c' }}>Members Area</div>
+                  {firstName && (
+                    <p style={{
+                      fontFamily: "'Playfair Display', serif",
+                      fontSize: 'clamp(1.4rem, 3vw, 2rem)',
+                      fontWeight: 400,
+                      color: 'rgba(245,240,232,.75)',
+                      margin: '0 0 0.15rem',
+                      letterSpacing: '-.01em',
+                    }}>
+                      Welcome, {firstName}
+                    </p>
+                  )}
+                  <h1 className="section-h2" style={{ color: 'var(--cream)', fontSize: 'clamp(1.75rem,4vw,2.75rem)' }}>
+                    Members <em style={{ color: '#c9a84c', fontStyle: 'italic' }}>Dashboard</em>
+                  </h1>
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <a href="/members/book-a-game" className="dashboard-book-btn" style={{
+                      display: 'inline-block',
+                      padding: '13px 34px',
+                      border: '1px solid #c9a84c',
+                      fontFamily: "'Cinzel', 'Playfair Display', serif",
+                      fontSize: '17px',
+                      fontWeight: 400,
+                      letterSpacing: '0.15em',
+                      textTransform: 'uppercase',
+                      color: '#c9a84c',
+                      textDecoration: 'none',
+                      whiteSpace: 'nowrap',
+                      background: 'transparent',
+                      transition: 'background .25s, color .25s',
+                    }}>
+                      Book a Match
+                    </a>
                   </div>
-                )}
-                <div style={{ marginTop: '1rem' }}>
-                  <a href="/members/logout" style={{
-                    display: 'inline-block',
-                    padding: '7px 14px',
-                    border: '1px solid rgba(192,57,43,.35)',
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    letterSpacing: '.08em',
-                    textTransform: 'uppercase',
-                    color: 'rgba(230,100,85,.95)',
-                    textDecoration: 'none',
-                  }}>
-                    Sign out
+                  <div style={{ flex: 1 }} />
+                </div>
+
+                {/* Log Out — bottom of left column, bottom edge = calendar bottom edge */}
+                <div style={{ marginTop: '1.5rem' }}>
+                  <a
+                    href="/members/logout"
+                    style={{
+                      width: '62px',
+                      height: '62px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#1b3b26',
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      letterSpacing: '.08em',
+                      textTransform: 'uppercase',
+                      textDecoration: 'none',
+                      lineHeight: 1.35,
+                      textAlign: 'center',
+                    }}
+                  >
+                    Log<br />out
                   </a>
                 </div>
               </div>
 
-              {/* Right: calendar only */}
+              {/* Right: calendar only — original position */}
               <div style={{ flexShrink: 0 }}>
                 <MiniCalendar />
               </div>

@@ -163,7 +163,7 @@ export const competitionSheets: CompetitionSheet[] = [
     type: 'round-robin',
     rules: 'Each game to 11 points. Half Handicap',
     players: [
-      'Andrew Fox', 'Mark Hunter', 'Tracy', 'Gerry the Jeweller',
+      'Andrew Fox', 'Mark Hunter', 'Tracy', 'Gerry Summers',
       'Alaric', 'Brian Coles', 'David Priestley', 'Ginnette Grimes',
       "Jim O'Neill", 'Judith Heaton', 'Rhona', 'Venina',
       'Andrew', 'Bernard O', 'Catherine M', "Noel O'Hara",
@@ -171,13 +171,13 @@ export const competitionSheets: CompetitionSheet[] = [
     ],
     initialScores: {
       '0:1': '1',   // Andrew Fox → Mark Hunter
-      '0:3': '10',  // Andrew Fox → Gerry the Jeweller
+      '0:3': '10',  // Andrew Fox → Gerry Summers
       '1:0': '11',  // Mark Hunter → Andrew Fox
       '1:5': '11',  // Mark Hunter → Brian Coles
-      '3:0': '11',  // Gerry the Jeweller → Andrew Fox
-      '3:5': '-1',  // Gerry the Jeweller → Brian Coles
+      '3:0': '11',  // Gerry Summers → Andrew Fox
+      '3:5': '-1',  // Gerry Summers → Brian Coles
       '5:1': '3',   // Brian Coles → Mark Hunter
-      '5:3': '11',  // Brian Coles → Gerry the Jeweller
+      '5:3': '11',  // Brian Coles → Gerry Summers
       '6:4': '11',  // David Priestley → Alaric
       '4:5': '11',  // Alaric → Brian Coles
       '4:6': '4',   // Alaric → David Priestley

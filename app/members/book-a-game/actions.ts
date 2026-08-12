@@ -155,8 +155,8 @@ export async function createFixtureBooking(input: {
     .select('id', { count: 'exact', head: true })
     .eq('date', input.date);
 
-  if ((count ?? 0) >= 2) {
-    return { success: false, error: 'A maximum of 2 matches can be booked per day. Please choose a different date.' };
+  if ((count ?? 0) >= 3) {
+    return { success: false, error: 'A maximum of 3 matches can be booked per day. Please choose a different date.' };
   }
 
   const { data, error } = await supabaseAdmin

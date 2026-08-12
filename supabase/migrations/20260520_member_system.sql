@@ -130,7 +130,7 @@ INSERT INTO public.club_members (full_name, membership_number, handicap, status)
   ('Hayley Steedman',   'BBCHS001',  4, 'active'),
   ('Toby Steedman',     'BBCTS001', -2, 'active'),
   ('Simon Stewart',     'BBCSS002',  2, 'active'),
-  ('Gerry Summers',     'BBCGS001', -6, 'active'),
+  ('Gerry Summers', 'BBCGS001', -6, 'active'),
   ('Gordon Swire',      'BBCGS002', -6, 'active'),
   ('Geraldine Talbot',  'BBCGT001',  6, 'active'),
   ('Marisa Talbot',     'BBCMT001',  4, 'active'),

@@ -60,6 +60,7 @@ const NEWS_EVENTS_LINKS = [
   { href: '/events',      label: 'Events' },
   { href: '/notices',     label: 'Notices' },
   { href: '/newsletter',  label: 'Newsletter' },
+  { href: '/roll-ups',    label: 'Club Nights' },
 ];
 
 const MEMBERSHIP_LINKS = [

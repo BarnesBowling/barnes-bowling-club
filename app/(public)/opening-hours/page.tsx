@@ -105,7 +105,7 @@ export default function OpeningHours() {
                     If they play, there&apos;s a modest fee of £5 per guest. We tally these up each month and you can see your running total on your account on the website, with the full amount billed towards the end of the season.
                   </p>
                   <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', color: 'var(--green-deep)', lineHeight: 1.8, margin: '0 0 0.75rem' }}>
-                    The fee doesn&apos;t apply on our Club Open Nights (Wednesdays, 5 – 8pm), Opening Day, Barnes Fair Day, or International Day — guests play free on those occasions.
+                    The fee doesn&apos;t apply on our Club Open Nights (Wednesdays, 6 – 8pm), Opening Day, Barnes Fair Day, or International Day — guests play free on those occasions.
                   </p>
                   <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', color: 'var(--green-deep)', lineHeight: 1.8, margin: 0 }}>
                     Children under 16 aren&apos;t able to play, and we ask that little ones are kept off the green.

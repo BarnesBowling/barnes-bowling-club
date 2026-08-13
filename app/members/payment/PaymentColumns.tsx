@@ -240,7 +240,6 @@ export function PaymentColumns({ memberEmail, balance }: Props) {
           <div style={{
             background: 'var(--cream)',
             padding: '1.75rem 2rem',
-            borderTop: '3px solid rgba(45,90,61,.15)',
           }}>
             <div style={{
               fontFamily: "'Playfair Display', serif",
@@ -249,41 +248,26 @@ export function PaymentColumns({ memberEmail, balance }: Props) {
               color: 'var(--green-deep)',
               marginBottom: '1rem',
             }}>
-              Pay by Bank Transfer
+              To pay by Bank Transfer
             </div>
-            <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-              {[
-                ['Account Name',   'Barnes Bowling Club'],
-                ['Account Number', '7014 3383'],
-                ['Sort Code',      '20-72-33'],
-              ].map(([label, value]) => (
-                <tr key={label} style={{ borderBottom: '1px solid rgba(45,90,61,.08)' }}>
-                  <td style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    letterSpacing: '.07em',
-                    textTransform: 'uppercase',
-                    color: 'var(--text-muted)',
-                    padding: '8px 0',
-                    width: '45%',
-                    verticalAlign: 'middle',
-                  }}>
-                    {label}
-                  </td>
-                  <td style={{
-                    fontFamily: "'Libre Baskerville', serif",
-                    fontSize: '14px',
-                    color: 'var(--green-deep)',
-                    padding: '8px 0',
-                    fontWeight: 500,
-                    verticalAlign: 'middle',
-                  }}>
-                    {value}
-                  </td>
-                </tr>
-              ))}
-            </table>
+            <p style={{
+              fontFamily: "'Libre Baskerville', serif",
+              fontSize: '14px',
+              color: 'var(--text-muted)',
+              lineHeight: 1.8,
+              margin: '0 0 0.75rem',
+            }}>
+              To settle the payment, please arrange a bank transfer to our Barnes Bowling Club account (Account Name: <strong style={{ color: 'var(--green-deep)' }}>Barnes Bowling Club</strong>, Account Number: <strong style={{ color: 'var(--green-deep)' }}>7014 3383</strong>, Sort Code: <strong style={{ color: 'var(--green-deep)' }}>20-72-33</strong>).
+            </p>
+            <p style={{
+              fontFamily: "'Libre Baskerville', serif",
+              fontSize: '14px',
+              color: 'var(--text-muted)',
+              lineHeight: 1.8,
+              margin: 0,
+            }}>
+              Please include your membership number as the payment reference, and email confirmation to <a href="mailto:info@barnesbowling.club" style={{ color: 'var(--green-mid)', textDecoration: 'none' }}>info@barnesbowling.club</a> for our records.
+            </p>
           </div>
 
         </div>

@@ -267,6 +267,29 @@ function PaymentForm({ memberEmail }: { memberEmail?: string }) {
           {loading ? 'Processing…' : showFee ? `Pay £${grossGBP.toFixed(2)}` : 'Pay Now'}
         </button>
       </div>
+
+      {/* Card brand icons */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        {/* Visa */}
+        <svg width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x=".5" y=".5" width="37" height="23" rx="3" fill="#fff" stroke="rgba(45,90,61,.2)"/>
+          <text x="19" y="16.5" fontFamily="Arial,sans-serif" fontSize="11" fontWeight="700" fill="#1a1f71" textAnchor="middle" letterSpacing="1">VISA</text>
+        </svg>
+        {/* Mastercard */}
+        <svg width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x=".5" y=".5" width="37" height="23" rx="3" fill="#fff" stroke="rgba(45,90,61,.2)"/>
+          <circle cx="15" cy="12" r="6" fill="#EB001B"/>
+          <circle cx="23" cy="12" r="6" fill="#F79E1B" fillOpacity="0.88"/>
+        </svg>
+        {/* Amex */}
+        <svg width="38" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x=".5" y=".5" width="37" height="23" rx="3" fill="#016FD0" stroke="rgba(45,90,61,.2)"/>
+          <text x="19" y="16" fontFamily="Arial,sans-serif" fontSize="8.5" fontWeight="700" fill="#fff" textAnchor="middle" letterSpacing="0.5">AMEX</text>
+        </svg>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(39,39,39,.38)', marginLeft: '2px' }}>
+          Secured by Stripe
+        </span>
+      </div>
     </form>
   );
 }

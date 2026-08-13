@@ -390,8 +390,6 @@ textarea { min-height: 110px; }
 .apply-layout { display: grid; grid-template-columns: minmax(0,1.8fr) minmax(0,1fr); gap: 2rem; align-items: start; }
 @media (max-width: 700px) { .apply-layout { grid-template-columns: 1fr; } .apply-sidebar { display: none; } }
 
-/* ── DASHBOARD HEADER BUTTON ── */
-@media (max-width: 600px) { .dashboard-book-btn { display: none !important; } }
 
 /* ── FOOTER MOBILE ── */
 @media (max-width: 640px) {

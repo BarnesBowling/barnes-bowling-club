@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifyMemberSession, SESSION_COOKIE } from '@/lib/memberSession';
+import { Resend } from 'resend';
 
 async function getSession() {
   const cookieStore = await cookies();
@@ -185,6 +186,65 @@ export async function createFixtureBooking(input: {
       return { success: false, error: 'That time slot was just taken. Please choose another.' };
     }
     return { success: false, error: `Could not save booking: ${error.message}` };
+  }
+
+  // Fire-and-forget alert email — must not block or fail the booking
+  if (process.env.RESEND_API_KEY) {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const { data: cm } = await supabaseAdmin
+      .from('club_members')
+      .select('full_name')
+      .eq('email', session.email)
+      .maybeSingle();
+    const bookerName = cm?.full_name || session.email;
+    const players = [input.player1, input.player2, input.player3, input.player4]
+      .filter((p): p is string => !!p);
+    const formattedDate = new Date(input.date + 'T00:00:00').toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+    resend.emails.send({
+      from:    'Barnes Bowling Club <noreply@barnesbowlingclub.com>',
+      to:      'info@barnesbowling.club',
+      subject: `New booking — ${input.competition} — ${formattedDate}`,
+      html: `
+        <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a3a2a">
+          <div style="background:#1a3a2a;padding:28px 32px">
+            <h1 style="margin:0;font-size:20px;color:#f5f0e8;letter-spacing:.02em">Barnes Bowling Club</h1>
+            <p style="margin:6px 0 0;font-size:12px;color:rgba(245,240,232,.6);font-family:Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase">Match Booking</p>
+          </div>
+          <div style="padding:32px">
+            <h2 style="font-size:20px;font-weight:500;margin:0 0 20px;color:#1a3a2a">New booking made by ${bookerName}</h2>
+            <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:14px">
+              <tr style="border-bottom:1px solid #e8e4dc">
+                <td style="padding:10px 0;color:#6b7280;font-family:Arial,sans-serif;width:40%">Competition</td>
+                <td style="padding:10px 0;color:#1a3a2a;font-weight:600">${input.competition}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e8e4dc">
+                <td style="padding:10px 0;color:#6b7280;font-family:Arial,sans-serif">Date</td>
+                <td style="padding:10px 0;color:#1a3a2a">${formattedDate}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e8e4dc">
+                <td style="padding:10px 0;color:#6b7280;font-family:Arial,sans-serif">Time</td>
+                <td style="padding:10px 0;color:#1a3a2a">${input.time_slot}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e8e4dc">
+                <td style="padding:10px 0;color:#6b7280;font-family:Arial,sans-serif">Players</td>
+                <td style="padding:10px 0;color:#1a3a2a">${players.join(', ')}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0;color:#6b7280;font-family:Arial,sans-serif">Booked by</td>
+                <td style="padding:10px 0;color:#1a3a2a">${bookerName} &lt;${session.email}&gt;</td>
+              </tr>
+            </table>
+          </div>
+          <div style="background:#f5f1ea;padding:20px 32px;border-top:1px solid #e8e4dc">
+            <p style="margin:0;font-size:12px;color:#9ca3af;font-family:Arial,sans-serif">
+              Barnes Bowling Club · Sun Inn, Church Road, Barnes, London SW13 9HE
+            </p>
+          </div>
+        </div>
+      `,
+    }).then(undefined, err => console.error('[booking-alert] email failed:', err));
   }
 
   revalidatePath('/members/calendar');

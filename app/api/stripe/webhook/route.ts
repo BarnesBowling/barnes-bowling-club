@@ -150,7 +150,7 @@ export async function POST(req: Request) {
     }
 
     const memberName = paymentIntent.metadata?.member_name || clubMember.full_name || clubMember.email || 'Member';
-    const memberEmail = clubMember.email || null;
+    const memberEmail = paymentIntent.metadata?.member_email || clubMember.email || null;
 
     // Insert credit into member_ledger
     const { error: ledgerError } = await supabaseAdmin.from('member_ledger').insert({

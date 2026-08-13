@@ -29,7 +29,7 @@ const labelStyle: React.CSSProperties = {
   marginBottom: '6px',
 };
 
-function PaymentForm() {
+function PaymentForm({ memberEmail }: { memberEmail?: string }) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -64,6 +64,7 @@ function PaymentForm() {
           description: reference || 'Barnes Bowling Club payment',
           name: memberName,
           membershipNumber,
+          memberEmail,
         }),
       });
 
@@ -246,10 +247,10 @@ function PaymentForm() {
   );
 }
 
-export function StripePaymentForm() {
+export function StripePaymentForm({ memberEmail }: { memberEmail?: string }) {
   return (
     <Elements stripe={stripePromise}>
-      <PaymentForm />
+      <PaymentForm memberEmail={memberEmail} />
     </Elements>
   );
 }

@@ -159,7 +159,7 @@ export default async function PaymentPage({
             }}>
               Secure online payment
             </div>
-            <StripePaymentForm />
+            <StripePaymentForm memberEmail={session.email} />
           </div>
 
           {/* ── PayPal divider ── */}

@@ -87,55 +87,6 @@ export default async function PaymentPage({
             </div>
           )}
 
-          {/* Payment option cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'rgba(45,90,61,.08)', marginBottom: '3rem' }}>
-
-            {/* Annual subscription */}
-            <div style={{ background: 'var(--cream)', padding: '2rem 2.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-                <div>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: 'var(--gold)', marginBottom: '6px' }}>Annual Fee</div>
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', fontWeight: 500, color: 'var(--green-deep)', marginBottom: '4px' }}>Playing Member Subscription</div>
-                  <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.7 }}>
-                    Full season access, Apr–Oct. Includes all club competitions and social events.
-                  </p>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '32px', fontWeight: 600, color: 'var(--green-deep)' }}>£215</div>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)', letterSpacing: '.05em' }}>per season</div>
-                </div>
-              </div>
-              <div style={{ marginTop: '1.5rem' }}>
-                <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
-                  Use the payment form below.
-                </p>
-              </div>
-            </div>
-
-            {/* Guest fee */}
-            <div style={{ background: 'var(--cream)', padding: '2rem 2.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-                <div>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: 'var(--gold)', marginBottom: '6px' }}>Per Visit</div>
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', fontWeight: 500, color: 'var(--green-deep)', marginBottom: '4px' }}>Guest Fee</div>
-                  <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.7 }}>
-                    Bring a guest to the green for a single session. Payable once per guest visit.
-                  </p>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '32px', fontWeight: 600, color: 'var(--green-deep)' }}>£5</div>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)', letterSpacing: '.05em' }}>per guest visit</div>
-                </div>
-              </div>
-              <div style={{ marginTop: '1.5rem' }}>
-                <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
-                  Use the payment form below.
-                </p>
-              </div>
-            </div>
-
-          </div>
-
           {/* ── Stripe payment form ── */}
           <div style={{ background: 'var(--cream)', padding: '2rem 2.5rem', marginBottom: '1px' }}>
             <div style={{

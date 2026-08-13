@@ -95,6 +95,37 @@ export async function addTransaction(formData: FormData): Promise<void> {
   revalidatePath('/admin/accounts');
 }
 
+export async function addAdjustmentTransaction(params: {
+  member_id: string;
+  amount: number;
+  type: 'debit' | 'credit';
+  description: string;
+  date: string;
+}): Promise<{ error?: string; row?: { id: string; member_id: string; date: string; description: string; category: string; amount: number; type: 'debit' | 'credit'; metadata: null; club_members: null } }> {
+  try {
+    const adminSession = await requireAdminSession();
+    const { data, error } = await supabaseAdmin
+      .from('member_ledger')
+      .insert({
+        member_id:   params.member_id,
+        date:        params.date,
+        description: params.description,
+        category:    'miscellaneous',
+        amount:      params.amount,
+        type:        params.type,
+        created_by:  adminSession.email,
+      })
+      .select('id, member_id, date, description, category, amount, type, metadata')
+      .single();
+    if (error) return { error: error.message };
+    revalidatePath('/admin/accounts');
+    revalidatePath('/members/account');
+    return { row: { ...data, type: data.type as 'debit' | 'credit', club_members: null } };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Failed to add adjustment' };
+  }
+}
+
 export async function deleteTransaction(formData: FormData): Promise<void> {
   await requireAdminSession();
   const id = String(formData.get('id'));

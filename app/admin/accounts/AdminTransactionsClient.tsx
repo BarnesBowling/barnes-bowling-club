@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useMemo, useEffect } from 'react';
-import { updateTransaction, deleteTransactionById, updateMemberBasics } from './actions';
+import { updateTransaction, deleteTransactionById, updateMemberBasics, addAdjustmentTransaction } from './actions';
 
 const CATEGORY_LABELS: Record<string, string> = {
   membership_fee: 'Membership Fee',
@@ -137,6 +137,12 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
   // Local overrides so member cards update immediately after save
   const [memberOverrides, setMemberOverrides] = useState<Record<string, Partial<MemberBasics>>>({});
 
+  // ── Adjust balance state ──────────────────────────────────────────────────
+  const [adjustMemberId, setAdjustMemberId] = useState<string | null>(null);
+  const [adjustForm, setAdjustForm] = useState<{
+    amount: string; type: 'debit' | 'credit'; description: string;
+  } | null>(null);
+
   // ── Status message ────────────────────────────────────────────────────────
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
@@ -236,6 +242,37 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
     });
   }
 
+  // ── Adjust handlers ───────────────────────────────────────────────────────
+
+  function startAdjust(m: MemberBasics) {
+    setAdjustMemberId(m.id);
+    setAdjustForm({ amount: '', type: 'debit', description: '' });
+    setEditMemberId(null);
+    setEditMemberForm(null);
+    setMsg(null);
+  }
+
+  function cancelAdjust() { setAdjustMemberId(null); setAdjustForm(null); }
+
+  function handleSaveAdjust(member_id: string) {
+    if (!adjustForm) return;
+    const amount = parseFloat(adjustForm.amount);
+    if (isNaN(amount) || amount <= 0) { showMsg(false, 'Amount must be a positive number.'); return; }
+    if (!adjustForm.description.trim()) { showMsg(false, 'Please enter a description.'); return; }
+    startTransition(async () => {
+      const date = new Date().toISOString().slice(0, 10);
+      const res = await addAdjustmentTransaction({
+        member_id, amount, type: adjustForm.type,
+        description: adjustForm.description.trim(), date,
+      });
+      if (res.error) { showMsg(false, res.error); return; }
+      if (res.row) setRows(prev => [res.row!, ...prev]);
+      setAdjustMemberId(null);
+      setAdjustForm(null);
+      showMsg(true, 'Adjustment saved.');
+    });
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -262,12 +299,13 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
           </h2>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {membersWithBalance.map(m => {
-              const isEditing = editMemberId === m.id;
+              const isEditing   = editMemberId === m.id;
+              const isAdjusting = adjustMemberId === m.id;
               return (
                 <div key={m.id} style={{
                   background: '#fff',
                   border: `1px solid ${m.balance > 0 ? 'rgba(192,57,43,.2)' : 'rgba(46,125,50,.2)'}`,
-                  padding: '.75rem 1rem', minWidth: '210px',
+                  padding: '.75rem 1rem', minWidth: '220px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
                     <div>
@@ -283,12 +321,20 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                         {m.balance > 0 ? fmtGBP(m.balance) : `−${fmtGBP(m.balance)}`}
                       </div>
                     </div>
-                    <button
-                      onClick={() => isEditing ? cancelEditMember() : startEditMember(m)}
-                      style={{ ...btnEdit, flexShrink: 0, height: '26px', padding: '0 8px', fontSize: '10px' }}
-                    >
-                      {isEditing ? 'Cancel' : 'Edit'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                      <button
+                        onClick={() => isEditing ? cancelEditMember() : startEditMember(m)}
+                        style={{ ...btnEdit, height: '26px', padding: '0 8px', fontSize: '10px' }}
+                      >
+                        {isEditing ? 'Cancel' : 'Edit'}
+                      </button>
+                      <button
+                        onClick={() => isAdjusting ? cancelAdjust() : startAdjust(m)}
+                        style={{ ...btnEdit, height: '26px', padding: '0 8px', fontSize: '10px', borderColor: 'rgba(45,90,61,.4)', color: 'var(--green-deep)' }}
+                      >
+                        {isAdjusting ? 'Cancel' : 'Adjust'}
+                      </button>
+                    </div>
                   </div>
 
                   {isEditing && editMemberForm && (
@@ -322,6 +368,57 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                             Save
                           </button>
                           <button onClick={cancelEditMember}
+                            style={{ ...btnCancel, height: '32px', fontSize: '11px', padding: '0 10px' }}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {isAdjusting && adjustForm && (
+                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(45,90,61,.1)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div>
+                          <label style={lbl}>Amount (£)</label>
+                          <input type="number" min="0.01" step="0.01" placeholder="0.00"
+                            value={adjustForm.amount}
+                            onChange={e => setAdjustForm(f => f && { ...f, amount: e.target.value })}
+                            style={{ ...inp, height: '32px', fontSize: '12px' }} />
+                        </div>
+                        <div>
+                          <label style={lbl}>Type</label>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            {(['debit', 'credit'] as const).map(tp => (
+                              <button key={tp} type="button"
+                                onClick={() => setAdjustForm(f => f && { ...f, type: tp })}
+                                style={{
+                                  flex: 1, height: '32px', border: '1.5px solid',
+                                  fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 700,
+                                  letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer',
+                                  borderColor: adjustForm.type === tp ? 'var(--green-mid)' : 'rgba(45,90,61,.2)',
+                                  background:  adjustForm.type === tp ? 'var(--green-mid)' : '#fff',
+                                  color:       adjustForm.type === tp ? '#fff' : 'var(--text-muted)',
+                                }}
+                              >
+                                {tp}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label style={lbl}>Description</label>
+                          <input type="text" placeholder="e.g. Balance correction"
+                            value={adjustForm.description}
+                            onChange={e => setAdjustForm(f => f && { ...f, description: e.target.value })}
+                            style={{ ...inp, height: '32px', fontSize: '12px' }} />
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                          <button onClick={() => handleSaveAdjust(m.id)} disabled={pending}
+                            style={{ ...btnSave, height: '32px', fontSize: '11px', padding: '0 14px', opacity: pending ? .65 : 1 }}>
+                            {pending ? 'Saving…' : 'Save'}
+                          </button>
+                          <button onClick={cancelAdjust}
                             style={{ ...btnCancel, height: '32px', fontSize: '11px', padding: '0 10px' }}>
                             Cancel
                           </button>

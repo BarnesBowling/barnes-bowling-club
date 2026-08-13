@@ -39,33 +39,49 @@ export async function POST(req: Request) {
     const amountFormatted = `£${amountGBP.toFixed(2)}`;
 
     // ── 1. Record payment in payments table ───────────────────────────────
-    await supabaseAdmin.from('payments').insert({
+    const { error: paymentsError } = await supabaseAdmin.from('payments').insert({
       user_id: userId,
       stripe_checkout_id: session.id,
       amount: amountPence,
       status: 'paid',
       membership_type: paymentType,
-    }).then(undefined, () => {});
+    });
+    if (paymentsError) console.error('[webhook] payments insert failed:', paymentsError);
 
     // ── 2. Update profile membership status for subscription payments ──────
     if (userId && paymentType !== 'guest_fee' && paymentType !== 'outstanding_balance') {
-      await supabaseAdmin
+      const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .update({ membership_status: 'active', membership_type: paymentType })
-        .eq('id', userId)
-        .then(undefined, () => {});
+        .eq('id', userId);
+      if (profileError) console.error('[webhook] profile update failed:', profileError);
     }
 
-    // ── 3. Post credit transaction to member_transactions ─────────────────
+    // ── 3. Post credit to member_ledger (the table the account page reads) ─
     if (memberEmail && amountGBP > 0) {
-      await supabaseAdmin.from('member_transactions').insert({
-        member_email: memberEmail,
-        date:         new Date(session.created * 1000).toISOString().slice(0, 10),
-        description:  `Payment received — ${paymentLabel} (Stripe ref: ${session.id.slice(-8)})`,
-        category:     'payment',
-        amount:       -amountGBP,  // negative = credit
-        created_by:   'stripe-webhook',
-      }).then(undefined, () => {});
+      // member_ledger uses member_id (UUID) not email — look it up first
+      const { data: clubMember, error: lookupError } = await supabaseAdmin
+        .from('club_members')
+        .select('id')
+        .eq('email', memberEmail)
+        .maybeSingle();
+
+      if (lookupError) {
+        console.error('[webhook] club_members lookup failed:', lookupError);
+      } else if (!clubMember) {
+        console.error('[webhook] no club_members row found for email:', memberEmail);
+      } else {
+        const { error: ledgerError } = await supabaseAdmin.from('member_ledger').insert({
+          member_id:   clubMember.id,
+          date:        new Date(session.created * 1000).toISOString().slice(0, 10),
+          description: `Payment received — ${paymentLabel} (Stripe ref: ${session.id.slice(-8)})`,
+          category:    'payment',
+          amount:      amountGBP,
+          type:        'credit',
+          created_by:  'stripe-webhook',
+        });
+        if (ledgerError) console.error('[webhook] member_ledger insert failed:', ledgerError);
+      }
     }
 
     // ── 4. Emails ─────────────────────────────────────────────────────────
@@ -142,21 +158,23 @@ export async function POST(req: Request) {
 
       // Send confirmation to member
       if (customerEmail) {
-        await resend.emails.send({
-          from:    'Barnes Bowling Club <noreply@barnesbowling.com>',
+        const { error: memberEmailError } = await resend.emails.send({
+          from:    'Barnes Bowling Club <noreply@barnesbowlingclub.com>',
           to:      customerEmail,
           subject: 'Payment Received — Barnes Bowling Club',
           html:    emailHtml('member'),
-        }).then(undefined, () => {});
+        });
+        if (memberEmailError) console.error('[webhook] member confirmation email failed:', memberEmailError);
       }
 
       // Send admin notification
-      await resend.emails.send({
-        from:    'Barnes Bowling Club <noreply@barnesbowling.com>',
+      const { error: adminEmailError } = await resend.emails.send({
+        from:    'Barnes Bowling Club <noreply@barnesbowlingclub.com>',
         to:      'info@barnesbowling.club',
         subject: `Payment received — ${memberName} — ${amountFormatted}`,
         html:    emailHtml('admin'),
-      }).then(undefined, () => {});
+      });
+      if (adminEmailError) console.error('[webhook] admin notification email failed:', adminEmailError);
     }
   }
 

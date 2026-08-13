@@ -5,7 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
   try {
-    const { amount, description, name, membershipNumber, memberEmail } = await req.json();
+    const { amount, netAmount, description, name, membershipNumber, memberEmail } = await req.json();
 
     if (!amount || typeof amount !== 'number' || amount < 100) {
       return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
         membership_number: membershipNumber || '',
         member_email: memberEmail || '',
         description: description || '',
+        net_amount: netAmount ? String(netAmount) : '',
       },
     });
 

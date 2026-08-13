@@ -120,7 +120,11 @@ export async function POST(req: Request) {
     const paymentIntent   = event.data.object;
     const membershipNumber = paymentIntent.metadata?.membership_number || null;
     const amountPence     = paymentIntent.amount_received ?? 0;
-    const amountGBP       = amountPence / 100;
+    // Use net_amount (pre-fee) for the ledger credit so the member's balance
+    // reflects what they intended to pay, not the grossed-up Stripe total.
+    const netAmountMeta   = paymentIntent.metadata?.net_amount;
+    const netPence        = netAmountMeta ? parseInt(netAmountMeta, 10) : amountPence;
+    const amountGBP       = netPence / 100;
     const amountFormatted = `£${amountGBP.toFixed(2)}`;
     const paymentLabel    = paymentIntent.metadata?.description || 'Payment received';
     const paymentDate     = new Date().toLocaleDateString('en-GB', {

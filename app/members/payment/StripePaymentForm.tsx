@@ -29,6 +29,13 @@ const labelStyle: React.CSSProperties = {
   marginBottom: '6px',
 };
 
+// Gross up net amount to cover Stripe's UK standard fee (1.5% + 20p).
+// grossPence = ceil((netPence + 20) / 0.985)
+function calcGross(netPence: number): number {
+  if (netPence <= 0) return 0;
+  return Math.ceil((netPence + 20) / 0.985);
+}
+
 function PaymentForm({ memberEmail }: { memberEmail?: string }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -41,6 +48,11 @@ function PaymentForm({ memberEmail }: { memberEmail?: string }) {
   const [error, setError]                     = useState<string | null>(null);
   const [success, setSuccess]                 = useState(false);
   const [paidAmount, setPaidAmount]           = useState('');
+
+  const netPence   = Math.round(parseFloat(amount || '0') * 100);
+  const grossPence = calcGross(netPence);
+  const grossGBP   = grossPence / 100;
+  const showFee    = netPence >= 100; // only show fee notice once ≥£1 entered
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,7 +72,8 @@ function PaymentForm({ memberEmail }: { memberEmail?: string }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: Math.round(amountNum * 100),
+          amount:    grossPence,
+          netAmount: netPence,
           description: reference || 'Barnes Bowling Club payment',
           name: memberName,
           membershipNumber,
@@ -185,6 +198,17 @@ function PaymentForm({ memberEmail }: { memberEmail?: string }) {
           placeholder="0.00"
           style={inputStyle}
         />
+        {showFee && (
+          <p style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: '12px',
+            color: 'rgba(39,39,39,.55)',
+            margin: '6px 0 0',
+            lineHeight: 1.5,
+          }}>
+            You&apos;ll be charged <strong style={{ color: 'var(--text-dark)' }}>£{grossGBP.toFixed(2)}</strong> so the club receives £{(netPence / 100).toFixed(2)} after card processing fees.
+          </p>
+        )}
       </div>
 
       {/* Card input */}
@@ -240,7 +264,7 @@ function PaymentForm({ memberEmail }: { memberEmail?: string }) {
             transition: 'background .15s',
           }}
         >
-          {loading ? 'Processing…' : 'Pay Now'}
+          {loading ? 'Processing…' : showFee ? `Pay £${grossGBP.toFixed(2)}` : 'Pay Now'}
         </button>
       </div>
     </form>

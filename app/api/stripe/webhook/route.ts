@@ -136,7 +136,7 @@ export async function POST(req: Request) {
     // Look up member by membership_number to get UUID and email
     const { data: clubMember, error: lookupError } = await supabaseAdmin
       .from('club_members')
-      .select('id, email, name')
+      .select('id, email, full_name')
       .eq('membership_number', membershipNumber)
       .maybeSingle();
 
@@ -149,7 +149,7 @@ export async function POST(req: Request) {
       return new Response('ok');
     }
 
-    const memberName = paymentIntent.metadata?.member_name || clubMember.name || clubMember.email || 'Member';
+    const memberName = paymentIntent.metadata?.member_name || clubMember.full_name || clubMember.email || 'Member';
     const memberEmail = clubMember.email || null;
 
     // Insert credit into member_ledger

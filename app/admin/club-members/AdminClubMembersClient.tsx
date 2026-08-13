@@ -702,7 +702,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
             {search ? 'No members match your search.' : 'No members in the roster yet.'}
           </p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div className="admin-members-table-wrap" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1300px' }}>
               <thead>
                 <tr>

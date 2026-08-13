@@ -176,6 +176,12 @@ export function ApplicationForm() {
         .appform-input:focus { border-color: var(--gold) !important; }
         .appform-enquiry-btn:hover { background: rgba(220,38,38,0.08) !important; }
         .appform-submit-btn:hover:not(:disabled) { background: #6b5519 !important; }
+        @media (max-width: 600px) {
+          .appform-details-row { flex-direction: column !important; }
+          .appform-photo-box { align-self: flex-start; }
+          .appform-canvas { height: 120px !important; }
+          .appform-submit-btn { width: 100%; }
+        }
       `}</style>
 
       {/* ── Notice box ── */}
@@ -228,7 +234,7 @@ export function ApplicationForm() {
       )}
 
       {/* ── Section 1: Your Details (fields left, passport photo right) ── */}
-      <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <div className="appform-details-row" style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <SectionHeading>Your Details</SectionHeading>
 
@@ -258,7 +264,7 @@ export function ApplicationForm() {
           </Field>
         </div>
 
-        <div style={{ flexShrink: 0 }}>
+        <div className="appform-photo-box" style={{ flexShrink: 0 }}>
           <label style={labelStyle}>Passport Photo</label>
           <div style={{
             width: 133,
@@ -399,6 +405,7 @@ export function ApplicationForm() {
         <label style={labelStyle}>Signature (click and drag in the box to sign)</label>
         <canvas
           ref={canvasRef}
+          className="appform-canvas"
           width={600}
           height={160}
           onMouseDown={startDraw}

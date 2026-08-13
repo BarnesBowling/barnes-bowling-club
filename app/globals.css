@@ -468,3 +468,195 @@ textarea { min-height: 110px; }
     transform: translateX(calc(100vw + 40px));
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE OPTIMISATIONS — max-width: 768px / 480px
+   All rules below are inside media queries — desktop is untouched
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── HERO (home) ── */
+@media (max-width: 768px) {
+  .hero-full { padding: 1.25rem 1.25rem 3rem; height: auto; min-height: 340px; }
+  .hero-full h1 { font-size: clamp(2rem, 8vw, 3rem); margin-bottom: 1rem; }
+  .hero-desc { font-size: 14px; margin-bottom: 1.25rem; }
+  .hero-buttons { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .hero-buttons a:last-child { font-size: 12px; }
+  .hero-stats { margin-top: 2rem; gap: 1.25rem; }
+  .hero-stat-num { font-size: 24px; }
+}
+
+/* ── WHAT'S HAPPENING — panel always visible on touch (no hover) ── */
+@media (max-width: 768px) {
+  .whats-happening-panel { transform: translateY(0) !important; background: rgba(0,0,0,0.55) !important; }
+  .whats-happening-panel-center { opacity: 1 !important; }
+  .whats-happening-panel-footer { display: none; }
+  .whats-happening-card { height: 260px; min-height: 260px; }
+}
+
+/* ── FEATURED BANNER ── */
+@media (max-width: 768px) {
+  .featured-banner { height: auto; min-height: 280px; }
+  .featured-banner-inner { padding: 0 1.25rem; }
+  .featured-banner-text { max-width: 100%; }
+  /* The roll-ups panel link has inline padding — override via class */
+  .featured-banner-panel-mobile { padding: 2rem 1.5rem !important; }
+}
+
+/* ── HISTORY SECTION ── */
+@media (max-width: 480px) {
+  .history-section::before { font-size: clamp(80px, 28vw, 120px); }
+  .history-fact-num { font-size: 28px; }
+}
+
+/* ── MEMBERSHIP CARDS ── */
+@media (max-width: 768px) {
+  .membership-section { padding: 3rem 1.25rem; }
+}
+@media (max-width: 480px) {
+  .membership-price { font-size: 32px; }
+}
+
+/* ── OFFICERS ── */
+@media (max-width: 480px) {
+  .officer-card { flex: 0 0 100%; }
+}
+
+/* ── FIND US / GET IN TOUCH section ── */
+@media (max-width: 768px) {
+  .find-section { padding: 3rem 1.25rem; }
+  /* iframe map height reduction */
+  .find-section iframe { height: 220px !important; }
+}
+
+/* ── EVENTS LIST ── */
+@media (max-width: 480px) {
+  .event-row { grid-template-columns: 50px 1fr; gap: 0.75rem; padding: 1rem 0; }
+  .event-date-day { font-size: 24px; }
+}
+
+/* ── SECTION INNER PADDING ── */
+@media (max-width: 480px) {
+  .section-inner { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+}
+
+/* ── NAV MOBILE LINK TOUCH TARGETS ── */
+@media (max-width: 960px) {
+  .nav-mobile-link { padding: 0.8rem 0; min-height: 44px; display: flex; align-items: center; }
+  .nav-mobile-sub-link { padding: 0.65rem 0 0.65rem 1rem; min-height: 44px; display: flex; align-items: center; }
+}
+
+/* ── CONTACT GRID (padding) ── */
+@media (max-width: 700px) {
+  .contact-grid > div { padding: 1.5rem !important; }
+}
+
+/* ── MEMBERS DASHBOARD ── */
+@media (max-width: 768px) {
+  /* Dashboard header: stack layout */
+  .dashboard-header-inner { flex-direction: column !important; align-items: flex-start !important; }
+  /* Quick links: allow wrapping at smaller font */
+  .dashboard-quicklinks a { font-size: 11px !important; padding: 5px 9px !important; }
+  /* MiniCalendar can overflow – constrain it */
+  .mini-calendar-wrap { width: 100% !important; overflow-x: auto; }
+}
+
+/* ── MEMBERS PAYMENT ── */
+/* .payment-cols already has an inline <style> block in PaymentColumns.tsx —
+   we add a belt-and-braces rule here in globals too */
+@media (max-width: 768px) {
+  .payment-cols { grid-template-columns: 1fr !important; }
+}
+
+/* ── ACCOUNT CLIENT — statement modal summary box ── */
+@media (max-width: 600px) {
+  .account-summary-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ── HANDICAPS TABLE ── */
+/* Already wrapped in overflowX:auto; ensure the sort buttons are full-width */
+@media (max-width: 480px) {
+  .handicap-sort-wrap { flex-wrap: wrap; }
+  .handicap-sort-wrap button { flex: 1 1 auto; padding: 8px 10px !important; min-height: 44px; }
+}
+
+/* ── BOOK-A-GAME time slot buttons ── */
+@media (max-width: 480px) {
+  .time-slot-btn { min-height: 44px !important; min-width: 58px !important; font-size: 11px !important; }
+}
+
+/* ── ADMIN tables — allow horizontal scroll ── */
+@media (max-width: 768px) {
+  .admin-table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+}
+
+/* ── MEMBERSHIP-APPLICATION canvas signature ── */
+@media (max-width: 480px) {
+  .appform-canvas { height: 120px !important; }
+}
+
+/* ── COMMUNITY GRID (already 1-col at 640px via existing rule) — reduce padding ── */
+@media (max-width: 480px) {
+  .community-card-body { padding: 1rem 1.25rem 1.5rem; }
+}
+
+/* ── HOW-TO-PLAY cards ── */
+@media (max-width: 768px) {
+  .htp-card { margin-bottom: 1rem; }
+}
+
+/* ── MEMBERSHIP PAGE two-column facts ── */
+@media (max-width: 768px) {
+  .membership-two-col { grid-template-columns: 1fr !important; }
+}
+
+/* ── GENERAL FORM INPUTS — ensure 44px min tap target ── */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="number"],
+  select,
+  textarea {
+    min-height: 44px;
+    font-size: 16px; /* prevent iOS auto-zoom */
+  }
+  textarea { min-height: 80px; }
+  .btn-gold, .pay-btn-gold { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; width: 100%; text-align: center; }
+}
+
+/* ── OPENING HOURS — keep sidebar readable ── */
+@media (max-width: 768px) {
+  .oh-grid { gap: 1.5rem !important; }
+}
+
+/* ── CORPORATE HIRE page is single-column max-width — fine on mobile ── */
+
+/* ── HOW TO PLAY grid ── */
+@media (max-width: 768px) {
+  .how-to-play-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ── NOTICES board — already responsive ── */
+
+/* ── MEMBERS ARCHIVE / RESULTS ── */
+@media (max-width: 768px) {
+  .archive-grid { grid-template-columns: 1fr !important; }
+  .results-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* ── ADMIN CLUB MEMBERS — the table is minWidth:1300px, ensure scroll wrapper ── */
+@media (max-width: 768px) {
+  .admin-members-table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+}
+
+/* ── FOOTER nav links: bigger tap area ── */
+@media (max-width: 640px) {
+  .footer-nav-link { min-height: 36px; display: inline-flex; align-items: center; }
+}
+
+/* ── GENERAL: prevent body content overflow on very narrow screens ── */
+@media (max-width: 480px) {
+  body { overflow-x: hidden; }
+  img, iframe { max-width: 100%; }
+}

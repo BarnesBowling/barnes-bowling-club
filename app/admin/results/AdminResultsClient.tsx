@@ -442,6 +442,13 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <style>{`
+        @media (max-width: 600px) {
+          .results-score-row { grid-template-columns: 1fr auto 1fr !important; }
+          .results-player-row { grid-template-columns: 1fr 1fr !important; }
+          .results-table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+        }
+      `}</style>
 
       {/* ── Section A: Enter / Edit Match Result ──────────────────────────── */}
       <section style={card}>

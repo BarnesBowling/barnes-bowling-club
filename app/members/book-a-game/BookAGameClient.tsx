@@ -593,6 +593,14 @@ export function BookAGameClient() {
 
   return (
     <>
+      <style>{`
+        @media (max-width: 480px) {
+          .bag-pairs-grid { grid-template-columns: 1fr !important; }
+          .bag-player1-locked { max-width: 100% !important; }
+          .bag-player2-combobox { max-width: 100% !important; }
+          .time-slot-btn { min-height: 44px !important; min-width: 58px !important; font-size: 11px !important; }
+        }
+      `}</style>
       <Navbar />
       <main>
         {/* Header */}
@@ -686,7 +694,7 @@ export function BookAGameClient() {
                   </div>
                   {isPairs ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="bag-pairs-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                         <div>
                           <label style={labelStyle}>Player 1 (you)</label>
                           <div style={{
@@ -713,7 +721,7 @@ export function BookAGameClient() {
                         </div>
                       </div>
                       <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-muted)', textAlign: 'center', padding: '2px 0' }}>vs</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="bag-pairs-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                         <div>
                           <label style={labelStyle}>Player 3</label>
                           <PlayerCombobox
@@ -802,6 +810,7 @@ export function BookAGameClient() {
                           <button
                             key={slot}
                             type="button"
+                            className="time-slot-btn"
                             disabled={taken}
                             onClick={() => { if (!taken) { setTimeSlot(slot); setStatus('idle'); } }}
                             style={{

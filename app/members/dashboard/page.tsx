@@ -52,7 +52,13 @@ export default async function Dashboard() {
             {/* alignItems:flex-end makes right column bottom-anchor the calendar;
                 left column with alignSelf:stretch grows to match that height so
                 the Log Out button sits at exactly the same bottom edge. */}
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3rem', flexWrap: 'wrap' }}>
+            <style>{`
+              @media (max-width: 768px) {
+                .dashboard-header-flex { flex-direction: column !important; align-items: flex-start !important; gap: 1.5rem !important; }
+                .dashboard-mini-cal { width: 100% !important; overflow-x: auto; }
+              }
+            `}</style>
+            <div className="dashboard-header-flex" style={{ display: 'flex', alignItems: 'flex-end', gap: '3rem', flexWrap: 'wrap' }}>
 
               {/* Left: title + actions + Log Out anchored to bottom */}
               <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', alignSelf: 'stretch' }}>
@@ -127,7 +133,7 @@ export default async function Dashboard() {
               </div>
 
               {/* Right: calendar only — original position */}
-              <div style={{ flexShrink: 0 }}>
+              <div className="dashboard-mini-cal" style={{ flexShrink: 0 }}>
                 <MiniCalendar />
               </div>
 

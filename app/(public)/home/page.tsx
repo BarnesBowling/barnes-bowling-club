@@ -81,7 +81,7 @@ export default async function Home() {
         <div className="featured-banner-inner" style={{ justifyContent: 'center' }}>
           <Link
             href="/roll-ups"
-            className="featured-banner-panel"
+            className="featured-banner-panel featured-banner-panel-mobile"
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -227,7 +227,7 @@ export default async function Home() {
         {/* Watch our story callout */}
         <div style={{
           borderTop: '1px solid rgba(245,240,232,.12)',
-          padding: '2rem 2rem',
+          padding: '2rem 1.25rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

@@ -130,6 +130,13 @@ function StatementSheet({
           #bbc-statement-sheet { box-shadow: none !important; max-height: none !important; overflow: visible !important; border-radius: 0 !important; }
           @page { margin: 1.5cm; size: A4; }
         }
+        @media (max-width: 600px) {
+          .account-summary-grid { grid-template-columns: 1fr !important; }
+          .statement-header-inner { flex-direction: column !important; gap: 0.75rem !important; }
+          .statement-footer-actions { flex-direction: column !important; gap: 0.5rem !important; }
+          .statement-footer-actions a,
+          .statement-footer-actions button { width: 100% !important; justify-content: center !important; }
+        }
       `}</style>
 
       {/* Overlay */}
@@ -158,7 +165,7 @@ function StatementSheet({
         >
 
           {/* ── Header ── */}
-          <div style={{ background: '#1b3b26', padding: '2rem 2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+          <div className="statement-header-inner" style={{ background: '#1b3b26', padding: '2rem 2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
               <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#c9a84c', marginBottom: '6px' }}>
                 Barnes Bowling Club — Account Statement
@@ -184,7 +191,7 @@ function StatementSheet({
           </div>
 
           {/* ── Summary box ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '2px solid #e8e4dc' }}>
+          <div className="account-summary-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '2px solid #e8e4dc' }}>
             {[
               { label: 'Total Charged', value: fmtGBP(totalCharged), col: '#c0392b' },
               { label: 'Total Paid',    value: fmtGBP(totalPaid),    col: '#2e7d32' },
@@ -302,7 +309,7 @@ function StatementSheet({
 
           {/* ── Footer ── */}
           <div style={{ padding: '1.75rem 2.5rem', borderTop: '1px solid #e8e4dc', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap', alignItems: 'center' }} className="no-print">
+            <div className="no-print statement-footer-actions" style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <a
                 href="/members/payment"
                 style={{

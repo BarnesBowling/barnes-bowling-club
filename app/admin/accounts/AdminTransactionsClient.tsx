@@ -277,6 +277,13 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .admin-balances-grid { flex-direction: column !important; }
+          .admin-balances-grid > div { min-width: 100% !important; width: 100% !important; }
+          .admin-table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+        }
+      `}</style>
 
       {/* Status banner */}
       {msg && (
@@ -297,7 +304,7 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
             Outstanding balances
           </h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div className="admin-balances-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {membersWithBalance.map(m => {
               const isEditing   = editMemberId === m.id;
               const isAdjusting = adjustMemberId === m.id;
@@ -444,7 +451,7 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
             No transactions recorded yet.
           </p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div className="admin-table-wrap" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', minWidth: '680px' }}>
               <thead>
                 <tr>

@@ -77,7 +77,7 @@ export function HandicapsClient({ members }: { members: MemberData[] }) {
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
 
           {/* Sort toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem', fontFamily: "'DM Sans', sans-serif" }}>
+          <div className="handicap-sort-wrap" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem', fontFamily: "'DM Sans', sans-serif" }}>
             <span style={{ fontSize: '11px', letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--text-muted)', marginRight: '4px' }}>
               Sort
             </span>

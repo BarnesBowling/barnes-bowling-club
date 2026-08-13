@@ -36,18 +36,26 @@ function calcGross(netPence: number): number {
   return Math.ceil((netPence + 20) / 0.985);
 }
 
-function PaymentForm({ memberEmail }: { memberEmail?: string }) {
+function PaymentForm({ memberEmail, defaultAmount, defaultReference }: { memberEmail?: string; defaultAmount?: string; defaultReference?: string }) {
   const stripe = useStripe();
   const elements = useElements();
 
   const [memberName, setMemberName]           = useState('');
   const [membershipNumber, setMembershipNumber] = useState('');
-  const [reference, setReference]             = useState('');
-  const [amount, setAmount]                   = useState('');
+  const [reference, setReference]             = useState(defaultReference ?? '');
+  const [amount, setAmount]                   = useState(defaultAmount ?? '');
   const [loading, setLoading]                 = useState(false);
   const [error, setError]                     = useState<string | null>(null);
   const [success, setSuccess]                 = useState(false);
   const [paidAmount, setPaidAmount]           = useState('');
+
+  // Sync when parent changes the pre-fill values (event box clicked)
+  const [prevDefault, setPrevDefault] = useState({ defaultAmount, defaultReference });
+  if (prevDefault.defaultAmount !== defaultAmount || prevDefault.defaultReference !== defaultReference) {
+    setPrevDefault({ defaultAmount, defaultReference });
+    setAmount(defaultAmount ?? '');
+    setReference(defaultReference ?? '');
+  }
 
   const netPence   = Math.round(parseFloat(amount || '0') * 100);
   const grossPence = calcGross(netPence);
@@ -294,10 +302,10 @@ function PaymentForm({ memberEmail }: { memberEmail?: string }) {
   );
 }
 
-export function StripePaymentForm({ memberEmail }: { memberEmail?: string }) {
+export function StripePaymentForm({ memberEmail, defaultAmount, defaultReference }: { memberEmail?: string; defaultAmount?: string; defaultReference?: string }) {
   return (
     <Elements stripe={stripePromise}>
-      <PaymentForm memberEmail={memberEmail} />
+      <PaymentForm memberEmail={memberEmail} defaultAmount={defaultAmount} defaultReference={defaultReference} />
     </Elements>
   );
 }

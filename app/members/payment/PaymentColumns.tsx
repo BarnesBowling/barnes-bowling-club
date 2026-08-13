@@ -3,28 +3,30 @@
 import { useState, useRef } from 'react';
 import { StripePaymentForm } from './StripePaymentForm';
 
-const EVENTS = [
-  { label: 'Silver Fox Supper',       amount: '5',  reference: 'Silver Fox Supper' },
-  { label: 'Manser Competition',      amount: '5',  reference: 'Manser Competition' },
-  { label: 'Closing Dinner',          amount: '',   reference: 'Closing Dinner' },
-  { label: 'Wrong Bias Competition',  amount: '5',  reference: 'Wrong Bias Competition' },
-];
+export interface PaymentEvent {
+  id: string;
+  name: string;
+  amount: number | null;
+  is_tbc: boolean;
+}
 
 interface Props {
   memberEmail: string;
   balance: number; // positive = owes money, negative = in credit
+  events: PaymentEvent[];
 }
 
 function fmtBalance(n: number): string {
   return `£${Math.abs(n).toFixed(2)}`;
 }
 
-export function PaymentColumns({ memberEmail, balance }: Props) {
+export function PaymentColumns({ memberEmail, balance, events }: Props) {
   const [selectedEvent, setSelectedEvent] = useState<{ amount: string; reference: string } | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
-  function handleEventClick(ev: typeof EVENTS[number]) {
-    setSelectedEvent({ amount: ev.amount, reference: ev.reference });
+  function handleEventClick(ev: PaymentEvent) {
+    const amount = (!ev.is_tbc && ev.amount != null) ? String(ev.amount) : '';
+    setSelectedEvent({ amount, reference: ev.name });
     setTimeout(() => {
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
@@ -150,11 +152,13 @@ export function PaymentColumns({ memberEmail, balance }: Props) {
               Pay for an Event
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {EVENTS.map(ev => {
-                const isSelected = selectedEvent?.reference === ev.reference;
+              {events.map(ev => {
+                const isSelected = selectedEvent?.reference === ev.name;
+                const priceLabel = ev.is_tbc || ev.amount == null ? 'TBC' : `£${Number(ev.amount).toFixed(2).replace(/\.00$/, '')}`;
+                const hasPrice   = !ev.is_tbc && ev.amount != null;
                 return (
                   <button
-                    key={ev.label}
+                    key={ev.id}
                     type="button"
                     onClick={() => handleEventClick(ev)}
                     style={{
@@ -175,21 +179,26 @@ export function PaymentColumns({ memberEmail, balance }: Props) {
                       color: 'var(--green-deep)',
                       fontWeight: isSelected ? 600 : 400,
                     }}>
-                      {ev.label}
+                      {ev.name}
                     </span>
                     <span style={{
                       fontFamily: "'Playfair Display', serif",
                       fontSize: '16px',
-                      color: ev.amount ? 'var(--green-deep)' : 'var(--text-muted)',
+                      color: hasPrice ? 'var(--green-deep)' : 'var(--text-muted)',
                       fontWeight: 600,
                       flexShrink: 0,
                       marginLeft: '1rem',
                     }}>
-                      {ev.amount ? `£${ev.amount}` : 'TBC'}
+                      {priceLabel}
                     </span>
                   </button>
                 );
               })}
+              {events.length === 0 && (
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
+                  No events currently scheduled.
+                </p>
+              )}
             </div>
             <p style={{
               fontFamily: "'DM Sans', sans-serif",

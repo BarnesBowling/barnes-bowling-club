@@ -32,6 +32,13 @@ export default async function PaymentPage() {
     }
   }
 
+  // Fetch active payment events
+  const { data: events } = await supabaseAdmin
+    .from('payment_events')
+    .select('id, name, amount, is_tbc')
+    .eq('active', true)
+    .order('sort_order');
+
   return (
     <>
       <Navbar />
@@ -50,7 +57,7 @@ export default async function PaymentPage() {
         </div>
 
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
-          <PaymentColumns memberEmail={session.email} balance={balance} />
+          <PaymentColumns memberEmail={session.email} balance={balance} events={events ?? []} />
 
           <div style={{ marginTop: '2rem' }}>
             <a href="/members/dashboard" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-mid)', textDecoration: 'none', letterSpacing: '.05em' }}>

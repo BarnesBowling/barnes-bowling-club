@@ -34,6 +34,7 @@ function Card({ name, role, photo }: { name: string; role: string; photo?: strin
             src={photo}
             alt={name}
             style={{
+              position: 'absolute', inset: 0,
               width: '100%', height: '100%', display: 'block',
               objectFit: 'cover',
               objectPosition: img.pos,

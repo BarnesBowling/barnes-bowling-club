@@ -72,8 +72,7 @@ async function renderPdfThumbnail(file: File): Promise<Blob> {
   canvas.width = viewport.width;
   canvas.height = viewport.height;
 
-  const ctx = canvas.getContext('2d')!;
-  await page.render({ canvasContext: ctx, viewport }).promise;
+  await page.render({ canvas, viewport }).promise;
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas toBlob failed')), 'image/jpeg', 0.88);

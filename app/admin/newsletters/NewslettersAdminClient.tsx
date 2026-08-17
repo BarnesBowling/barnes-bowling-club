@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useTransition } from 'react';
+import { useState, useRef, useTransition, useEffect } from 'react';
 import { getUploadUrls, createNewsletter, deleteNewsletter } from './actions';
 
 interface Newsletter {
@@ -100,6 +100,7 @@ const emptyForm = {
 
 export function NewslettersAdminClient({ initialNewsletters }: { initialNewsletters: Newsletter[] }) {
   const [newsletters, setNewsletters] = useState<Newsletter[]>(initialNewsletters);
+  useEffect(() => { setNewsletters(initialNewsletters); }, [initialNewsletters]);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [pdfFile, setPdfFile] = useState<File | null>(null);

@@ -301,6 +301,11 @@ export default async function Admin() {
                 title="Book a Match"
                 description="Book a fixture on behalf of any member"
               />
+              <AdminLinkCard
+                href="/admin/newsletters"
+                title="Newsletters"
+                description="Upload new editions and manage the newsletter archive"
+              />
             </div>
           </section>
 

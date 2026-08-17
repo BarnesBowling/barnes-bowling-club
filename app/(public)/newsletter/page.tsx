@@ -1,33 +1,25 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { NewsletterGrid } from './NewsletterGrid';
 
-const ISSUES = [
-  {
-    title: 'Newsletter — Vol. 3',
-    date: '30 May 2026',
-    issue: 'Vol. 3',
-    src: '/newsletters/newsletter-vol3.jpg',
-    type: 'image' as const,
-  },
-  {
-    title: 'Newsletter — Vol. 2',
-    date: '19 May 2026',
-    issue: 'Vol. 2',
-    src: '/newsletters/newsletter-vol2-may2026.pdf',
-    type: 'pdf' as const,
-  },
-  {
-    title: 'Newsletter — May 2026',
-    date: '3 May 2026',
-    issue: 'Vol. 1',
-    src: '/newsletters/newsletter-may-2026.jpg',
-    pdf: '/newsletters/2026-05-vol1.pdf',
-    type: 'image' as const,
-  },
-];
+export const dynamic = 'force-dynamic';
 
-export default function Newsletter() {
+export default async function Newsletter() {
+  const { data: rows } = await supabaseAdmin
+    .from('newsletters')
+    .select('id, title, issue_date, issue_label, pdf_public_url, thumbnail_public_url')
+    .order('sort_order', { ascending: false });
+
+  const issues = (rows ?? []).map(r => ({
+    title: r.title,
+    date: new Date(r.issue_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+    issue: r.issue_label,
+    src: r.thumbnail_public_url,
+    pdf: r.pdf_public_url,
+    type: 'image' as const,
+  }));
+
   return (
     <>
       <Navbar />
@@ -66,7 +58,13 @@ export default function Newsletter() {
             <p style={{ fontFamily: "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '17px', color: 'rgba(245,240,232,0.85)', lineHeight: 1.8, margin: '0 0 2.5rem' }}>
               Catch up on past editions of <em>On the Green</em> — the Barnes Bowling Club newsletter.
             </p>
-            <NewsletterGrid issues={ISSUES} />
+            {issues.length === 0 ? (
+              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '14px', color: 'rgba(245,240,232,.55)', fontStyle: 'italic' }}>
+                No newsletters published yet.
+              </p>
+            ) : (
+              <NewsletterGrid issues={issues} />
+            )}
           </div>
         </div>
 

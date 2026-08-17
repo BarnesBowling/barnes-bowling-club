@@ -12,7 +12,7 @@ export const photoBooks: PhotoBook[] = [
     id: 'book-2026',
     title: '2026 Season',
     spineColour: '#2D5A3D',
-    pages: Array.from({ length: 12 }, (_, i) =>
+    pages: Array.from({ length: 18 }, (_, i) =>
       `/archive/years-photos/2026/page-${String(i + 1).padStart(2, '0')}.jpg`
     ),
   },

@@ -127,7 +127,7 @@ export default async function YearResultsPage({ params }: { params: Promise<{ ye
       id: 'silver-fox',
       label: 'Silver Fox',
       fullName: 'The Silver Fox Trophy',
-      rules: 'Handicap −6 only · played over 6 ends',
+      rules: 'Handicap −6 only · first to 7 points',
       icon: '/trophies/silver-fox-icon.svg',
       result: results?.silverFox,
     },

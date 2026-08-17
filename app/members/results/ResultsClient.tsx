@@ -48,7 +48,7 @@ function compRules(slug: string, name: string): string | null {
   if (s.includes('cup'))        return 'No handicap · games to 21 points';
   if (s.includes('pair'))       return 'Combined half handicap · early rounds to 15 pts, semi-finals & final to 21 pts';
   if (s.includes('manser'))     return 'Round robin · games to 11 points';
-  if (s.includes('silver-fox') || s.includes('silver fox')) return 'Handicap −6 only · played over 6 ends';
+  if (s.includes('silver-fox') || s.includes('silver fox')) return 'Handicap −6 only · first to 7 points';
   return null;
 }
 

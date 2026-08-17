@@ -268,15 +268,17 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
   const showRound = selectedComp?.format === 'knockout' || selectedComp?.format === 'final';
   const isSilverFox = competitionSlug === 'silver-fox';
   const isLateRound = ['Semi-Final', 'Final'].includes(round);
-  const maxScore: number | null = selectedComp
-    ? (isPairs && isLateRound
-        ? (selectedComp.target_score_late ?? selectedComp.target_score_early ?? null)
-        : selectedComp.target_score_early ?? null)
-    : null;
-  const scoreLabel = isSilverFox ? 'Ends Won' : 'Score';
+  const maxScore: number | null = isSilverFox
+    ? 7
+    : selectedComp
+      ? (isPairs && isLateRound
+          ? (selectedComp.target_score_late ?? selectedComp.target_score_early ?? null)
+          : selectedComp.target_score_early ?? null)
+      : null;
+  const scoreLabel = 'Score';
   const scoringHint = maxScore
     ? isSilverFox
-      ? `Best of ${maxScore} ends`
+      ? 'First to 7 points'
       : isPairs
         ? isLateRound
           ? `First to ${maxScore} points (semi/final)`
@@ -347,10 +349,7 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
         setMatchMsg({ ok: false, text: `Scores cannot exceed ${maxScore} for ${selectedComp?.name ?? 'this competition'} (${scoringHint}).` });
         return;
       }
-      if (isSilverFox && (a > 6 || b > 6)) {
-        setMatchMsg({ ok: false, text: 'Silver Fox is played over 6 ends — ends won cannot exceed 6.' });
-        return;
-      }
+
     }
 
     const sideA = isPairs

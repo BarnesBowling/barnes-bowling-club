@@ -94,6 +94,7 @@ const emptyForm = {
   issueDate: '',
   issueLabel: '',
   sortOrder: '0',
+  newsletterType: 'pdf' as 'pdf' | 'image',
   thumbnailMode: 'auto' as 'auto' | 'custom',
 };
 
@@ -104,11 +105,14 @@ export function NewslettersAdminClient({ initialNewsletters }: { initialNewslett
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [thumbPreview, setThumbPreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('');
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const pdfRef = useRef<HTMLInputElement>(null);
   const thumbRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLInputElement>(null);
 
   function showMsg(ok: boolean, text: string) {
     setMsg({ ok, text });
@@ -120,9 +124,12 @@ export function NewslettersAdminClient({ initialNewsletters }: { initialNewslett
     setPdfFile(null);
     setThumbFile(null);
     setThumbPreview(null);
+    setImageFile(null);
+    setImagePreview(null);
     setStatus('');
     if (pdfRef.current) pdfRef.current.value = '';
     if (thumbRef.current) thumbRef.current.value = '';
+    if (imageRef.current) imageRef.current.value = '';
   }
 
   function handlePdfChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -137,52 +144,77 @@ export function NewslettersAdminClient({ initialNewsletters }: { initialNewslett
     if (f) setThumbPreview(URL.createObjectURL(f));
   }
 
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null;
+    setImageFile(f);
+    setImagePreview(f ? URL.createObjectURL(f) : null);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!pdfFile) { showMsg(false, 'Please select a PDF file.'); return; }
     if (!form.title.trim()) { showMsg(false, 'Please enter a title.'); return; }
-    if (form.thumbnailMode === 'custom' && !thumbFile) { showMsg(false, 'Please select a thumbnail image.'); return; }
+
+    if (form.newsletterType === 'pdf') {
+      if (!pdfFile) { showMsg(false, 'Please select a PDF file.'); return; }
+      if (form.thumbnailMode === 'custom' && !thumbFile) { showMsg(false, 'Please select a thumbnail image.'); return; }
+    } else {
+      if (!imageFile) { showMsg(false, 'Please select a JPEG image.'); return; }
+    }
 
     startTransition(async () => {
       try {
-        // 1. Get presigned upload URLs from server
         setStatus('Getting upload URLs…');
         const urls = await getUploadUrls(form.title);
         if (urls.error) { showMsg(false, urls.error); setStatus(''); return; }
 
-        // 2. Generate or use thumbnail
-        let thumbBlob: Blob;
-        if (form.thumbnailMode === 'auto') {
-          setStatus('Generating thumbnail from PDF…');
-          thumbBlob = await renderPdfThumbnail(pdfFile);
+        if (form.newsletterType === 'pdf') {
+          // ── PDF newsletter ──────────────────────────────────────────────────
+          let thumbBlob: Blob;
+          if (form.thumbnailMode === 'auto') {
+            setStatus('Generating thumbnail from PDF…');
+            thumbBlob = await renderPdfThumbnail(pdfFile!);
+          } else {
+            thumbBlob = thumbFile!;
+          }
+
+          setStatus('Uploading PDF…');
+          await uploadToSignedUrl(urls.pdfSignedUrl, pdfFile!, 'application/pdf');
+
+          setStatus('Uploading thumbnail…');
+          await uploadToSignedUrl(
+            urls.thumbSignedUrl,
+            thumbBlob,
+            form.thumbnailMode === 'auto' ? 'image/jpeg' : (thumbFile?.type ?? 'image/jpeg'),
+          );
+
+          setStatus('Saving…');
+          const res = await createNewsletter({
+            title: form.title.trim(),
+            issueDate: form.issueDate,
+            issueLabel: form.issueLabel.trim(),
+            pdfPath: urls.pdfPath,
+            thumbPath: urls.thumbPath,
+            thumbnailSource: form.thumbnailMode,
+            sortOrder: Number(form.sortOrder),
+          });
+          if (res.error) { showMsg(false, res.error); setStatus(''); return; }
         } else {
-          thumbBlob = thumbFile!;
+          // ── Image-only newsletter ───────────────────────────────────────────
+          setStatus('Uploading image…');
+          await uploadToSignedUrl(urls.thumbSignedUrl, imageFile!, imageFile!.type || 'image/jpeg');
+
+          setStatus('Saving…');
+          const res = await createNewsletter({
+            title: form.title.trim(),
+            issueDate: form.issueDate,
+            issueLabel: form.issueLabel.trim(),
+            pdfPath: urls.thumbPath,   // image-only: reuse thumb path so delete works
+            thumbPath: urls.thumbPath,
+            thumbnailSource: 'custom',
+            sortOrder: Number(form.sortOrder),
+          });
+          if (res.error) { showMsg(false, res.error); setStatus(''); return; }
         }
-
-        // 3. Upload PDF and thumbnail directly to Supabase storage
-        setStatus('Uploading PDF…');
-        await uploadToSignedUrl(urls.pdfSignedUrl, pdfFile, 'application/pdf');
-
-        setStatus('Uploading thumbnail…');
-        await uploadToSignedUrl(
-          urls.thumbSignedUrl,
-          thumbBlob,
-          form.thumbnailMode === 'auto' ? 'image/jpeg' : (thumbFile?.type ?? 'image/jpeg'),
-        );
-
-        // 4. Save DB row
-        setStatus('Saving…');
-        const res = await createNewsletter({
-          title: form.title.trim(),
-          issueDate: form.issueDate,
-          issueLabel: form.issueLabel.trim(),
-          pdfPath: urls.pdfPath,
-          thumbPath: urls.thumbPath,
-          thumbnailSource: form.thumbnailMode,
-          sortOrder: Number(form.sortOrder),
-        });
-
-        if (res.error) { showMsg(false, res.error); setStatus(''); return; }
 
         setShowAdd(false);
         resetForm();
@@ -278,6 +310,33 @@ export function NewslettersAdminClient({ initialNewsletters }: { initialNewslett
           </div>
 
           <form onSubmit={handleSubmit}>
+
+            {/* Newsletter type toggle */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={lbl}>Newsletter Type</label>
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", fontSize: '13px', color: 'var(--green-deep)' }}>
+                  <input type="radio" name="newsletterType" value="pdf" checked={form.newsletterType === 'pdf'}
+                    onChange={() => {
+                      setForm(f => ({ ...f, newsletterType: 'pdf' }));
+                      setImageFile(null); setImagePreview(null);
+                      if (imageRef.current) imageRef.current.value = '';
+                    }} />
+                  PDF newsletter
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", fontSize: '13px', color: 'var(--green-deep)' }}>
+                  <input type="radio" name="newsletterType" value="image" checked={form.newsletterType === 'image'}
+                    onChange={() => {
+                      setForm(f => ({ ...f, newsletterType: 'image' }));
+                      setPdfFile(null); setThumbFile(null); setThumbPreview(null);
+                      if (pdfRef.current) pdfRef.current.value = '';
+                      if (thumbRef.current) thumbRef.current.value = '';
+                    }} />
+                  Image-only newsletter
+                </label>
+              </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={lbl}>Title</label>
@@ -297,36 +356,52 @@ export function NewslettersAdminClient({ initialNewsletters }: { initialNewslett
               </div>
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={lbl}>PDF File</label>
-              <input ref={pdfRef} type="file" accept="application/pdf" required onChange={handlePdfChange}
-                style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '13px', color: 'var(--green-deep)' }} />
-            </div>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={lbl}>Thumbnail</label>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", fontSize: '13px', color: 'var(--green-deep)' }}>
-                  <input type="radio" name="thumbMode" value="auto" checked={form.thumbnailMode === 'auto'}
-                    onChange={() => { setForm(f => ({ ...f, thumbnailMode: 'auto' })); setThumbFile(null); setThumbPreview(null); if (thumbRef.current) thumbRef.current.value = ''; }} />
-                  Auto-generate from PDF
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", fontSize: '13px', color: 'var(--green-deep)' }}>
-                  <input type="radio" name="thumbMode" value="custom" checked={form.thumbnailMode === 'custom'}
-                    onChange={() => setForm(f => ({ ...f, thumbnailMode: 'custom' }))} />
-                  Upload my own image
-                </label>
-              </div>
-              {form.thumbnailMode === 'custom' && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  <input ref={thumbRef} type="file" accept="image/*" onChange={handleThumbChange}
+            {form.newsletterType === 'pdf' ? (
+              <>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={lbl}>PDF File</label>
+                  <input ref={pdfRef} type="file" accept="application/pdf" required onChange={handlePdfChange}
                     style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '13px', color: 'var(--green-deep)' }} />
-                  {thumbPreview && (
-                    <img src={thumbPreview} alt="Thumbnail preview" style={{ marginTop: '0.5rem', height: '100px', objectFit: 'contain', border: '1px solid rgba(45,90,61,.15)', display: 'block' }} />
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={lbl}>Thumbnail</label>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", fontSize: '13px', color: 'var(--green-deep)' }}>
+                      <input type="radio" name="thumbMode" value="auto" checked={form.thumbnailMode === 'auto'}
+                        onChange={() => { setForm(f => ({ ...f, thumbnailMode: 'auto' })); setThumbFile(null); setThumbPreview(null); if (thumbRef.current) thumbRef.current.value = ''; }} />
+                      Auto-generate from PDF
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", fontSize: '13px', color: 'var(--green-deep)' }}>
+                      <input type="radio" name="thumbMode" value="custom" checked={form.thumbnailMode === 'custom'}
+                        onChange={() => setForm(f => ({ ...f, thumbnailMode: 'custom' }))} />
+                      Upload my own image
+                    </label>
+                  </div>
+                  {form.thumbnailMode === 'custom' && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <input ref={thumbRef} type="file" accept="image/*" onChange={handleThumbChange}
+                        style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '13px', color: 'var(--green-deep)' }} />
+                      {thumbPreview && (
+                        <img src={thumbPreview} alt="Thumbnail preview" style={{ marginTop: '0.5rem', height: '100px', objectFit: 'contain', border: '1px solid rgba(45,90,61,.15)', display: 'block' }} />
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
+              </>
+            ) : (
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={lbl}>Newsletter Image (JPEG)</label>
+                <input ref={imageRef} type="file" accept="image/*" required onChange={handleImageChange}
+                  style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '13px', color: 'var(--green-deep)' }} />
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
+                  This image is the newsletter — it will open full-size in a lightbox when clicked.
+                </div>
+                {imagePreview && (
+                  <img src={imagePreview} alt="Preview" style={{ marginTop: '0.5rem', height: '120px', objectFit: 'contain', border: '1px solid rgba(45,90,61,.15)', display: 'block' }} />
+                )}
+              </div>
+            )}
 
             {status && (
               <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '12px', color: 'var(--green-mid)', marginBottom: '0.75rem', fontStyle: 'italic' }}>

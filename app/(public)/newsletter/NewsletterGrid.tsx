@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 interface Issue {
+  id: string;
   title: string;
   date: string;
   issue: string;
@@ -54,7 +55,7 @@ export function NewsletterGrid({ issues }: { issues: Issue[] }) {
       <div className="nl-grid">
         {issues.map((issue) => (
           <div
-            key={issue.src}
+            key={issue.id}
             className="nl-card"
             onClick={() => handleClick(issue)}
             role="button"

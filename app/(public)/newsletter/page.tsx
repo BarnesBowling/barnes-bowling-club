@@ -12,6 +12,7 @@ export default async function Newsletter() {
     .order('sort_order', { ascending: false });
 
   const issues = (rows ?? []).map(r => ({
+    id: r.id,
     title: r.title,
     date: new Date(r.issue_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
     issue: r.issue_label,

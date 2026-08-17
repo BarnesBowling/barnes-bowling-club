@@ -198,6 +198,7 @@ export function NewslettersAdminClient({ initialNewsletters }: { initialNewslett
             sortOrder: Number(form.sortOrder),
           });
           if (res.error) { showMsg(false, res.error); setStatus(''); return; }
+          if (res.newsletter) setNewsletters(prev => [...prev, res.newsletter!].sort((a, b) => b.sort_order - a.sort_order));
         } else {
           // ── Image-only newsletter ───────────────────────────────────────────
           setStatus('Uploading image…');
@@ -214,11 +215,12 @@ export function NewslettersAdminClient({ initialNewsletters }: { initialNewslett
             sortOrder: Number(form.sortOrder),
           });
           if (res.error) { showMsg(false, res.error); setStatus(''); return; }
+          if (res.newsletter) setNewsletters(prev => [...prev, res.newsletter!].sort((a, b) => b.sort_order - a.sort_order));
         }
 
         setShowAdd(false);
         resetForm();
-        showMsg(true, 'Newsletter uploaded successfully. Refresh to see it in the list.');
+        showMsg(true, 'Newsletter uploaded successfully.');
         setStatus('');
       } catch (err) {
         showMsg(false, err instanceof Error ? err.message : 'Upload failed');

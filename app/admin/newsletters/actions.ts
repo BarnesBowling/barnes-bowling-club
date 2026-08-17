@@ -49,14 +49,19 @@ export async function createNewsletter(data: {
   thumbPath: string;
   thumbnailSource: 'auto' | 'custom';
   sortOrder: number;
-}): Promise<{ error?: string }> {
+}): Promise<{ newsletter?: {
+  id: string; title: string; issue_date: string; issue_label: string;
+  pdf_storage_path: string; pdf_public_url: string;
+  thumbnail_storage_path: string; thumbnail_public_url: string;
+  thumbnail_source: 'auto' | 'custom'; sort_order: number;
+}; error?: string }> {
   try {
     await requireAdminSession();
 
     const pdfUrl = supabaseAdmin.storage.from('newsletters').getPublicUrl(data.pdfPath).data.publicUrl;
     const thumbUrl = supabaseAdmin.storage.from('newsletters').getPublicUrl(data.thumbPath).data.publicUrl;
 
-    const { error } = await supabaseAdmin.from('newsletters').insert({
+    const { data: row, error } = await supabaseAdmin.from('newsletters').insert({
       title: data.title,
       issue_date: data.issueDate,
       issue_label: data.issueLabel,
@@ -66,12 +71,12 @@ export async function createNewsletter(data: {
       thumbnail_public_url: thumbUrl,
       thumbnail_source: data.thumbnailSource,
       sort_order: data.sortOrder,
-    });
+    }).select('id, title, issue_date, issue_label, pdf_storage_path, pdf_public_url, thumbnail_storage_path, thumbnail_public_url, thumbnail_source, sort_order').single();
 
     if (error) return { error: error.message };
     revalidatePath('/admin/newsletters');
     revalidatePath('/newsletter');
-    return {};
+    return { newsletter: row };
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Failed to save newsletter' };
   }

@@ -83,13 +83,13 @@ function HConnector({ count }: { count: number }) {
 export default async function GeneralCommitteePage() {
   const { data: officers } = await supabaseAdmin
     .from('officers')
-    .select('id, name, role, sort_order, photo_filename')
+    .select('id, name, role, sort_order, photo_filename, photo_public_url')
     .eq('group_name', 'Committee')
     .order('sort_order');
 
   const all = officers ?? [];
   const photoUrl = (o: (typeof all)[0]) =>
-    o.photo_filename ? `/committee/${o.photo_filename}` : undefined;
+    o.photo_public_url ?? (o.photo_filename ? `/committee/${o.photo_filename}` : undefined);
 
   /* Bucket into rows by role keyword */
   const row1 = all.filter((o) => /president/i.test(o.role));

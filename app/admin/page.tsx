@@ -125,16 +125,6 @@ async function moveTickerMessage(formData: FormData) {
   revalidatePath('/');
 }
 
-async function saveOfficerPhoto(formData: FormData) {
-  'use server';
-  await requireAdminSession();
-  const id = String(formData.get('id'));
-  const photo_filename = String(formData.get('photo_filename')).trim() || null;
-  await supabaseAdmin.from('officers').update({ photo_filename }).eq('id', id);
-  revalidatePath('/admin');
-  revalidatePath('/members/dashboard');
-}
-
 async function addEvent(formData: FormData) {
   'use server';
   await requireAdminSession();
@@ -216,7 +206,7 @@ async function updateMembershipAppClubUse(formData: FormData) {
 export default async function Admin() {
   try { await requireAdminSession(); } catch { redirect('/login?redirect=/admin'); }
 
-  const [{ data: apps }, { data: membershipApps }, { data: notices }, { data: sections }, { data: historySections }, { data: timelineEntries }, { data: tickerMessages }, { data: adminOfficers }, { data: adminEvents }, { data: ledgerRows }, { data: stripePayments }, { data: currentGreen }] = await Promise.all([
+  const [{ data: apps }, { data: membershipApps }, { data: notices }, { data: sections }, { data: historySections }, { data: timelineEntries }, { data: tickerMessages }, { data: adminEvents }, { data: ledgerRows }, { data: stripePayments }, { data: currentGreen }] = await Promise.all([
     supabaseAdmin.from('applications').select('*').order('created_at', { ascending: false }).limit(20),
     supabaseAdmin.from('membership_applications').select('*').order('created_at', { ascending: false }).limit(50),
     supabaseAdmin.from('notices').select('*').order('published_at', { ascending: false }),
@@ -224,7 +214,6 @@ export default async function Admin() {
     supabaseAdmin.from('history_sections').select('*').order('sort_order'),
     supabaseAdmin.from('history_timeline').select('*').order('year'),
     supabaseAdmin.from('ticker_messages').select('id, message, sort_order, active').order('sort_order'),
-    supabaseAdmin.from('officers').select('id, name, role, sort_order, photo_filename').eq('group_name', 'Committee').order('sort_order'),
     supabaseAdmin.from('events').select('id, title, event_date, description, category, is_tbc, bank_holiday, day_label, location, visibility').order('event_date', { nullsFirst: false }),
     supabaseAdmin.from('member_ledger').select('member_id, amount, type, club_members(full_name, membership_number)'),
     supabaseAdmin.from('member_transactions').select('id, member_email, date, description, amount, created_at').lt('amount', 0).order('date', { ascending: false }).limit(20),
@@ -306,6 +295,11 @@ export default async function Admin() {
                 title="Newsletters"
                 description="Upload new editions and manage the newsletter archive"
               />
+              <AdminLinkCard
+                href="/admin/committee"
+                title="Committee Photos"
+                description="Upload and manage photos for General Committee and Handicap Committee members"
+              />
             </div>
           </section>
 
@@ -363,43 +357,10 @@ export default async function Admin() {
           {/* COMMITTEE PHOTOS */}
           <section>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', marginBottom: '.5rem' }}>Committee photos</h2>
-            <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.5rem' }}>
-              Upload photos to <code>public/committee/</code> then enter the filename here (e.g. <code>jane-smith.jpg</code>). Leave blank to show the placeholder silhouette.
+            <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '1.25rem' }}>
+              Photos are now managed via the dedicated Committee Photos admin page.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
-              {adminOfficers?.map((o) => (
-                <div key={o.id} style={{ background: 'white', border: '1px solid rgba(45,90,61,.12)', padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-                  {o.photo_filename ? (
-                    <img
-                      src={`/committee/${o.photo_filename}`}
-                      alt={o.name}
-                      style={{ width: '52px', height: '52px', borderRadius: '6px', objectFit: 'cover', objectPosition: 'center top', flexShrink: 0, border: '1px solid rgba(45,90,61,.12)' }}
-                    />
-                  ) : (
-                    <div style={{ width: '52px', height: '52px', borderRadius: '6px', background: 'var(--green-deep)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg viewBox="0 0 100 100" width="30" height="30" fill="rgba(245,240,232,.35)">
-                        <circle cx="50" cy="35" r="20" />
-                        <ellipse cx="50" cy="85" rx="32" ry="25" />
-                      </svg>
-                    </div>
-                  )}
-                  <div style={{ minWidth: '180px' }}>
-                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '15px', color: 'var(--green-deep)', fontWeight: 500 }}>{o.name}</div>
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase' as const, color: 'var(--gold)', marginTop: '2px' }}>{o.role}</div>
-                  </div>
-                  <form action={saveOfficerPhoto} style={{ display: 'flex', alignItems: 'center', gap: '.5rem', flex: 1, minWidth: '240px' }}>
-                    <input type="hidden" name="id" value={o.id} />
-                    <input
-                      name="photo_filename"
-                      defaultValue={o.photo_filename ?? ''}
-                      placeholder="e.g. jane-smith.jpg"
-                      style={{ ...inputStyle, flex: 1 }}
-                    />
-                    <button className="btn" style={{ whiteSpace: 'nowrap', padding: '0.7rem 1.25rem' }}>Save</button>
-                  </form>
-                </div>
-              ))}
-            </div>
+            <a href="/admin/committee" className="btn" style={{ display: 'inline-block' }}>Manage committee photos</a>
           </section>
 
           {/* SEASON EVENTS */}

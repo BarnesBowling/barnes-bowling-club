@@ -38,13 +38,13 @@ function Card({ o }: { o: Officer }) {
         background: '#e8e8e8',
         borderRadius: '4px',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden',
+        overflow: 'hidden', position: 'relative',
       }}>
         {src ? (
           <img
             src={src}
             alt={o.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
           />
         ) : (
           <svg viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth="1"

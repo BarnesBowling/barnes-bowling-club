@@ -6,11 +6,12 @@ import { SheetBracketView } from './SheetBracketView';
 import { ManserRoundRobinGrid } from './ManserRoundRobinGrid';
 
 const FILTERS: { value: 'all' | Competition; label: string }[] = [
-  { value: 'all',    label: 'All'    },
-  { value: 'cup',    label: 'Cup'    },
-  { value: 'shield', label: 'Shield' },
-  { value: 'pairs',  label: 'Pairs'  },
-  { value: 'manser',   label: 'Manser'   },
+  { value: 'all',        label: 'All'        },
+  { value: 'cup',        label: 'Cup'        },
+  { value: 'shield',     label: 'Shield'     },
+  { value: 'pairs',      label: 'Pairs'      },
+  { value: 'manser',     label: 'Manser'     },
+  { value: 'silver_fox', label: 'Silver Fox' },
   { value: 'plus_cup',   label: 'Plus Cup'   },
   { value: 'ladies_day', label: 'Ladies Day' },
 ];
@@ -83,7 +84,7 @@ export function CompetitionSheetsClient({ sheets, results }: Props) {
       </div>
 
       {/* ── Brackets / Grids ── */}
-      {(active === 'all' ? (['cup', 'shield', 'pairs', 'plus_cup', 'ladies_day', 'manser'] as Competition[]) : [active]).flatMap(comp =>
+      {(active === 'all' ? (['cup', 'shield', 'pairs', 'manser', 'silver_fox', 'plus_cup', 'ladies_day'] as Competition[]) : [active]).flatMap(comp =>
         sheets
           .filter(s => s.competition === comp)
           .map(sheet => {

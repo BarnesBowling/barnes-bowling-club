@@ -3,7 +3,7 @@
 // type values: 'bracket' | 'image' | 'pdf' | 'round-robin'
 // For bracket type, populate rounds[]. For round-robin, populate players[]. For image/pdf, set src.
 
-export type Competition = 'cup' | 'shield' | 'pairs' | 'manser' | 'plus_cup' | 'ladies_day';
+export type Competition = 'cup' | 'shield' | 'pairs' | 'manser' | 'plus_cup' | 'ladies_day' | 'silver_fox';
 
 export type MatchResult = {
   competition_slug: string;
@@ -204,6 +204,20 @@ export const competitionSheets: CompetitionSheet[] = [
       'Marisa',
       'Jan',
       'Catherine',
+    ],
+  },
+
+  {
+    id: 'silver-fox-2026',
+    title: 'Silver Fox',
+    competition: 'silver_fox',
+    date: '2026 Season',
+    type: 'round-robin',
+    slug: 'silver-fox',
+    rules: 'First to 7 points. Handicap −6 only.',
+    players: [
+      'Kevin B', 'Gareth', 'Simon C', 'Brian C', 'Simon D',
+      'Alaric', 'Roger F', 'Mark H', 'Bernard', 'Gerry',
     ],
   },
 

@@ -68,7 +68,7 @@ export function LoginForm({ redirectPath = '' }: Props) {
           autoComplete="current-password"
           style={inputStyle}
         />
-        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(27,59,38,.4)', marginTop: '2px' }}>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#1b3b26', marginTop: '2px' }}>
           First time logging in? Use your registered email address as your password.
         </span>
       </div>

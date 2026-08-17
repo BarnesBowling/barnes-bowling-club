@@ -8,7 +8,14 @@ export interface PhotoBook {
 
 export const photoBooks: PhotoBook[] = [
   // Shelf 1
-  { id: 'book-2026',   title: '2026 Season',            spineColour: '#2D5A3D', pages: [] },
+  {
+    id: 'book-2026',
+    title: '2026 Season',
+    spineColour: '#2D5A3D',
+    pages: Array.from({ length: 12 }, (_, i) =>
+      `/archive/years-photos/2026/page-${String(i + 1).padStart(2, '0')}.jpg`
+    ),
+  },
   {
     id: 'book-2025',
     title: '2025 Season',

@@ -248,6 +248,11 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
 
   // ── Auto-dismiss success banners ──────────────────────────────────────────
   useEffect(() => {
+    console.log('[slug-watch] competitionSlug changed to:', JSON.stringify(competitionSlug), '| stack trace follows');
+    console.trace();
+  }, [competitionSlug]);
+
+  useEffect(() => {
     if (matchMsg?.ok) {
       const t = setTimeout(() => setMatchMsg(null), 3000);
       return () => clearTimeout(t);
@@ -479,6 +484,7 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
                     key={c.id}
                     type="button"
                     onClick={() => {
+                      console.log('[competition-btn] clicked, setting slug to:', c.slug);
                       setCompetitionSlug(c.slug);
                       setRound('');
                       setSideAPairId('');

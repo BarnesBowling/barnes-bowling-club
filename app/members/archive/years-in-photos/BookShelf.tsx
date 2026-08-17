@@ -70,7 +70,7 @@ export function BookShelf() {
                 onClick={() => setSelected(book)}
                 onMouseEnter={() => setHovered(book.id)}
                 onMouseLeave={() => setHovered(null)}
-                title={book.pages.length ? `Open: ${book.title}` : `${book.title} — coming soon`}
+                title={(book.richPages?.length ?? book.pages.length) ? `Open: ${book.title}` : `${book.title} — coming soon`}
                 style={{
                   flexShrink: 0,
                   width: 'clamp(36px, 6vw, 55px)',
@@ -88,7 +88,7 @@ export function BookShelf() {
                     ? '4px 0 14px rgba(0,0,0,0.5), -1px 0 0 rgba(255,255,255,0.1)'
                     : '3px 0 8px rgba(0,0,0,0.3), -1px 0 0 rgba(255,255,255,0.06)',
                   borderRadius: '2px 1px 0 0',
-                  opacity: book.pages.length ? 1 : 0.75,
+                  opacity: (book.richPages?.length ?? book.pages.length) ? 1 : 0.75,
                   // Breathing room around the leaning book
                   marginRight: i === 4 ? '8px' : undefined,
                 }}
@@ -133,7 +133,7 @@ export function BookShelf() {
                 onClick={() => setSelected(book)}
                 onMouseEnter={() => setHovered(book.id)}
                 onMouseLeave={() => setHovered(null)}
-                title={book.pages.length ? `Open: ${book.title}` : `${book.title} — coming soon`}
+                title={(book.richPages?.length ?? book.pages.length) ? `Open: ${book.title}` : `${book.title} — coming soon`}
                 style={{
                   width: '211px',
                   height: '55px',
@@ -149,7 +149,7 @@ export function BookShelf() {
                     ? '0 -4px 12px rgba(0,0,0,0.4), 2px 0 0 rgba(0,0,0,0.15)'
                     : '0 -2px 6px rgba(0,0,0,0.2), 2px 0 0 rgba(0,0,0,0.1)',
                   borderRadius: '1px 1px 0 0',
-                  opacity: book.pages.length ? 1 : 0.75,
+                  opacity: (book.richPages?.length ?? book.pages.length) ? 1 : 0.75,
                 }}
               >
                 {/* Spine edge detail (left side when lying flat) */}
@@ -248,8 +248,8 @@ export function BookShelf() {
             </div>
 
             <div style={{ background: selected.singlePage ? '#fafaf8' : '#1c1c1c', borderRadius: '4px', padding: '1.5rem' }}>
-              {selected.pages.length > 0 ? (
-                <FlipBook key={selected.id} pages={selected.pages} singlepage={selected.singlePage} />
+              {(selected.richPages?.length ?? selected.pages.length) > 0 ? (
+                <FlipBook key={selected.id} pages={selected.pages} richPages={selected.richPages} singlepage={selected.singlePage} />
               ) : (
                 <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
                   <p style={{

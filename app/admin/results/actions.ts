@@ -40,6 +40,7 @@ type MatchPayload = {
 };
 
 function buildMatchRecord(data: MatchPayload) {
+  console.log('[buildMatchRecord] received competitionSlug:', JSON.stringify(data.competitionSlug));
   const { competitionSlug, round, matchDate, sideA, sideB, sideAPairId, sideBPairId, notes } = data;
   const sideAScore = parseInt(String(data.sideAScore), 10);
   const sideBScore = parseInt(String(data.sideBScore), 10);

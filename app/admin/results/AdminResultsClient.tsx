@@ -359,6 +359,8 @@ export function AdminResultsClient({ competitions, pairs, recentMatches }: Props
       ? (pairs.find(p => p.id === sideBPairId)?.team_name ?? '')
       : sideBMember;
 
+    console.log('[match submit] competitionSlug state at submit:', JSON.stringify(competitionSlug));
+
     const payload = {
       competitionSlug,
       round: round || null,

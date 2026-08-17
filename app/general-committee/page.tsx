@@ -17,28 +17,26 @@ const CW = 160; // card wrapper width px
 const CG = 24;  // gap between cards px
 const CH = 40;  // connector zone height px
 
-const IMG: Record<string, { fit: 'contain' | 'cover'; pos: string; bg?: string; scale?: number }> = {
-  'Tracy Greasley': { fit: 'contain', pos: '15% center', bg: '#e8e8e8' },
-  'Judith Heaton':  { fit: 'cover',   pos: 'center 35%', scale: 1.3 },
-  'Brian Coles':    { fit: 'cover',   pos: 'center 35%', scale: 1.3 },
+const IMG: Record<string, { pos: string }> = {
+  'Tracy Greasley': { pos: 'center 15%' },
+  'Judith Heaton':  { pos: 'center 20%' },
+  'Brian Coles':    { pos: 'center 20%' },
 };
-const IMG_DEFAULT = { fit: 'cover' as const, pos: 'center top' };
+const IMG_DEFAULT = { pos: 'center top' };
 
 function Card({ name, role, photo }: { name: string; role: string; photo?: string }) {
   const img = IMG[name] ?? IMG_DEFAULT;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: `${CW}px` }}>
-      <div style={{ width: '120px', height: '120px', background: '#e8e8e8', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+      <div style={{ width: '120px', height: '120px', background: '#e8e8e8', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
         {photo ? (
           <img
             src={photo}
             alt={name}
             style={{
               width: '100%', height: '100%', display: 'block',
-              objectFit: img.fit,
+              objectFit: 'cover',
               objectPosition: img.pos,
-              background: img.bg,
-              ...(img.scale ? { transform: `scale(${img.scale})`, transformOrigin: 'center top' } : {}),
             }}
           />
         ) : (

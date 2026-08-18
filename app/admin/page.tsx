@@ -300,6 +300,11 @@ export default async function Admin() {
                 title="Committee Photos"
                 description="Upload and manage photos for General Committee and Handicap Committee members"
               />
+              <AdminLinkCard
+                href="/admin/archive"
+                title="Archive Roles"
+                description="Edit past presidents and captains and add new years"
+              />
             </div>
           </section>
 

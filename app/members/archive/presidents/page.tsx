@@ -1,10 +1,19 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { pastPresidents } from '@/data/archive-roles';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Past Presidents — Barnes Bowling Club' };
 
-export default function PastPresidentsPage() {
+export default async function PastPresidentsPage() {
+  const { data } = await supabaseAdmin
+    .from('archive_roles')
+    .select('year, name, note')
+    .eq('role_type', 'president')
+    .order('year', { ascending: false });
+
+  const pastPresidents = data ?? [];
+
   return (
     <>
       <style>{`
@@ -116,6 +125,9 @@ export default function PastPresidentsPage() {
                   <div className="tl-content">
                     <div className="tl-year">{entry.year}</div>
                     <div className={`tl-name${isTbd ? ' tl-tbd' : ''}`}>{isTbd ? 'To be added' : entry.name}</div>
+                    {entry.note && !isTbd && (
+                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '2px', lineHeight: 1.4 }}>{entry.note}</div>
+                    )}
                   </div>
                   <div className="tl-dot" />
                   <div className="tl-spacer" />

@@ -61,6 +61,16 @@ function coverImgEl(src: string, objectPosition = 'center top'): HTMLImageElemen
   return img;
 }
 
+function containImgEl(src: string): HTMLImageElement {
+  const img = document.createElement('img');
+  img.src = src; img.alt = '';
+  Object.assign(img.style, {
+    position: 'absolute', inset: '0', width: '100%', height: '100%',
+    objectFit: 'contain', objectPosition: 'center center', display: 'block',
+  });
+  return img;
+}
+
 function captionEl(text: string): HTMLDivElement {
   const el = document.createElement('div');
   el.textContent = text;
@@ -242,6 +252,99 @@ function buildGridPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   return page;
 }
 
+// Full-page single photo with object-fit:contain (no cropping).
+function buildSfSinglePage(rp: RichPage, isLeft: boolean): HTMLDivElement {
+  const page = albumPageBase(isLeft);
+  const hasHeader = !!(rp.title || rp.subtitle);
+
+  if (!hasHeader) {
+    const wrap = document.createElement('div');
+    Object.assign(wrap.style, { position: 'absolute', inset: '0', overflow: 'hidden' });
+    if (rp.photos[0]) wrap.appendChild(containImgEl(rp.photos[0].src));
+    page.appendChild(wrap);
+    return page;
+  }
+
+  const inner = document.createElement('div');
+  Object.assign(inner.style, {
+    padding: '7% 8% 7%', display: 'flex', flexDirection: 'column',
+    height: '100%', boxSizing: 'border-box',
+  });
+  if (rp.title) {
+    const t = document.createElement('div');
+    t.textContent = rp.title;
+    Object.assign(t.style, {
+      fontFamily: "'Playfair Display', serif", fontSize: '24px', fontWeight: '700',
+      color: '#1a3a2a', letterSpacing: '0.02em', marginBottom: '4px', lineHeight: '1.2', flexShrink: '0',
+    });
+    inner.appendChild(t);
+  }
+  if (rp.subtitle) {
+    const s = document.createElement('div');
+    s.textContent = rp.subtitle;
+    Object.assign(s.style, {
+      fontFamily: "'Libre Baskerville', serif", fontSize: '11px', fontStyle: 'italic',
+      color: '#A89560', letterSpacing: '0.07em', marginBottom: '10px', flexShrink: '0',
+    });
+    inner.appendChild(s);
+  }
+  const photo = rp.photos[0];
+  if (photo) {
+    const wrap = document.createElement('div');
+    Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden', minHeight: '0' });
+    wrap.appendChild(containImgEl(photo.src));
+    inner.appendChild(wrap);
+    if (photo.caption !== undefined) inner.appendChild(captionEl(photo.caption ?? ''));
+  }
+  page.appendChild(inner);
+  return page;
+}
+
+// Two photos stacked with object-fit:contain — used for landscape pairs.
+function buildSfPairPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
+  const page = albumPageBase(isLeft);
+  const hasHeader = !!(rp.title || rp.subtitle);
+  const inner = document.createElement('div');
+  Object.assign(inner.style, {
+    padding: hasHeader ? '6% 7% 7%' : '7%',
+    display: 'flex', flexDirection: 'column',
+    height: '100%', boxSizing: 'border-box', gap: '8px',
+  });
+
+  if (rp.title) {
+    const t = document.createElement('div');
+    t.textContent = rp.title;
+    Object.assign(t.style, {
+      fontFamily: "'Playfair Display', serif", fontSize: '22px', fontWeight: '700',
+      color: '#1a3a2a', letterSpacing: '0.02em', marginBottom: '3px', lineHeight: '1.2', flexShrink: '0',
+    });
+    inner.appendChild(t);
+  }
+  if (rp.subtitle) {
+    const s = document.createElement('div');
+    s.textContent = rp.subtitle;
+    Object.assign(s.style, {
+      fontFamily: "'Libre Baskerville', serif", fontSize: '11px', fontStyle: 'italic',
+      color: '#A89560', letterSpacing: '0.07em', marginBottom: '6px', flexShrink: '0',
+    });
+    inner.appendChild(s);
+  }
+
+  rp.photos.forEach(photo => {
+    const block = document.createElement('div');
+    Object.assign(block.style, { flex: '1', display: 'flex', flexDirection: 'column', minHeight: '0' });
+    const wrap = document.createElement('div');
+    Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden', minHeight: '0' });
+    wrap.appendChild(containImgEl(photo.src));
+    block.appendChild(wrap);
+    if (photo.caption !== undefined) block.appendChild(captionEl(photo.caption ?? ''));
+    inner.appendChild(block);
+  });
+
+  page.appendChild(inner);
+  return page;
+}
+
 function buildRichPage(rp: RichPage, index: number): HTMLDivElement {
   const isLeft = index % 2 === 0;
   switch (rp.layout) {
@@ -250,6 +353,8 @@ function buildRichPage(rp: RichPage, index: number): HTMLDivElement {
     case 'grid-left':
     case 'grid-right': return buildGridPage(rp, isLeft);
     case 'grid-2x2':   return buildGrid2x2Page(rp, isLeft);
+    case 'sf-single':  return buildSfSinglePage(rp, isLeft);
+    case 'sf-pair':    return buildSfPairPage(rp, isLeft);
     default:           return buildSinglePage(rp, isLeft);
   }
 }

@@ -3,7 +3,15 @@ export interface RichPagePhoto {
   caption?: string;
 }
 
-export type RichPageLayout = 'single' | 'title-hero' | 'two-photos' | 'grid-left' | 'grid-right' | 'grid-2x2';
+export type RichPageLayout =
+  | 'single'
+  | 'title-hero'
+  | 'two-photos'
+  | 'grid-left'
+  | 'grid-right'
+  | 'grid-2x2'
+  | 'sf-single'   // one photo, full-page contain
+  | 'sf-pair';    // two landscape photos stacked, contain
 
 export interface RichPage {
   layout: RichPageLayout;
@@ -22,6 +30,8 @@ export interface PhotoBook {
   richPages?: RichPage[];
 }
 
+const SF = (n: number) => `/archive/years-photos/2026/silver-fox-${String(n).padStart(2, '0')}.jpg`;
+
 export const photoBooks: PhotoBook[] = [
   // Shelf 1
   {
@@ -30,40 +40,42 @@ export const photoBooks: PhotoBook[] = [
     spineColour: '#2D5A3D',
     pages: [],
     richPages: [
-      // General season pages — drop page-01.jpg … page-18.jpg into public/archive/years-photos/2026/
+      // ── Silver Fox — 15 August 2026 — 26 pages, 30 photos ──────────────
+      // Landscape pairs: 01+02, 16+17, 19+20, 23+24
+      // Landscape alone: 04, 07, 21
+      // Portrait (1 per page): all others
+      { layout: 'sf-pair',   title: 'Silver Fox', subtitle: '15 August 2026',
+        photos: [{ src: SF(1), caption: '' }, { src: SF(2), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(3),  caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(4),  caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(5),  caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(6),  caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(7),  caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(8),  caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(9),  caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(10), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(11), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(12), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(13), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(14), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(15), caption: '' }] },
+      { layout: 'sf-pair',   photos: [{ src: SF(16), caption: '' }, { src: SF(17), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(18), caption: '' }] },
+      { layout: 'sf-pair',   photos: [{ src: SF(19), caption: '' }, { src: SF(20), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(21), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(22), caption: '' }] },
+      { layout: 'sf-pair',   photos: [{ src: SF(23), caption: '' }, { src: SF(24), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(25), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(26), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(27), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(28), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(29), caption: '' }] },
+      { layout: 'sf-single', photos: [{ src: SF(30), caption: '' }] },
+      // ── General season pages (drop page-01…18.jpg into the same folder) ─
       ...Array.from({ length: 18 }, (_, i) => ({
         layout: 'single' as const,
         photos: [{ src: `/archive/years-photos/2026/page-${String(i + 1).padStart(2, '0')}.jpg` }],
       })),
-      // ── Silver Fox — 15 August 2026 — 8 pages, 30 photos ────────────────
-      // Page 19 (left): title + subtitle + 2×2 grid (photos 01–04)
-      {
-        layout: 'grid-2x2' as const,
-        title: 'Silver Fox',
-        subtitle: '15 August 2026',
-        photos: [
-          { src: '/archive/years-photos/2026/silver-fox-01.jpg', caption: '' },
-          { src: '/archive/years-photos/2026/silver-fox-02.jpg', caption: '' },
-          { src: '/archive/years-photos/2026/silver-fox-03.jpg', caption: '' },
-          { src: '/archive/years-photos/2026/silver-fox-04.jpg', caption: '' },
-        ],
-      },
-      // Pages 20–25: 2×2 grid, 4 photos each (photos 05–28)
-      ...Array.from({ length: 6 }, (_, page) => ({
-        layout: 'grid-2x2' as const,
-        photos: Array.from({ length: 4 }, (_, cell) => ({
-          src: `/archive/years-photos/2026/silver-fox-${String(page * 4 + cell + 5).padStart(2, '0')}.jpg`,
-          caption: '',
-        })),
-      })),
-      // Page 26 (right): 2 photos (photos 29–30)
-      {
-        layout: 'grid-2x2' as const,
-        photos: [
-          { src: '/archive/years-photos/2026/silver-fox-29.jpg', caption: '' },
-          { src: '/archive/years-photos/2026/silver-fox-30.jpg', caption: '' },
-        ],
-      },
     ],
   },
   {

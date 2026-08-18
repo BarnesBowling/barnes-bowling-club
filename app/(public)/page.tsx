@@ -335,7 +335,7 @@ export default function LandingPage() {
             The Club
           </a>
           <a href="/members/dashboard" className="bbc-btn">
-            Member&rsquo;s Area
+            Members Area
           </a>
         </div>
       </div>

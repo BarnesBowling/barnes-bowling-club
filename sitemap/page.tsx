@@ -68,9 +68,9 @@ const SECTIONS: SitemapSection[] = [
     ],
   },
   {
-    heading: 'Members\' Area',
+    heading: 'Members Area',
     links: [
-      { label: 'Dashboard',           href: '/members/dashboard',   desc: 'Members\' home page — login required' },
+      { label: 'Dashboard',           href: '/members/dashboard',   desc: 'Members home page — login required' },
       { label: 'Calendar',            href: '/members/calendar',    desc: '2026 season calendar — login required' },
       { label: 'Competitions',        href: '/members/competitions', desc: 'Competition entries — login required' },
       { label: 'Results',             href: '/members/results',     desc: 'Match and competition results — login required' },

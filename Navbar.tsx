@@ -18,7 +18,7 @@ const SEARCH_PAGES = [
   { title: 'Membership Enquiry',     href: '/apply',               keywords: 'apply enquiry membership enquire interested joining' },
   { title: 'Membership Application', href: '/membership-application', keywords: 'membership application form apply join formal' },
   { title: 'Opening Hours',         href: '/opening-hours',       keywords: 'opening hours visit season winter daily hours green' },
-  { title: "Members' Area Area",      href: '/members/dashboard',   keywords: 'members dashboard portal login sign in account' },
+  { title: 'Members Area',             href: '/members/dashboard',   keywords: 'members dashboard portal login sign in account' },
   { title: 'Make a Payment',        href: '/members/payment',     keywords: 'payment subscription fee pay stripe guest' },
   { title: 'Results & Leaderboard', href: '/members/results',     keywords: 'results leaderboard manser shield cup pairs match scores winners fixtures standings' },
 ];
@@ -235,9 +235,9 @@ export function Navbar() {
             <Link href="/contact">Contact</Link>
           </div>
 
-          {/* Members' Area */}
+          {/* Members Area */}
           <div className="nav-right">
-            <Link className="nav-members-btn" href="/members/dashboard">Members' Area</Link>
+            <Link className="nav-members-btn" href="/members/dashboard">Members Area</Link>
           </div>
 
           {/* Hamburger — mobile only */}
@@ -308,7 +308,7 @@ export function Navbar() {
 
           <div className="nav-mobile-bottom">
             <Link className="nav-members-btn" href="/members/dashboard" onClick={() => setMenuOpen(false)}>
-              Members' Area
+              Members Area
             </Link>
           </div>
 

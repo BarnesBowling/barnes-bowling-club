@@ -130,7 +130,7 @@ export function Footer() {
               onMouseEnter={e => (e.currentTarget.style.background = '#6E6338')}
               onMouseLeave={e => (e.currentTarget.style.background = '#A89560')}
             >
-              Members&apos; Area
+              Members Area
             </Link>
           </div>
 

@@ -169,6 +169,55 @@ function buildTwoPhotosPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   return page;
 }
 
+// Self-contained 2×2 grid. Optional title/subtitle at top; one caption per photo.
+// With 4 photos renders 2 rows × 2 cols; with 2 photos renders 1 row × 2 cols.
+function buildGrid2x2Page(rp: RichPage, isLeft: boolean): HTMLDivElement {
+  const page = albumPageBase(isLeft);
+  const inner = document.createElement('div');
+  const hasHeader = !!(rp.title || rp.subtitle);
+  Object.assign(inner.style, {
+    padding: hasHeader ? '6% 7% 7%' : '7%',
+    display: 'flex', flexDirection: 'column',
+    height: '100%', boxSizing: 'border-box', gap: '6px',
+  });
+
+  if (rp.title) {
+    const t = document.createElement('div');
+    t.textContent = rp.title;
+    Object.assign(t.style, {
+      fontFamily: "'Playfair Display', serif", fontSize: '20px', fontWeight: '700',
+      color: '#1a3a2a', letterSpacing: '0.02em', marginBottom: '2px', lineHeight: '1.2', flexShrink: '0',
+    });
+    inner.appendChild(t);
+  }
+  if (rp.subtitle) {
+    const s = document.createElement('div');
+    s.textContent = rp.subtitle;
+    Object.assign(s.style, {
+      fontFamily: "'Libre Baskerville', serif", fontSize: '11px', fontStyle: 'italic',
+      color: '#A89560', letterSpacing: '0.07em', marginBottom: '6px', flexShrink: '0',
+    });
+    inner.appendChild(s);
+  }
+
+  const grid = document.createElement('div');
+  Object.assign(grid.style, {
+    flex: '1', display: 'grid', gridTemplateColumns: '1fr 1fr',
+    gridAutoRows: '1fr', gap: '5px', minHeight: '0',
+  });
+
+  rp.photos.forEach(photo => {
+    const cell = document.createElement('div');
+    Object.assign(cell.style, { position: 'relative', overflow: 'hidden', minHeight: '0' });
+    cell.appendChild(coverImgEl(photo.src, 'center center'));
+    grid.appendChild(cell);
+  });
+
+  inner.appendChild(grid);
+  page.appendChild(inner);
+  return page;
+}
+
 // One column of the 2×2 grid spread. Shared caption appears on the right page only.
 function buildGridPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   const page = albumPageBase(isLeft);
@@ -200,6 +249,7 @@ function buildRichPage(rp: RichPage, index: number): HTMLDivElement {
     case 'two-photos': return buildTwoPhotosPage(rp, isLeft);
     case 'grid-left':
     case 'grid-right': return buildGridPage(rp, isLeft);
+    case 'grid-2x2':   return buildGrid2x2Page(rp, isLeft);
     default:           return buildSinglePage(rp, isLeft);
   }
 }

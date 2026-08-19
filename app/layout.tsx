@@ -16,7 +16,7 @@ export const metadata: Metadata = {
       { url: '/icons/bbc-app-icon.svg', type: 'image/svg+xml' },
     ],
     shortcut: '/icons/bbc-app-icon-192.png',
-    apple: '/apple-icon',
+    apple: '/apple-touch-icon.png',
   },
   appleWebApp: {
     capable: true,

@@ -7,9 +7,12 @@ export function PwaRegister() {
     if (!('serviceWorker' in navigator)) return;
 
     const register = () => {
-      navigator.serviceWorker.register('/sw.js').catch(() => {
-        // The website remains fully usable if service-worker registration fails.
-      });
+      navigator.serviceWorker
+        .register('/sw.js', { updateViaCache: 'none' })
+        .then((registration) => registration.update())
+        .catch(() => {
+          // The website remains fully usable if service-worker registration fails.
+        });
     };
 
     if (document.readyState === 'complete') {

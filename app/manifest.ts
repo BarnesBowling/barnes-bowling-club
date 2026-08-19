@@ -5,6 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Barnes Bowling Club',
     short_name: 'Barnes Bowls',
     description: 'Barnes Bowling Club — fixtures, competitions, notices, gallery and members area.',
+    id: '/club-app',
     start_url: '/club-app',
     scope: '/',
     display: 'standalone',

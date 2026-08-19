@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bbc-pwa-v2';
+const CACHE_VERSION = 'bbc-pwa-v3';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PUBLIC_CACHE = `${CACHE_VERSION}-public`;
 

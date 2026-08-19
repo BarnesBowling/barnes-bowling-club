@@ -10,6 +10,14 @@ export const metadata: Metadata = {
   description: 'Production website for Barnes Bowling Club',
   applicationName: 'Barnes Bowling Club',
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/icons/bbc-app-icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/bbc-app-icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icons/bbc-app-icon-192.png',
+    apple: '/apple-icon',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

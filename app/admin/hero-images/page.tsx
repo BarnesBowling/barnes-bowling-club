@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import { uploadImage } from '@/lib/images';
 
-const SLOTS = [
+type ImageSlot = {
+  label: string;
+  title: string;
+  fallback: string;
+};
+
+const DESKTOP_SLOTS: ImageSlot[] = [
   { label: 'hero-carousel', title: 'Hero Banner (top of page)', fallback: '/images/Barnes_Bowling_Club_Sep_1_SV_2.JPG' },
   { label: 'whats-happening-1', title: "What's Happening - Card 1", fallback: '/images/gallery1.JPG' },
   { label: 'whats-happening-2', title: "What's Happening - Card 2", fallback: '/images/gallery5.JPG' },
@@ -12,6 +18,13 @@ const SLOTS = [
   { label: 'activity-1', title: 'Activity Card 1', fallback: '/images/IMG_9105.JPG' },
   { label: 'activity-2', title: 'Activity Card 2', fallback: '/images/gallery6.JPG' },
   { label: 'activity-3', title: 'Activity Card 3', fallback: '/images/gallery7.JPG' },
+];
+
+const PHONE_SLOTS: ImageSlot[] = [
+  { label: 'club-app-hero', title: 'Phone App - Main Hero', fallback: '/images/gallery2.JPG' },
+  { label: 'club-app-card-1', title: 'Phone App - Card 1', fallback: '/images/gallery1.JPG' },
+  { label: 'club-app-card-2', title: 'Phone App - Card 2', fallback: '/images/gallery5.JPG' },
+  { label: 'club-app-card-3', title: 'Phone App - Card 3', fallback: '/images/gallery2.JPG' },
 ];
 
 export default function AdminHeroImagesPage() {
@@ -28,6 +41,27 @@ export default function AdminHeroImagesPage() {
     }
   }
 
+  function renderSlot(slot: ImageSlot) {
+    return (
+      <div key={slot.label} style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', padding: '1.25rem', border: '1px solid rgba(45,90,61,.15)', background: 'white' }}>
+        <div style={{ width: '140px', height: '90px', flexShrink: 0, backgroundImage: 'url(' + (uploaded[slot.label] || slot.fallback) + ')', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '15px', color: 'var(--green-deep)', marginBottom: '0.25rem' }}>
+            {slot.title}
+          </div>
+          <label style={{ display: 'inline-block', padding: '0.45rem 1rem', background: uploading === slot.label ? 'rgba(45,90,61,.4)' : 'var(--green-deep)', color: 'white', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', cursor: 'pointer' }}>
+            {uploading === slot.label ? 'Uploading...' : uploaded[slot.label] ? 'Replace Image' : 'Upload Image'}
+            <input type="file" accept="image/*" style={{ display: 'none' }}
+              onChange={e => { const file = e.target.files && e.target.files[0]; if (file) handleUpload(slot.label, file); }} />
+          </label>
+          {uploaded[slot.label] && (
+            <span style={{ marginLeft: '0.75rem', fontSize: '12px', color: 'green' }}>Updated</span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
@@ -38,29 +72,33 @@ export default function AdminHeroImagesPage() {
           Home Page Images
         </h1>
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
-          Upload a new image for each slot to replace it on the home page.
+          Upload or replace images for the desktop website and phone app independently.
         </p>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {SLOTS.map(slot => (
-          <div key={slot.label} style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', padding: '1.25rem', border: '1px solid rgba(45,90,61,.15)', background: 'white' }}>
-            <div style={{ width: '140px', height: '90px', flexShrink: 0, backgroundImage: 'url(' + (uploaded[slot.label] || slot.fallback) + ')', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '15px', color: 'var(--green-deep)', marginBottom: '0.25rem' }}>
-                {slot.title}
-              </div>
-              <label style={{ display: 'inline-block', padding: '0.45rem 1rem', background: uploading === slot.label ? 'rgba(45,90,61,.4)' : 'var(--green-deep)', color: 'white', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', cursor: 'pointer' }}>
-                {uploading === slot.label ? 'Uploading...' : uploaded[slot.label] ? 'Replace Image' : 'Upload Image'}
-                <input type="file" accept="image/*" style={{ display: 'none' }}
-                  onChange={e => { const file = e.target.files && e.target.files[0]; if (file) handleUpload(slot.label, file); }} />
-              </label>
-              {uploaded[slot.label] && (
-                <span style={{ marginLeft: '0.75rem', fontSize: '12px', color: 'green' }}>Updated</span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+
+      <section>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', margin: '0 0 0.5rem' }}>
+          Desktop Website Images
+        </h2>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 1rem' }}>
+          These images are used on the main desktop website.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {DESKTOP_SLOTS.map(renderSlot)}
+        </div>
+      </section>
+
+      <section style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(45,90,61,.18)' }}>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', margin: '0 0 0.5rem' }}>
+          Phone App Images
+        </h2>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 1rem' }}>
+          These four images are used only on the members phone app. Changing them will not change the desktop website.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {PHONE_SLOTS.map(renderSlot)}
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Barnes Bowling Club">
+  <rect width="512" height="512" rx="112" fill="#1b3b2a"/>
+  <circle cx="256" cy="256" r="204" fill="none" stroke="#c9a84c" stroke-width="7"/>
+  <circle cx="256" cy="256" r="181" fill="none" stroke="#c9a84c" stroke-opacity=".34" stroke-width="4"/>
+  <text x="256" y="191" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="600" letter-spacing="18" fill="#c9a84c" fill-opacity=".75">EST</text>
+  <text x="256" y="302" text-anchor="middle" font-family="Georgia, serif" font-size="112" font-weight="500" letter-spacing="12" fill="#c9a84c">BBC</text>
+  <text x="256" y="356" text-anchor="middle" font-family="Arial, sans-serif" font-size="35" font-weight="300" letter-spacing="12" fill="#c9a84c" fill-opacity=".85">c·1725</text>
+  <line x1="123" y1="183" x2="178" y2="183" stroke="#c9a84c" stroke-opacity=".42" stroke-width="4"/>
+  <line x1="334" y1="183" x2="389" y2="183" stroke="#c9a84c" stroke-opacity=".42" stroke-width="4"/>
+</svg>

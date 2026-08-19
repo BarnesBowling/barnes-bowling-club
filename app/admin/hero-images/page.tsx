@@ -84,14 +84,26 @@ export default function AdminHeroImagesPage() {
           Back to Admin
         </a>
         <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '28px', color: 'var(--green-deep)', margin: '0.5rem 0 0.25rem' }}>
-          Home Page Images
+          Website & Phone App Images
         </h1>
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
-          Upload or replace images for the desktop website and phone app independently.
+          Phone app and desktop website images are controlled separately.
         </p>
       </div>
 
-      <section>
+      <section id="phone-app-images" style={{ padding: '1.5rem', background: 'rgba(201,168,76,.08)', border: '1px solid rgba(201,168,76,.3)' }}>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '24px', color: 'var(--green-deep)', margin: '0 0 0.5rem' }}>
+          Phone App Images
+        </h2>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 1rem' }}>
+          These four images are used only on the members phone app. Changing them will not change the desktop website.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {PHONE_SLOTS.map(renderSlot)}
+        </div>
+      </section>
+
+      <section style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(45,90,61,.18)' }}>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', margin: '0 0 0.5rem' }}>
           Desktop Website Images
         </h2>
@@ -100,18 +112,6 @@ export default function AdminHeroImagesPage() {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {DESKTOP_SLOTS.map(renderSlot)}
-        </div>
-      </section>
-
-      <section style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(45,90,61,.18)' }}>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', margin: '0 0 0.5rem' }}>
-          Phone App Images
-        </h2>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 1rem' }}>
-          These four images are used only on the members phone app. Changing them will not change the desktop website.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {PHONE_SLOTS.map(renderSlot)}
         </div>
       </section>
     </div>

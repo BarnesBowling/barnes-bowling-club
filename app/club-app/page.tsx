@@ -1,220 +1,316 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import {
   CalendarDays,
   Trophy,
-  Megaphone,
+  Bell,
   CircleDot,
-  Images,
+  CreditCard,
   Users,
   Home,
   Menu,
-  Landmark,
   Newspaper,
-  UserPlus,
+  ChevronRight,
+  UserRound,
+  BookOpenText,
 } from 'lucide-react';
 import { BbcCrest } from '@/components/BbcCrest';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getHeroImages } from '@/lib/images';
+import { SESSION_COOKIE, verifyMemberSession } from '@/lib/memberSession';
 
 export const metadata = {
   title: 'Club App — Barnes Bowling Club',
-  description: 'Quick access to Barnes Bowling Club fixtures, competitions, notices, gallery and members area.',
+  description: 'Barnes Bowling Club mobile dashboard for fixtures, competitions, notices and member services.',
 };
 
-function dateParts(value?: string | null) {
-  if (!value) return { day: '', month: '' };
+function prettyDate(value?: string | null) {
+  if (!value) return '';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return { day: '', month: '' };
-  return {
-    day: new Intl.DateTimeFormat('en-GB', { day: '2-digit' }).format(date),
-    month: new Intl.DateTimeFormat('en-GB', { month: 'short' }).format(date).toUpperCase(),
-  };
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(date);
 }
 
 export default async function ClubAppPage() {
   const supabase = await createClient();
   const heroImages = await getHeroImages();
-  const { data: events } = await supabase
-    .from('events')
-    .select('id,title,event_date')
-    .eq('visibility', 'public')
-    .gte('event_date', new Date().toISOString())
-    .order('event_date')
-    .limit(3);
+
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(SESSION_COOKIE);
+  const session = sessionCookie ? await verifyMemberSession(sessionCookie.value) : null;
+
+  const [{ data: events }, { data: green }, { data: notices }] = await Promise.all([
+    supabase
+      .from('events')
+      .select('id,title,event_date')
+      .gte('event_date', new Date().toISOString())
+      .order('event_date')
+      .limit(2),
+    supabase
+      .from('green_status')
+      .select('status,message,updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabaseAdmin
+      .from('notices')
+      .select('id,title,body,published_at')
+      .order('published_at', { ascending: false })
+      .limit(1),
+  ]);
+
+  let firstName: string | null = null;
+  if (session?.email) {
+    const [{ data: profile }, { data: member }] = await Promise.all([
+      supabaseAdmin
+        .from('member_profiles')
+        .select('first_name')
+        .eq('member_email', session.email)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('club_members')
+        .select('full_name')
+        .eq('email', session.email)
+        .maybeSingle(),
+    ]);
+    firstName = profile?.first_name ?? member?.full_name?.split(' ')[0] ?? null;
+  }
 
   const hero = heroImages['hero-carousel'] ?? '/images/Barnes_Bowling_Club_Sep_1_SV_2.JPG';
-  const cardImages = [
-    heroImages['whats-happening-1'] ?? '/images/gallery1.JPG',
-    heroImages['whats-happening-2'] ?? '/images/gallery5.JPG',
-    heroImages['whats-happening-3'] ?? '/images/gallery2.JPG',
-  ];
+  const nextEvent = events?.[0] ?? null;
+  const secondEvent = events?.[1] ?? null;
+  const notice = notices?.[0] ?? null;
 
-  const quickLinks = [
-    { label: 'Competitions', href: '/login?redirect=/members/results', icon: Trophy },
-    { label: 'Calendar', href: '/login?redirect=/members/calendar', icon: CalendarDays },
-    { label: 'Club Notices', href: '/notices', icon: Megaphone },
+  const status = green?.status ?? 'open_good';
+  const greenOpen = status === 'open_good' || status === 'open_fair';
+  const greenLabel = status === 'open_good'
+    ? 'Green Open'
+    : status === 'open_fair'
+      ? 'Green Open — Fair'
+      : 'Green Closed';
+
+  const shortcuts = [
     { label: 'Book a Match', href: '/login?redirect=/members/book-a-game', icon: CircleDot },
-    { label: 'Gallery', href: '/gallery', icon: Images },
-    { label: 'Members Area', href: '/login', icon: Users },
-  ];
-
-  const fallbackCards = [
-    { title: 'Competition fixtures', href: '/login?redirect=/members/results' },
-    { title: 'Season calendar', href: '/login?redirect=/members/calendar' },
-    { title: 'Club notices', href: '/notices' },
+    { label: 'Fixtures', href: '/login?redirect=/members/calendar', icon: CalendarDays },
+    { label: 'Competitions', href: '/login?redirect=/members/competitions', icon: Trophy },
+    { label: 'Results', href: '/login?redirect=/members/results', icon: BookOpenText },
+    { label: 'My Account', href: '/login?redirect=/members/account', icon: CreditCard },
+    { label: 'Members', href: '/login?redirect=/members/dashboard', icon: Users },
   ];
 
   return (
-    <main className="club-app-shell">
+    <main className="app-stage">
       <style>{`
-        :root { --app-green:#1b3b2a; --app-green-2:#245039; --app-cream:#f7f3eb; --app-gold:#c9a84c; --app-ink:#20231f; }
-        body { background: #ebe8e1; }
-        .club-app-shell { min-height:100vh; background:var(--app-cream); color:var(--app-ink); font-family:'DM Sans','Helvetica Neue',Arial,sans-serif; padding-bottom:82px; }
-        .app-top { background:linear-gradient(145deg,#123021 0%,var(--app-green) 62%,#245239 100%); color:white; padding:max(18px,env(safe-area-inset-top)) 22px 18px; }
-        .app-brand { max-width:1120px; margin:0 auto; display:flex; align-items:center; gap:15px; }
-        .app-brand-copy { flex:1; min-width:0; }
-        .app-brand-title { font-family:'Playfair Display',Georgia,serif; font-size:clamp(27px,5vw,42px); line-height:.96; font-weight:500; letter-spacing:-.02em; }
-        .app-brand-est { margin-top:7px; color:var(--app-gold); font-family:'Libre Baskerville',Georgia,serif; font-size:13px; }
-        .app-login { display:flex; width:46px; height:46px; border:1px solid rgba(255,255,255,.65); border-radius:50%; align-items:center; justify-content:center; color:white; text-decoration:none; flex-shrink:0; }
-        .app-hero { min-height:355px; position:relative; background-size:cover; background-position:center; display:flex; align-items:flex-end; }
-        .app-hero:after { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(8,18,12,.74),rgba(8,18,12,.06) 70%); }
-        .app-hero-copy { position:relative; z-index:1; width:min(1120px,100%); margin:0 auto; padding:34px 22px; color:white; }
-        .app-hero-copy h1 { margin:0; max-width:560px; font-family:'Playfair Display',Georgia,serif; font-size:clamp(35px,7vw,58px); line-height:1.02; font-weight:500; }
-        .app-hero-copy p { margin:9px 0 0; font-family:'Libre Baskerville',Georgia,serif; font-size:15px; color:rgba(255,255,255,.88); }
-        .app-content { max-width:1120px; margin:0 auto; padding:20px 18px 54px; }
-        .quick-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:11px; margin-top:-1px; }
-        .quick-card { min-height:118px; border:1px solid rgba(27,59,42,.11); background:#fff; border-radius:13px; box-shadow:0 6px 18px rgba(24,40,29,.07); text-decoration:none; color:#1c2f23; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:10px; padding:12px 7px; transition:transform .18s ease,box-shadow .18s ease; }
-        .quick-card:hover { transform:translateY(-2px); box-shadow:0 10px 23px rgba(24,40,29,.12); }
-        .quick-card span { font-size:13px; line-height:1.15; font-weight:650; }
-        .section-head { margin:34px 2px 16px; display:flex; align-items:end; justify-content:space-between; gap:16px; }
-        .section-head h2 { margin:0; color:var(--app-green); font-family:'Playfair Display',Georgia,serif; font-size:clamp(27px,4vw,38px); font-weight:500; }
-        .section-head a { color:#a27e24; text-decoration:none; font-family:'Libre Baskerville',Georgia,serif; font-size:13px; }
-        .happening-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-        .event-card { border:1px solid rgba(27,59,42,.11); border-radius:13px; overflow:hidden; background:#fff; text-decoration:none; color:inherit; box-shadow:0 5px 16px rgba(24,40,29,.06); }
-        .event-photo { height:176px; position:relative; background-size:cover; background-position:center; }
-        .date-chip { position:absolute; bottom:0; left:14px; background:var(--app-green); color:white; min-width:53px; padding:7px 8px; text-align:center; }
-        .date-chip strong { display:block; font-size:19px; line-height:1; }
-        .date-chip span { font-size:10px; letter-spacing:.08em; }
-        .event-body { padding:15px 16px 18px; }
-        .event-title { font-family:'Playfair Display',Georgia,serif; font-size:21px; line-height:1.18; color:#18251d; }
-        .event-more { margin-top:11px; color:var(--app-green-2); font-size:12px; text-decoration:underline; text-underline-offset:3px; }
-        .feature-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:24px; }
-        .feature-card { min-height:184px; padding:25px; border-radius:13px; text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; border:1px solid rgba(27,59,42,.12); }
-        .feature-card.dark { background:linear-gradient(145deg,#143522,#24553a); color:#fff; }
-        .feature-card.light { background:#fffaf0; color:#1c2f23; }
-        .feature-icon { color:var(--app-gold); }
-        .feature-card h3 { font-family:'Playfair Display',Georgia,serif; margin:12px 0 8px; font-size:25px; font-weight:500; }
-        .feature-card p { margin:0; font-family:'Libre Baskerville',Georgia,serif; font-size:13px; line-height:1.6; opacity:.84; }
-        .feature-more { margin-top:18px; color:var(--app-gold); font-size:12px; font-weight:700; letter-spacing:.02em; }
-        .app-bottom { position:fixed; z-index:30; bottom:0; left:0; right:0; height:calc(66px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); background:rgba(255,255,255,.96); border-top:1px solid rgba(27,59,42,.12); backdrop-filter:blur(14px); display:none; }
-        .app-bottom-inner { height:66px; max-width:600px; margin:0 auto; display:grid; grid-template-columns:repeat(5,1fr); }
-        .bottom-link { color:#4a504b; text-decoration:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:10px; }
-        .bottom-link.active { color:var(--app-green); font-weight:700; }
-        @media(max-width:760px){
-          .app-top{padding-left:16px;padding-right:16px}.app-brand{gap:10px}.app-brand svg{width:66px;height:66px}.app-login{width:42px;height:42px}
-          .app-hero{min-height:330px}.app-hero-copy{padding:28px 18px}.app-content{padding:16px 12px 34px}
-          .quick-grid{grid-template-columns:repeat(3,1fr);gap:8px}.quick-card{min-height:103px}.quick-card span{font-size:12px}
-          .happening-grid{grid-template-columns:1fr;gap:12px}.event-card{display:grid;grid-template-columns:43% 57%}.event-photo{height:142px}.event-body{padding:16px 14px}.event-title{font-size:18px}
-          .feature-grid{grid-template-columns:1fr;gap:11px}.feature-card{min-height:150px}.app-bottom{display:block}.section-head{margin-top:29px}
+        :root {
+          --bbc-green:#173c29;
+          --bbc-green-2:#24533a;
+          --bbc-cream:#f5f0e8;
+          --bbc-gold:#c5a24b;
+          --bbc-ink:#1d2b22;
+          --bbc-muted:#6f756f;
+          --bbc-line:#e6dfd4;
         }
-        @media(max-width:390px){.app-brand-title{font-size:25px}.quick-card{min-height:96px}.quick-card svg{width:22px;height:22px}.event-card{grid-template-columns:40% 60%}}
+        body { margin:0; background:#e9e5dd; }
+        * { box-sizing:border-box; }
+        .app-stage { min-height:100vh; padding:0 0 88px; color:var(--bbc-ink); font-family:'DM Sans','Helvetica Neue',Arial,sans-serif; }
+        .app-phone { width:min(100%,560px); margin:0 auto; min-height:100vh; background:#fbf8f2; box-shadow:0 0 40px rgba(20,35,25,.10); }
+
+        .app-header { background:var(--bbc-green); color:white; padding:max(14px,env(safe-area-inset-top)) 18px 15px; display:flex; align-items:center; gap:12px; }
+        .brand-copy { flex:1; min-width:0; }
+        .brand-title { font-family:'Playfair Display',Georgia,serif; font-size:19px; line-height:1.05; letter-spacing:.01em; }
+        .brand-sub { margin-top:3px; color:rgba(255,255,255,.66); font-size:10px; letter-spacing:.14em; text-transform:uppercase; }
+        .profile-button { width:42px; height:42px; border:1px solid rgba(255,255,255,.55); border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; text-decoration:none; }
+
+        .hero { position:relative; height:194px; background-size:cover; background-position:center 55%; overflow:hidden; }
+        .hero:after { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(12,27,18,.80) 0%,rgba(12,27,18,.18) 68%,rgba(12,27,18,.02) 100%); }
+        .hero-copy { position:absolute; left:20px; right:20px; bottom:18px; z-index:1; color:white; }
+        .hero-kicker { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.72); margin-bottom:4px; }
+        .hero-title { margin:0; font-family:'Playfair Display',Georgia,serif; font-size:30px; line-height:1.05; font-weight:500; }
+        .hero-title em { color:#e2c56f; font-style:italic; }
+
+        .content { padding:16px 14px 30px; }
+        .status-card { display:flex; align-items:center; gap:12px; background:white; border:1px solid var(--bbc-line); border-radius:15px; padding:13px 14px; box-shadow:0 4px 16px rgba(29,43,34,.05); }
+        .status-dot { width:11px; height:11px; border-radius:50%; flex:none; box-shadow:0 0 0 5px rgba(36,83,58,.08); }
+        .status-dot.open { background:#4f8a60; }
+        .status-dot.closed { background:#9c3b3f; box-shadow:0 0 0 5px rgba(156,59,63,.08); }
+        .status-copy { flex:1; min-width:0; }
+        .status-title { font-family:'Playfair Display',Georgia,serif; font-size:18px; color:var(--bbc-green); }
+        .status-text { margin-top:2px; font-size:11px; color:var(--bbc-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .status-link { color:var(--bbc-gold); text-decoration:none; }
+
+        .section-label { margin:22px 2px 10px; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#7a715f; }
+        .quick-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+        .quick-card { min-height:88px; background:white; border:1px solid var(--bbc-line); border-radius:15px; padding:14px; color:var(--bbc-green); text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 3px 12px rgba(29,43,34,.045); }
+        .quick-icon { color:var(--bbc-gold); }
+        .quick-label { display:flex; align-items:center; justify-content:space-between; gap:6px; font-family:'Playfair Display',Georgia,serif; font-size:17px; }
+
+        .feature-card { display:block; background:white; border:1px solid var(--bbc-line); border-radius:16px; overflow:hidden; color:inherit; text-decoration:none; box-shadow:0 4px 16px rgba(29,43,34,.05); }
+        .fixture-card { display:grid; grid-template-columns:112px 1fr; min-height:120px; }
+        .fixture-photo { min-height:120px; background-size:cover; background-position:center; }
+        .fixture-copy { padding:14px 15px; }
+        .eyebrow { color:var(--bbc-gold); font-size:10px; font-weight:700; letter-spacing:.11em; text-transform:uppercase; }
+        .feature-title { margin:5px 0 4px; color:var(--bbc-green); font-family:'Playfair Display',Georgia,serif; font-size:20px; line-height:1.15; }
+        .feature-meta { color:var(--bbc-muted); font-size:12px; line-height:1.45; }
+        .feature-link { margin-top:9px; display:flex; align-items:center; gap:3px; color:var(--bbc-green-2); font-size:11px; font-weight:700; }
+
+        .two-up { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .mini-card { min-height:150px; padding:15px; background:white; border:1px solid var(--bbc-line); border-radius:15px; text-decoration:none; color:inherit; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 3px 12px rgba(29,43,34,.045); }
+        .mini-card.dark { background:var(--bbc-green); color:white; border-color:var(--bbc-green); }
+        .mini-card.dark .mini-title { color:white; }
+        .mini-card.dark .mini-text { color:rgba(255,255,255,.70); }
+        .mini-card.dark .mini-link { color:#e3c56e; }
+        .mini-icon { color:var(--bbc-gold); }
+        .mini-title { margin:10px 0 4px; font-family:'Playfair Display',Georgia,serif; font-size:19px; color:var(--bbc-green); }
+        .mini-text { font-size:11px; line-height:1.45; color:var(--bbc-muted); }
+        .mini-link { margin-top:10px; color:var(--bbc-green-2); font-size:10px; font-weight:700; display:flex; align-items:center; gap:3px; }
+
+        .news-card { padding:15px; }
+        .news-head { display:flex; align-items:center; gap:9px; }
+        .news-icon { width:36px; height:36px; border-radius:50%; background:#f4ead0; color:#9e7d28; display:flex; align-items:center; justify-content:center; flex:none; }
+        .news-body { margin-top:10px; color:#555e58; font-family:'Libre Baskerville',Georgia,serif; font-size:12px; line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+
+        .secondary-event { margin-top:10px; }
+
+        .bottom-nav { position:fixed; left:50%; transform:translateX(-50%); bottom:0; z-index:20; width:min(100%,560px); height:calc(68px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); background:rgba(255,255,255,.97); border-top:1px solid var(--bbc-line); backdrop-filter:blur(14px); }
+        .bottom-grid { height:68px; display:grid; grid-template-columns:repeat(5,1fr); }
+        .bottom-link { color:#69716b; text-decoration:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:9px; }
+        .bottom-link.active { color:var(--bbc-green); font-weight:700; }
+
+        @media (min-width:700px) {
+          .app-stage { padding-top:22px; }
+          .app-phone { border-radius:24px 24px 0 0; overflow:hidden; }
+        }
+        @media (max-width:370px) {
+          .fixture-card { grid-template-columns:96px 1fr; }
+          .feature-title { font-size:18px; }
+          .quick-label { font-size:16px; }
+        }
       `}</style>
 
-      <header className="app-top">
-        <div className="app-brand">
-          <BbcCrest size={78} light />
-          <div className="app-brand-copy">
-            <div className="app-brand-title">Barnes<br />Bowling Club</div>
-            <div className="app-brand-est">Est. c1725</div>
+      <div className="app-phone">
+        <header className="app-header">
+          <BbcCrest size={54} light />
+          <div className="brand-copy">
+            <div className="brand-title">Barnes Bowling Club</div>
+            <div className="brand-sub">Members App</div>
           </div>
-          <Link className="app-login" href="/login" aria-label="Open members area">
-            <Users size={23} strokeWidth={1.6} />
+          <Link href={session ? '/members/dashboard' : '/login'} className="profile-button" aria-label="Members area">
+            <UserRound size={21} strokeWidth={1.7} />
           </Link>
-        </div>
-      </header>
+        </header>
 
-      <section className="app-hero" style={{ backgroundImage: `url('${hero}')` }}>
-        <div className="app-hero-copy">
-          <h1>Welcome to<br />Barnes Bowling Club</h1>
-          <p>A historic club with a warm welcome.</p>
-        </div>
-      </section>
+        <section className="hero" style={{ backgroundImage: `url('${hero}')` }}>
+          <div className="hero-copy">
+            <div className="hero-kicker">Welcome</div>
+            <h1 className="hero-title">
+              {firstName ? <>Good afternoon, <em>{firstName}</em></> : <>Welcome to <em>Barnes</em></>}
+            </h1>
+          </div>
+        </section>
 
-      <div className="app-content">
-        <nav className="quick-grid" aria-label="Club app shortcuts">
-          {quickLinks.map(({ label, href, icon: Icon }) => (
-            <Link key={label} href={href} className="quick-card">
-              <Icon size={29} strokeWidth={1.55} />
-              <span>{label}</span>
-            </Link>
-          ))}
-        </nav>
+        <div className="content">
+          <div className="status-card">
+            <div className={`status-dot ${greenOpen ? 'open' : 'closed'}`} />
+            <div className="status-copy">
+              <div className="status-title">{greenLabel}</div>
+              <div className="status-text">{green?.message ?? 'Check conditions before play.'}</div>
+            </div>
+            <Link href="/home" className="status-link" aria-label="View green information"><ChevronRight size={19} /></Link>
+          </div>
 
-        <div className="section-head">
-          <h2>What’s Happening at Barnes</h2>
-          <Link href="/home">View all</Link>
-        </div>
-
-        <section className="happening-grid" aria-label="Upcoming club activity">
-          {[0, 1, 2].map((index) => {
-            const event = events?.[index];
-            const fallback = fallbackCards[index];
-            const parts = dateParts(event?.event_date);
-            const href = event ? '/home' : fallback.href;
-            return (
-              <Link href={href} className="event-card" key={event?.id ?? fallback.title}>
-                <div className="event-photo" style={{ backgroundImage: `url('${cardImages[index]}')` }}>
-                  {event && (
-                    <div className="date-chip">
-                      <strong>{parts.day}</strong>
-                      <span>{parts.month}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="event-body">
-                  <div className="event-title">{event?.title ?? fallback.title}</div>
-                  <div className="event-more">View details →</div>
-                </div>
+          <div className="section-label">Quick access</div>
+          <nav className="quick-grid" aria-label="Quick access">
+            {shortcuts.map(({ label, href, icon: Icon }) => (
+              <Link key={label} href={href} className="quick-card">
+                <Icon className="quick-icon" size={24} strokeWidth={1.5} />
+                <div className="quick-label"><span>{label}</span><ChevronRight size={15} /></div>
               </Link>
-            );
-          })}
-        </section>
+            ))}
+          </nav>
 
-        <section className="feature-grid" aria-label="Explore Barnes Bowling Club">
-          <Link href="/history" className="feature-card dark">
-            <div>
-              <Landmark className="feature-icon" size={31} strokeWidth={1.5} />
-              <h3>Our History</h3>
-              <p>Discover the story of our historic Barnes green and the traditional game still played today.</p>
+          <div className="section-label">Today at the club</div>
+          <Link href="/login?redirect=/members/calendar" className="feature-card fixture-card">
+            <div className="fixture-photo" style={{ backgroundImage: `url('${heroImages['whats-happening-2'] ?? '/images/gallery5.JPG'}')` }} />
+            <div className="fixture-copy">
+              <div className="eyebrow">Next fixture / event</div>
+              <div className="feature-title">{nextEvent?.title ?? 'Season calendar'}</div>
+              <div className="feature-meta">{nextEvent ? prettyDate(nextEvent.event_date) : 'See everything coming up at the club.'}</div>
+              <div className="feature-link">View calendar <ChevronRight size={13} /></div>
             </div>
-            <div className="feature-more">Discover more →</div>
           </Link>
-          <Link href="/news" className="feature-card light">
-            <div>
-              <Newspaper className="feature-icon" size={31} strokeWidth={1.5} />
-              <h3>Club News</h3>
-              <p>The latest news, notices and updates from around the club.</p>
+
+          <div className="section-label">Club updates</div>
+          <div className="two-up">
+            <Link href="/login?redirect=/members/results" className="mini-card dark">
+              <div>
+                <Trophy className="mini-icon" size={25} strokeWidth={1.5} />
+                <div className="mini-title">Latest Results</div>
+                <div className="mini-text">See match results, leaderboard and competition progress.</div>
+              </div>
+              <div className="mini-link">View results <ChevronRight size={12} /></div>
+            </Link>
+
+            <Link href="/login?redirect=/members/account" className="mini-card">
+              <div>
+                <CreditCard className="mini-icon" size={25} strokeWidth={1.5} />
+                <div className="mini-title">My Account</div>
+                <div className="mini-text">Payments, balances and member account details.</div>
+              </div>
+              <div className="mini-link">Open account <ChevronRight size={12} /></div>
+            </Link>
+          </div>
+
+          <div className="section-label">Club news</div>
+          <Link href="/notices" className="feature-card news-card">
+            <div className="news-head">
+              <div className="news-icon"><Bell size={18} /></div>
+              <div>
+                <div className="eyebrow">Latest notice</div>
+                <div className="feature-title" style={{ marginTop: 2 }}>{notice?.title ?? 'Club notices'}</div>
+              </div>
             </div>
-            <div className="feature-more">Read more →</div>
-          </Link>
-          <Link href="/membership" className="feature-card dark">
-            <div>
-              <UserPlus className="feature-icon" size={31} strokeWidth={1.5} />
-              <h3>Membership</h3>
-              <p>Find out how to become part of our friendly, sociable Barnes community.</p>
+            <div className="news-body">
+              {notice?.body ?? 'News, notices and updates from Barnes Bowling Club.'}
             </div>
-            <div className="feature-more">Find out more →</div>
+            <div className="feature-link">Read club news <ChevronRight size={13} /></div>
           </Link>
-        </section>
+
+          <div className="section-label">Competition draws</div>
+          <Link href="/login?redirect=/members/competition-sheets" className="feature-card news-card">
+            <div className="news-head">
+              <div className="news-icon"><Trophy size={18} /></div>
+              <div>
+                <div className="eyebrow">2026 season</div>
+                <div className="feature-title" style={{ marginTop: 2 }}>Draws & competition sheets</div>
+              </div>
+            </div>
+            <div className="feature-link">Open competition sheets <ChevronRight size={13} /></div>
+          </Link>
+
+          {secondEvent && (
+            <div className="secondary-event">
+              <Link href="/login?redirect=/members/calendar" className="feature-card news-card">
+                <div className="eyebrow">Also coming up</div>
+                <div className="feature-title">{secondEvent.title}</div>
+                <div className="feature-meta">{prettyDate(secondEvent.event_date)}</div>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
-      <nav className="app-bottom" aria-label="App navigation">
-        <div className="app-bottom-inner">
-          <Link href="/club-app" className="bottom-link active"><Home size={22} /><span>Home</span></Link>
-          <Link href="/login?redirect=/members/calendar" className="bottom-link"><CalendarDays size={22} /><span>Calendar</span></Link>
-          <Link href="/login?redirect=/members/results" className="bottom-link"><Trophy size={22} /><span>Competitions</span></Link>
-          <Link href="/gallery" className="bottom-link"><Images size={22} /><span>Gallery</span></Link>
-          <Link href="/home" className="bottom-link"><Menu size={22} /><span>More</span></Link>
+      <nav className="bottom-nav" aria-label="App navigation">
+        <div className="bottom-grid">
+          <Link href="/club-app" className="bottom-link active"><Home size={21} /><span>Home</span></Link>
+          <Link href="/login?redirect=/members/calendar" className="bottom-link"><CalendarDays size={21} /><span>Fixtures</span></Link>
+          <Link href="/login?redirect=/members/competitions" className="bottom-link"><Trophy size={21} /><span>Competitions</span></Link>
+          <Link href="/login?redirect=/members/dashboard" className="bottom-link"><Users size={21} /><span>Members</span></Link>
+          <Link href="/home" className="bottom-link"><Menu size={21} /><span>More</span></Link>
         </div>
       </nav>
     </main>

@@ -20,7 +20,7 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: 'any',
       },
       {
-        src: '/icons/bbc-app-icon.svg',
+        src: '/icons/bbc-app-icon-maskable.svg',
         sizes: 'any',
         type: 'image/svg+xml',
         purpose: 'maskable',

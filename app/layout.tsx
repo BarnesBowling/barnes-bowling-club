@@ -1,7 +1,9 @@
 import './globals.css';
+import './mobile-nav-fix.css';
 import type { Metadata, Viewport } from 'next';
 import { CookieConsent } from '@/components/CookieConsent';
 import { PwaRegister } from '@/components/PwaRegister';
+import { AppPreviewEnhancements } from '@/components/AppPreviewEnhancements';
 
 export const metadata: Metadata = {
   title: 'Barnes Bowling Club',
@@ -29,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         {children}
+        <AppPreviewEnhancements />
         <PwaRegister />
         <CookieConsent />
       </body>

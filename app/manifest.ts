@@ -15,21 +15,21 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['sports', 'social'],
     icons: [
       {
-        src: '/icons/bbc-app-icon-192.png',
+        src: '/icons/bbc-app-icon-v4-192.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/bbc-app-icon.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
+        src: '/icons/bbc-app-icon-v4-512.png',
+        sizes: '512x512',
+        type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/bbc-app-icon-maskable.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
+        src: '/icons/bbc-app-icon-v4-512.png',
+        sizes: '512x512',
+        type: 'image/png',
         purpose: 'maskable',
       },
     ],

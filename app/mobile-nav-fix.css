@@ -1,0 +1,64 @@
+/* Mobile header alignment: keep Members Area visible and place the menu toggle directly below it. */
+@media (max-width: 900px) {
+  .navbar-root .nav-main {
+    overflow: visible;
+  }
+
+  .navbar-root .nav-main-inner {
+    position: relative;
+    height: 94px;
+    min-height: 94px;
+    align-items: flex-start;
+    padding: 6px 18px 0;
+  }
+
+  .navbar-root .navlinks {
+    display: none !important;
+  }
+
+  .navbar-root .nav-right {
+    display: flex !important;
+    position: absolute !important;
+    top: 4px !important;
+    right: 18px !important;
+    margin: 0 !important;
+    transform: none !important;
+    z-index: 112;
+  }
+
+  .navbar-root .nav-hamburger {
+    display: flex !important;
+    position: absolute !important;
+    top: 43px !important;
+    right: 18px !important;
+    margin: 0 !important;
+    padding: 4px 0 !important;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    z-index: 113;
+  }
+
+  .navbar-root .nav-hamburger svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .navbar-root .nav-mobile-panel {
+    position: relative;
+    z-index: 111;
+  }
+}
+
+@media (max-width: 430px) {
+  .navbar-root .nav-main-inner {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .navbar-root .nav-right,
+  .navbar-root .nav-hamburger {
+    right: 14px !important;
+  }
+}

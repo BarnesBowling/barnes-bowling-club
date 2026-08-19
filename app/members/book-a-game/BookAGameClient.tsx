@@ -6,12 +6,15 @@ import { Footer } from '@/components/Footer';
 import {
   getBookingsForDate,
   getBookingsForRange,
+  getGreenBookingsForDate,
+  getGreenBookingsForRange,
   getMemberBookings,
   getCurrentMember,
   createFixtureBooking,
   cancelFixtureBooking,
   type FixtureBooking,
   type RangeBooking,
+  type GreenBooking,
   type MemberOption,
 } from './actions';
 import { MEMBERS } from '@/lib/handicapData';
@@ -38,6 +41,8 @@ const COMP_COLORS: Record<string, { text: string; bg: string }> = {
   pairs:  { text: '#2d5a3d', bg: 'rgba(45,90,61,.1)'   },
   manser: { text: '#7a6040', bg: 'rgba(120,95,60,.12)' },
 };
+
+const GREEN_COLOR = { text: '#1a5f7a', bg: 'rgba(26,95,122,.12)' };
 
 const TIME_SLOTS = Array.from({ length: 21 }, (_, i) => {
   const totalMins = 10 * 60 + i * 30;
@@ -258,12 +263,16 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
   }, []);
 
   const [calBookings, setCalBookings] = useState<Record<string, RangeBooking[]>>({});
+  const [calGreenBookings, setCalGreenBookings] = useState<Record<string, GreenBooking[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const allBookings = await getBookingsForRange(days14[0], days14[days14.length - 1]);
+      const [allBookings, allGreen] = await Promise.all([
+        getBookingsForRange(days14[0], days14[days14.length - 1]),
+        getGreenBookingsForRange(days14[0], days14[days14.length - 1]),
+      ]);
       const map: Record<string, RangeBooking[]> = {};
       for (const b of allBookings) {
         if (!map[b.date]) map[b.date] = [];
@@ -272,7 +281,13 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
       for (const day of Object.keys(map)) {
         map[day].sort((a, b) => a.time_slot.localeCompare(b.time_slot));
       }
+      const greenMap: Record<string, GreenBooking[]> = {};
+      for (const g of allGreen) {
+        if (!greenMap[g.date]) greenMap[g.date] = [];
+        greenMap[g.date].push(g);
+      }
       setCalBookings(map);
+      setCalGreenBookings(greenMap);
       setLoading(false);
     }
     load();
@@ -317,9 +332,11 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
           Next 14 days
         </div>
         {/* Slot legend */}
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '8px' }}>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '8px', flexWrap: 'wrap' }}>
           {[
-            { color: 'var(--green-deep)', label: 'Booked' },
+            { color: 'var(--green-deep)', label: 'Match' },
+            { color: '#2980b9',           label: 'Your match' },
+            { color: '#1a5f7a',           label: 'Corporate' },
             { color: 'rgba(45,90,61,.2)', label: 'Free' },
           ].map(({ color, label }) => (
             <span key={label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontFamily: "'DM Sans', sans-serif", fontSize: '10px', color: 'var(--text-muted)' }}>
@@ -339,10 +356,15 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
         ) : (
           days14.map((day, i) => {
             const dayBookings = calBookings[day] ?? [];
+            const dayGreenBookings = calGreenBookings[day] ?? [];
             const bookedSlots = new Set(dayBookings.map(b => b.time_slot));
-            const freeCount = TIME_SLOTS.length - bookedSlots.size;
+            const greenBlockedSlots = new Set(
+              TIME_SLOTS.filter(slot => dayGreenBookings.some(gb => slot >= gb.start_time && slot < gb.end_time))
+            );
+            const freeCount = TIME_SLOTS.length - bookedSlots.size - greenBlockedSlots.size;
             const isSelected = day === selectedDate;
             const isToday = day === todayStr;
+            const hasEntries = dayBookings.length > 0 || dayGreenBookings.length > 0;
 
             const dateLabel = new Date(day + 'T12:00:00').toLocaleDateString('en-GB', {
               weekday: 'short', day: 'numeric', month: 'short',
@@ -401,20 +423,26 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
                 </div>
 
                 {/* Slot strip */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: dayBookings.length > 0 ? '8px' : 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: hasEntries ? '8px' : 0 }}>
                   {TIME_SLOTS.map(slot => {
                     const taken = bookedSlots.has(slot);
+                    const greenBlocked = !taken && greenBlockedSlots.has(slot);
                     const isOwnSlot = taken && dayBookings.some(b => b.time_slot === slot && b.isOwn);
+                    const title = taken
+                      ? `${slot} — ${isOwnSlot ? 'Your match' : 'Match booked'}`
+                      : greenBlocked ? `${slot} — Corporate booking`
+                      : `${slot} — Free`;
                     return (
                       <div
                         key={slot}
-                        title={`${slot}${taken ? ' — Booked' : ' — Free'}`}
+                        title={title}
                         style={{
                           width: '14px',
                           height: '7px',
                           borderRadius: '1px',
                           background: taken
                             ? isOwnSlot ? '#2980b9' : 'var(--green-deep)'
+                            : greenBlocked ? '#1a5f7a'
                             : 'rgba(45,90,61,.2)',
                           flexShrink: 0,
                         }}
@@ -432,7 +460,7 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
                   </span>
                 </div>
 
-                {/* Booked slot details */}
+                {/* Match booking details */}
                 {dayBookings.map(b => {
                   const colors = COMP_COLORS[b.competition] ?? { text: 'var(--text-mid)', bg: 'rgba(0,0,0,.05)' };
                   return (
@@ -472,6 +500,15 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
                     </div>
                   );
                 })}
+
+                {/* Corporate / green booking entries */}
+                {dayGreenBookings.map(gb => (
+                  <div key={gb.id} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginTop: '4px', flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, color: GREEN_COLOR.text, minWidth: '2.75rem', flexShrink: 0 }}>{gb.start_time}</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: GREEN_COLOR.text, background: GREEN_COLOR.bg, padding: '1px 6px', whiteSpace: 'nowrap', flexShrink: 0 }}>Corporate</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: GREEN_COLOR.text, lineHeight: 1.4 }}>{gb.organisation_name} · until {gb.end_time}</span>
+                  </div>
+                ))}
               </div>
             );
           })
@@ -504,6 +541,11 @@ export function BookAGameClient() {
 
   const isPairs = COMPETITIONS.find(c => c.id === competition)?.isPairs ?? false;
   const takenSlots = new Set(bookings.map(b => b.time_slot));
+  const [greenBookingsForDate, setGreenBookingsForDate] = useState<GreenBooking[]>([]);
+  const greenBlockedSlots = useMemo(
+    () => new Set(TIME_SLOTS.filter(slot => greenBookingsForDate.some(gb => slot >= gb.start_time && slot < gb.end_time))),
+    [greenBookingsForDate]
+  );
   const today = localDateStr(new Date());
 
   // Load the logged-in member and lock Player 1 to them
@@ -519,14 +561,19 @@ export function BookAGameClient() {
   const fetchBookings = useCallback(async (d: string) => {
     if (!d) return;
     setLoadingSlots(true);
-    const dayBookings = await getBookingsForDate(d);
+    const [dayBookings, dayGreen] = await Promise.all([
+      getBookingsForDate(d),
+      getGreenBookingsForDate(d),
+    ]);
     setBookings(dayBookings);
+    setGreenBookingsForDate(dayGreen);
     setLoadingSlots(false);
   }, []);
 
   useEffect(() => {
     setTimeSlot('');
     setBookings([]);
+    setGreenBookingsForDate([]);
     if (date) fetchBookings(date);
   }, [date, fetchBookings]);
 
@@ -562,6 +609,10 @@ export function BookAGameClient() {
     }
     if (takenSlots.has(timeSlot)) {
       setErrorMsg('That time slot is already booked. Please choose another.');
+      return;
+    }
+    if (greenBlockedSlots.has(timeSlot)) {
+      setErrorMsg('That time slot falls within a corporate green booking. Please choose another.');
       return;
     }
 
@@ -805,14 +856,16 @@ export function BookAGameClient() {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                       {TIME_SLOTS.map(slot => {
                         const taken = takenSlots.has(slot);
+                        const greenBlocked = !taken && greenBlockedSlots.has(slot);
+                        const unavailable = taken || greenBlocked;
                         const selected = timeSlot === slot;
                         return (
                           <button
                             key={slot}
                             type="button"
                             className="time-slot-btn"
-                            disabled={taken}
-                            onClick={() => { if (!taken) { setTimeSlot(slot); setStatus('idle'); } }}
+                            disabled={unavailable}
+                            onClick={() => { if (!unavailable) { setTimeSlot(slot); setStatus('idle'); } }}
                             style={{
                               padding: '7px 13px',
                               fontFamily: "'DM Sans', sans-serif",
@@ -821,15 +874,17 @@ export function BookAGameClient() {
                               letterSpacing: '.04em',
                               border: '1.5px solid',
                               borderRadius: '2px',
-                              cursor: taken ? 'not-allowed' : 'pointer',
-                              borderColor: taken ? 'rgba(0,0,0,.1)' : selected ? 'var(--green-deep)' : 'rgba(45,90,61,.25)',
-                              background: taken ? 'rgba(0,0,0,.04)' : selected ? 'var(--green-deep)' : 'transparent',
-                              color: taken ? 'rgba(0,0,0,.3)' : selected ? 'var(--cream)' : 'var(--green-deep)',
+                              cursor: unavailable ? 'not-allowed' : 'pointer',
+                              borderColor: taken ? 'rgba(0,0,0,.1)' : greenBlocked ? 'rgba(26,95,122,.3)' : selected ? 'var(--green-deep)' : 'rgba(45,90,61,.25)',
+                              background: taken ? 'rgba(0,0,0,.04)' : greenBlocked ? 'rgba(26,95,122,.08)' : selected ? 'var(--green-deep)' : 'transparent',
+                              color: taken ? 'rgba(0,0,0,.3)' : greenBlocked ? '#1a5f7a' : selected ? 'var(--cream)' : 'var(--green-deep)',
                               textDecoration: taken ? 'line-through' : 'none',
+                              opacity: greenBlocked ? 0.7 : 1,
                             }}
                           >
                             {slot}
                             {taken && <span style={{ fontSize: '9px', marginLeft: '4px', fontWeight: 400 }}>booked</span>}
+                            {greenBlocked && <span style={{ fontSize: '9px', marginLeft: '4px', fontWeight: 400 }}>corporate</span>}
                           </button>
                         );
                       })}
@@ -838,7 +893,7 @@ export function BookAGameClient() {
                 )}
 
                 {/* Existing bookings for selected date */}
-                {date && bookings.length > 0 && (
+                {date && (bookings.length > 0 || greenBookingsForDate.length > 0) && (
                   <div style={{ marginBottom: '2rem', padding: '1.25rem 1.5rem', background: 'rgba(45,90,61,.03)', border: '1px solid rgba(45,90,61,.1)' }}>
                     <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
                       Already booked on {new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -849,6 +904,13 @@ export function BookAGameClient() {
                           <span style={{ fontWeight: 700, color: 'var(--green-deep)', minWidth: '3rem' }}>{b.time_slot}</span>
                           <span style={{ color: 'var(--text-muted)' }}>{compLabel(b.competition)}</span>
                           <span style={{ color: 'var(--text-mid)' }}>{formatBookingPlayers(b)}</span>
+                        </div>
+                      ))}
+                      {greenBookingsForDate.map(gb => (
+                        <div key={gb.id} style={{ display: 'flex', gap: '1rem', fontFamily: "'DM Sans', sans-serif", fontSize: '13px' }}>
+                          <span style={{ fontWeight: 700, color: GREEN_COLOR.text, minWidth: '3rem' }}>{gb.start_time}</span>
+                          <span style={{ color: GREEN_COLOR.text, fontStyle: 'italic' }}>Corporate · {gb.organisation_name}</span>
+                          <span style={{ color: 'var(--text-muted)' }}>until {gb.end_time}</span>
                         </div>
                       ))}
                     </div>

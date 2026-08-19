@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { getAllUpcomingBookings, type FixtureBooking } from '../book-a-game/actions';
+import { getAllUpcomingBookings, getGreenBookingsForRange, type FixtureBooking, type GreenBooking } from '../book-a-game/actions';
 import { EVENTS, TBC_EVENTS, type Category, type CalEvent } from '@/data/season-calendar-2026';
 import { MiniCalendar } from '../_components/MiniCalendar';
 
@@ -31,9 +31,12 @@ function fmtPlayers(bm: FixtureBooking) {
   return `${bm.player1} vs ${bm.player2}`;
 }
 
+const GREEN_COLOR = { text: '#1a5f7a', bg: 'rgba(26,95,122,.12)', dot: '#1a5f7a' };
+
 type TLItem =
   | { kind: 'season'; ev: CalEvent; sortDay: number }
-  | { kind: 'booked'; bm: FixtureBooking; sortDay: number };
+  | { kind: 'booked'; bm: FixtureBooking; sortDay: number }
+  | { kind: 'green'; gb: GreenBooking; sortDay: number };
 
 function groupByMonth(events: CalEvent[]) {
   const map = new Map<string, { order: number; events: CalEvent[] }>();
@@ -46,8 +49,10 @@ function groupByMonth(events: CalEvent[]) {
 
 export default function CalendarPage() {
   const [bookedMatches, setBookedMatches] = useState<FixtureBooking[]>([]);
+  const [greenBookings, setGreenBookings] = useState<GreenBooking[]>([]);
   useEffect(() => {
     getAllUpcomingBookings().then(setBookedMatches).catch(() => setBookedMatches([]));
+    getGreenBookingsForRange('2026-01-01', '2026-12-31').then(setGreenBookings).catch(() => setGreenBookings([]));
   }, []);
 
   const [filterCategory, setFilterCategory] = useState<Category | null>(null);
@@ -68,6 +73,13 @@ export default function CalendarPage() {
     const d = parts[2];
     if (!monthItemsMap.has(mo)) monthItemsMap.set(mo, { name: MONTH_NAMES[mo - 1], items: [] });
     monthItemsMap.get(mo)!.items.push({ kind: 'booked', bm, sortDay: d });
+  }
+  for (const gb of greenBookings) {
+    const parts = gb.date.split('-').map(Number);
+    const mo = parts[1];
+    const d = parts[2];
+    if (!monthItemsMap.has(mo)) monthItemsMap.set(mo, { name: MONTH_NAMES[mo - 1], items: [] });
+    monthItemsMap.get(mo)!.items.push({ kind: 'green', gb, sortDay: d });
   }
   const mergedMonths = [...monthItemsMap.entries()]
     .sort(([a], [b]) => a - b)
@@ -205,6 +217,52 @@ export default function CalendarPage() {
                               {ev.details}
                             </p>
                           )}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (item.kind === 'green') {
+                    const gb = item.gb;
+                    const dayStr = String(item.sortDay);
+                    const weekday = new Date(gb.date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase();
+                    return (
+                      <div
+                        key={`g-${i}`}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '72px 8px 1fr',
+                          gap: '0 1.25rem',
+                          paddingBottom: '1.25rem',
+                          marginBottom: '1.25rem',
+                          borderBottom: isLast ? 'none' : '1px solid rgba(45,90,61,.07)',
+                          alignItems: 'start',
+                        }}
+                      >
+                        <div style={{ textAlign: 'right', paddingTop: '3px' }}>
+                          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                            {weekday}
+                          </div>
+                          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '22px', fontWeight: 300, color: 'var(--green-deep)', lineHeight: 1, marginTop: '1px' }}>
+                            {dayStr}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '5px' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: GREEN_COLOR.dot, flexShrink: 0 }} />
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '.5rem', marginBottom: '.35rem' }}>
+                            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '17px', fontWeight: 500, color: GREEN_COLOR.text, lineHeight: 1.3 }}>
+                              {gb.organisation_name}
+                            </span>
+                            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: GREEN_COLOR.text, background: GREEN_COLOR.bg, border: '1px solid rgba(26,95,122,.25)', padding: '2px 7px', whiteSpace: 'nowrap' }}>
+                              Corporate
+                            </span>
+                          </div>
+                          <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', lineHeight: 1.7, color: 'var(--text-mid)', margin: 0 }}>
+                            Green hire · {gb.start_time}–{gb.end_time}
+                            {gb.notes && ` · ${gb.notes}`}
+                          </p>
                         </div>
                       </div>
                     );

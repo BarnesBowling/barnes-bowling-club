@@ -4,11 +4,14 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   getBookingsForDate,
   getBookingsForRange,
+  getGreenBookingsForDate,
+  getGreenBookingsForRange,
   cancelFixtureBooking,
   type FixtureBooking,
   type RangeBooking,
+  type GreenBooking,
 } from '@/app/members/book-a-game/actions';
-import { createFixtureBookingAsAdmin } from './actions';
+import { createFixtureBookingAsAdmin, createGreenBookingAsAdmin } from './actions';
 import { MEMBERS } from '@/lib/handicapData';
 
 const playerOptions: string[] = MEMBERS
@@ -31,6 +34,8 @@ const COMP_COLORS: Record<string, { text: string; bg: string }> = {
   pairs:  { text: '#2d5a3d', bg: 'rgba(45,90,61,.1)'   },
   manser: { text: '#7a6040', bg: 'rgba(120,95,60,.12)' },
 };
+
+const GREEN_COLOR = { text: '#1a5f7a', bg: 'rgba(26,95,122,.12)' };
 
 const TIME_SLOTS = Array.from({ length: 21 }, (_, i) => {
   const totalMins = 10 * 60 + i * 30;
@@ -236,12 +241,16 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
   }, []);
 
   const [calBookings, setCalBookings] = useState<Record<string, RangeBooking[]>>({});
+  const [calGreenBookings, setCalGreenBookings] = useState<Record<string, GreenBooking[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const allBookings = await getBookingsForRange(days14[0], days14[days14.length - 1]);
+      const [allBookings, allGreen] = await Promise.all([
+        getBookingsForRange(days14[0], days14[days14.length - 1]),
+        getGreenBookingsForRange(days14[0], days14[days14.length - 1]),
+      ]);
       const map: Record<string, RangeBooking[]> = {};
       for (const b of allBookings) {
         if (!map[b.date]) map[b.date] = [];
@@ -250,7 +259,13 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
       for (const day of Object.keys(map)) {
         map[day].sort((a, b) => a.time_slot.localeCompare(b.time_slot));
       }
+      const greenMap: Record<string, GreenBooking[]> = {};
+      for (const g of allGreen) {
+        if (!greenMap[g.date]) greenMap[g.date] = [];
+        greenMap[g.date].push(g);
+      }
       setCalBookings(map);
+      setCalGreenBookings(greenMap);
       setLoading(false);
     }
     load();
@@ -263,8 +278,12 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
       <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(45,90,61,.15)', flexShrink: 0, background: 'rgba(45,90,61,.03)' }}>
         <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#c9a84c', marginBottom: '2px' }}>Fixtures</div>
         <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '16px', fontWeight: 500, color: 'var(--green-deep)' }}>Next 14 days</div>
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '8px' }}>
-          {[{ color: 'var(--green-deep)', label: 'Booked' }, { color: 'rgba(45,90,61,.2)', label: 'Free' }].map(({ color, label }) => (
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '8px', flexWrap: 'wrap' }}>
+          {[
+            { color: 'var(--green-deep)', label: 'Match' },
+            { color: '#1a5f7a',           label: 'Corporate' },
+            { color: 'rgba(45,90,61,.2)', label: 'Free' },
+          ].map(({ color, label }) => (
             <span key={label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontFamily: "'DM Sans', sans-serif", fontSize: '10px', color: 'var(--text-muted)' }}>
               <span style={{ width: '14px', height: '7px', background: color, borderRadius: '1px', display: 'inline-block', flexShrink: 0 }} />
               {label}
@@ -278,11 +297,16 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
         ) : (
           days14.map((day, i) => {
             const dayBookings = calBookings[day] ?? [];
+            const dayGreenBookings = calGreenBookings[day] ?? [];
             const bookedSlots = new Set(dayBookings.map(b => b.time_slot));
-            const freeCount = TIME_SLOTS.length - bookedSlots.size;
+            const greenBlockedSlots = new Set(
+              TIME_SLOTS.filter(slot => dayGreenBookings.some(gb => slot >= gb.start_time && slot < gb.end_time))
+            );
+            const freeCount = TIME_SLOTS.length - bookedSlots.size - greenBlockedSlots.size;
             const isSelected = day === selectedDate;
             const isToday = day === todayStr;
             const dateLabel = new Date(day + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+            const hasEntries = dayBookings.length > 0 || dayGreenBookings.length > 0;
             return (
               <div key={day} style={{ padding: '11px 16px', borderBottom: i < 13 ? '1px solid rgba(45,90,61,.08)' : 'none', borderLeft: isSelected ? '3px solid var(--green-deep)' : '3px solid transparent', background: isSelected ? 'rgba(45,90,61,.05)' : 'transparent' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
@@ -290,10 +314,24 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
                   {isToday && <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#c9a84c', border: '1px solid rgba(201,168,76,.4)', padding: '1px 5px' }}>Today</span>}
                   {isSelected && <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--green-deep)', border: '1px solid rgba(45,90,61,.3)', padding: '1px 5px' }}>Selected</span>}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: dayBookings.length > 0 ? '8px' : 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: hasEntries ? '8px' : 0 }}>
                   {TIME_SLOTS.map(slot => {
                     const taken = bookedSlots.has(slot);
-                    return <div key={slot} title={`${slot}${taken ? ' — Booked' : ' — Free'}`} style={{ width: '14px', height: '7px', borderRadius: '1px', background: taken ? 'var(--green-deep)' : 'rgba(45,90,61,.2)', flexShrink: 0 }} />;
+                    const greenBlocked = !taken && greenBlockedSlots.has(slot);
+                    const title = taken ? `${slot} — Match booked` : greenBlocked ? `${slot} — Corporate booking` : `${slot} — Free`;
+                    return (
+                      <div
+                        key={slot}
+                        title={title}
+                        style={{
+                          width: '14px',
+                          height: '7px',
+                          borderRadius: '1px',
+                          background: taken ? 'var(--green-deep)' : greenBlocked ? '#1a5f7a' : 'rgba(45,90,61,.2)',
+                          flexShrink: 0,
+                        }}
+                      />
+                    );
                   })}
                   <span style={{ marginLeft: '6px', fontFamily: "'DM Sans', sans-serif", fontSize: '10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                     {freeCount === TIME_SLOTS.length ? 'All free' : `${freeCount}/${TIME_SLOTS.length} free`}
@@ -309,6 +347,13 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
                     </div>
                   );
                 })}
+                {dayGreenBookings.map(gb => (
+                  <div key={gb.id} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', marginTop: '4px', flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, color: GREEN_COLOR.text, minWidth: '2.75rem', flexShrink: 0 }}>{gb.start_time}</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: GREEN_COLOR.text, background: GREEN_COLOR.bg, padding: '1px 6px', whiteSpace: 'nowrap', flexShrink: 0 }}>Corporate</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: GREEN_COLOR.text, lineHeight: 1.4 }}>{gb.organisation_name} · until {gb.end_time}</span>
+                  </div>
+                ))}
               </div>
             );
           })
@@ -319,15 +364,28 @@ function FixturesCalendar({ selectedDate, refreshKey }: { selectedDate: string; 
 }
 
 export default function AdminBookAGamePage() {
+  // Booking type: fixture match or corporate green hire
+  const [bookingType, setBookingType] = useState<'fixture' | 'green'>('fixture');
+
+  // Fixture state
   const [competition, setCompetition] = useState<CompId>('shield');
   const [player1, setPlayer1] = useState('');
   const [player2, setPlayer2] = useState('');
   const [player3, setPlayer3] = useState('');
   const [player4, setPlayer4] = useState('');
-  const [date, setDate] = useState('');
   const [timeSlot, setTimeSlot] = useState('');
 
+  // Green / corporate state
+  const [orgName, setOrgName] = useState('');
+  const [bookedBy, setBookedBy] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [orgNotes, setOrgNotes] = useState('');
+
+  // Shared state
+  const [date, setDate] = useState('');
   const [bookings, setBookings] = useState<FixtureBooking[]>([]);
+  const [greenBookingsForDate, setGreenBookingsForDate] = useState<GreenBooking[]>([]);
   const [allBookings, setAllBookings] = useState<FixtureBooking[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -338,6 +396,10 @@ export default function AdminBookAGamePage() {
 
   const isPairs = COMPETITIONS.find(c => c.id === competition)?.isPairs ?? false;
   const takenSlots = new Set(bookings.map(b => b.time_slot));
+  const greenBlockedSlots = useMemo(
+    () => new Set(TIME_SLOTS.filter(slot => greenBookingsForDate.some(gb => slot >= gb.start_time && slot < gb.end_time))),
+    [greenBookingsForDate]
+  );
   const today = localDateStr(new Date());
 
   const fetchBookings = useCallback(async (d: string) => {
@@ -347,11 +409,16 @@ export default function AdminBookAGamePage() {
       const timeout = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Timed out fetching bookings')), 5000)
       );
-      const dayBookings = await Promise.race([getBookingsForDate(d), timeout]);
+      const [dayBookings, dayGreen] = await Promise.all([
+        Promise.race([getBookingsForDate(d), timeout]),
+        getGreenBookingsForDate(d),
+      ]);
       setBookings(dayBookings);
+      setGreenBookingsForDate(dayGreen);
     } catch (err) {
       console.error('[fetchBookings]', err);
       setBookings([]);
+      setGreenBookingsForDate([]);
     } finally {
       setLoadingSlots(false);
     }
@@ -360,6 +427,7 @@ export default function AdminBookAGamePage() {
   useEffect(() => {
     setTimeSlot('');
     setBookings([]);
+    setGreenBookingsForDate([]);
     if (date) fetchBookings(date);
   }, [date, fetchBookings]);
 
@@ -382,10 +450,51 @@ export default function AdminBookAGamePage() {
     }
   }
 
+  function switchBookingType(type: 'fixture' | 'green') {
+    setBookingType(type);
+    setStatus('idle');
+    setErrorMsg('');
+    if (type === 'green') {
+      setTimeSlot('');
+    } else {
+      setStartTime('');
+      setEndTime('');
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg('');
 
+    if (bookingType === 'green') {
+      if (!orgName.trim() || !date || !startTime || !endTime) {
+        setErrorMsg('Please fill in organisation name, date, start time, and end time.');
+        return;
+      }
+      setSubmitting(true);
+      const result = await createGreenBookingAsAdmin({
+        organisation_name: orgName.trim(),
+        booked_by: bookedBy.trim(),
+        date,
+        start_time: startTime,
+        end_time: endTime,
+        notes: orgNotes.trim() || null,
+      });
+      setSubmitting(false);
+      if (!result.success) {
+        setErrorMsg(result.error);
+        setStatus('error');
+        await fetchBookings(date);
+        return;
+      }
+      setStatus('success');
+      setOrgName(''); setBookedBy(''); setStartTime(''); setEndTime(''); setOrgNotes('');
+      await fetchBookings(date);
+      setRefreshKey(k => k + 1);
+      return;
+    }
+
+    // Fixture booking
     if (!competition || !player1.trim() || !player2.trim() || !date || !timeSlot) {
       setErrorMsg('Please fill in all required fields and select a time slot.');
       return;
@@ -396,6 +505,10 @@ export default function AdminBookAGamePage() {
     }
     if (takenSlots.has(timeSlot)) {
       setErrorMsg('That time slot is already booked. Please choose another.');
+      return;
+    }
+    if (greenBlockedSlots.has(timeSlot)) {
+      setErrorMsg('That time slot falls within a corporate green booking. Please choose another.');
       return;
     }
 
@@ -425,6 +538,10 @@ export default function AdminBookAGamePage() {
     setRefreshKey(k => k + 1);
   }
 
+  const isSubmitDisabled = submitting || (bookingType === 'fixture'
+    ? (!player1.trim() || !player2.trim() || !date || !timeSlot)
+    : (!orgName.trim() || !date || !startTime || !endTime));
+
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
@@ -435,7 +552,7 @@ export default function AdminBookAGamePage() {
           Book a Match
         </h1>
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
-          Book a fixture on behalf of any member.
+          Book a fixture or corporate green hire on behalf of any member.
         </p>
       </div>
 
@@ -469,78 +586,143 @@ export default function AdminBookAGamePage() {
 
           {mode === 'book' && (
             <form onSubmit={handleSubmit} noValidate>
+              {/* Competition / booking type selector */}
               <div style={{ marginBottom: '2rem' }}>
                 <div style={sectionHeadStyle}>Choose competition</div>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {COMPETITIONS.map(c => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => { setCompetition(c.id); setStatus('idle'); }}
-                      style={{
-                        padding: '8px 16px',
-                        fontFamily: "'DM Sans', sans-serif",
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        letterSpacing: '.06em',
-                        textTransform: 'uppercase',
-                        border: '1.5px solid',
-                        borderRadius: '2px',
-                        cursor: 'pointer',
-                        borderColor: competition === c.id ? 'var(--green-deep)' : 'rgba(45,90,61,.25)',
-                        background: competition === c.id ? 'var(--green-deep)' : 'transparent',
-                        color: competition === c.id ? 'var(--cream)' : 'var(--text-muted)',
-                      }}
-                    >
-                      {c.label}
-                    </button>
-                  ))}
+                  {COMPETITIONS.map(c => {
+                    const active = bookingType === 'fixture' && competition === c.id;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => { switchBookingType('fixture'); setCompetition(c.id); }}
+                        style={{
+                          padding: '8px 16px',
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          letterSpacing: '.06em',
+                          textTransform: 'uppercase',
+                          border: '1.5px solid',
+                          borderRadius: '2px',
+                          cursor: 'pointer',
+                          borderColor: active ? 'var(--green-deep)' : 'rgba(45,90,61,.25)',
+                          background: active ? 'var(--green-deep)' : 'transparent',
+                          color: active ? 'var(--cream)' : 'var(--text-muted)',
+                        }}
+                      >
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => switchBookingType('green')}
+                    style={{
+                      padding: '8px 16px',
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      letterSpacing: '.06em',
+                      textTransform: 'uppercase',
+                      border: '1.5px solid',
+                      borderRadius: '2px',
+                      cursor: 'pointer',
+                      borderColor: bookingType === 'green' ? '#1a5f7a' : 'rgba(26,95,122,.35)',
+                      background: bookingType === 'green' ? '#1a5f7a' : 'transparent',
+                      color: bookingType === 'green' ? '#fff' : '#1a5f7a',
+                    }}
+                  >
+                    Other (Corporate)
+                  </button>
                 </div>
               </div>
 
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={sectionHeadStyle}>{isPairs ? 'Players (2 vs 2)' : 'Players (1 vs 1)'}</div>
-
-
-                {isPairs ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              {/* Fixture: Players */}
+              {bookingType === 'fixture' && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <div style={sectionHeadStyle}>{isPairs ? 'Players (2 vs 2)' : 'Players (1 vs 1)'}</div>
+                  {isPairs ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                        <div>
+                          <label style={labelStyle}>Player 1 (booking member)</label>
+                          <PlayerCombobox value={player1} onChange={setPlayer1} options={playerOptions.filter(n => n !== player2 && n !== player3 && n !== player4)} placeholder="Type to search…" />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Player 2 (partner)</label>
+                          <PlayerCombobox value={player2} onChange={setPlayer2} options={playerOptions.filter(n => n !== player1 && n !== player3 && n !== player4)} placeholder="Type to search…" />
+                        </div>
+                      </div>
+                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-muted)', textAlign: 'center', padding: '2px 0' }}>vs</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                        <div>
+                          <label style={labelStyle}>Player 3</label>
+                          <PlayerCombobox value={player3} onChange={setPlayer3} options={playerOptions.filter(n => n !== player1 && n !== player2 && n !== player4)} placeholder="Type to search…" />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Player 4</label>
+                          <PlayerCombobox value={player4} onChange={setPlayer4} options={playerOptions.filter(n => n !== player1 && n !== player2 && n !== player3)} placeholder="Type to search…" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <div>
                         <label style={labelStyle}>Player 1 (booking member)</label>
-                        <PlayerCombobox value={player1} onChange={setPlayer1} options={playerOptions.filter(n => n !== player2 && n !== player3 && n !== player4)} placeholder="Type to search…" />
+                        <PlayerCombobox value={player1} onChange={setPlayer1} options={playerOptions.filter(n => n !== player2)} placeholder="Type to search…" style={{ maxWidth: '280px' }} />
                       </div>
+                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-muted)', paddingLeft: '2px' }}>vs</div>
                       <div>
-                        <label style={labelStyle}>Player 2 (partner)</label>
-                        <PlayerCombobox value={player2} onChange={setPlayer2} options={playerOptions.filter(n => n !== player1 && n !== player3 && n !== player4)} placeholder="Type to search…" />
+                        <label style={labelStyle}>Player 2 (opponent)</label>
+                        <PlayerCombobox value={player2} onChange={setPlayer2} options={playerOptions.filter(n => n !== player1)} placeholder="Type to search…" style={{ maxWidth: '280px' }} />
                       </div>
                     </div>
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-muted)', textAlign: 'center', padding: '2px 0' }}>vs</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                      <div>
-                        <label style={labelStyle}>Player 3</label>
-                        <PlayerCombobox value={player3} onChange={setPlayer3} options={playerOptions.filter(n => n !== player1 && n !== player2 && n !== player4)} placeholder="Type to search…" />
-                      </div>
-                      <div>
-                        <label style={labelStyle}>Player 4</label>
-                        <PlayerCombobox value={player4} onChange={setPlayer4} options={playerOptions.filter(n => n !== player1 && n !== player2 && n !== player3)} placeholder="Type to search…" />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div>
-                      <label style={labelStyle}>Player 1 (booking member)</label>
-                      <PlayerCombobox value={player1} onChange={setPlayer1} options={playerOptions.filter(n => n !== player2)} placeholder="Type to search…" style={{ maxWidth: '280px' }} />
-                    </div>
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-muted)', paddingLeft: '2px' }}>vs</div>
-                    <div>
-                      <label style={labelStyle}>Player 2 (opponent)</label>
-                      <PlayerCombobox value={player2} onChange={setPlayer2} options={playerOptions.filter(n => n !== player1)} placeholder="Type to search…" style={{ maxWidth: '280px' }} />
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
+              {/* Green / corporate: org details */}
+              {bookingType === 'green' && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <div style={sectionHeadStyle}>Corporate / Green Hire Details</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                      <label style={labelStyle}>Organisation Name *</label>
+                      <input
+                        type="text"
+                        value={orgName}
+                        onChange={e => setOrgName(e.target.value)}
+                        placeholder="e.g. Barnes Tennis Club"
+                        style={{ ...inputStyle, maxWidth: '360px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Booked By (optional)</label>
+                      <input
+                        type="text"
+                        value={bookedBy}
+                        onChange={e => setBookedBy(e.target.value)}
+                        placeholder="Contact name"
+                        style={{ ...inputStyle, maxWidth: '280px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Notes (optional)</label>
+                      <input
+                        type="text"
+                        value={orgNotes}
+                        onChange={e => setOrgNotes(e.target.value)}
+                        placeholder="Any additional notes"
+                        style={{ ...inputStyle, maxWidth: '420px' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Date (shared) */}
               <div style={{ marginBottom: '2rem' }}>
                 <div style={sectionHeadStyle}>Date</div>
                 <div>
@@ -556,7 +738,8 @@ export default function AdminBookAGamePage() {
                 </div>
               </div>
 
-              {date && (
+              {/* Fixture: time slot picker */}
+              {bookingType === 'fixture' && date && (
                 <div style={{ marginBottom: '2rem' }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '1rem' }}>
                     <div style={sectionHeadStyle}>Time slot</div>
@@ -565,13 +748,15 @@ export default function AdminBookAGamePage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                     {TIME_SLOTS.map(slot => {
                       const taken = takenSlots.has(slot);
+                      const greenBlocked = !taken && greenBlockedSlots.has(slot);
+                      const unavailable = taken || greenBlocked;
                       const selected = timeSlot === slot;
                       return (
                         <button
                           key={slot}
                           type="button"
-                          disabled={taken}
-                          onClick={() => { if (!taken) { setTimeSlot(slot); setStatus('idle'); } }}
+                          disabled={unavailable}
+                          onClick={() => { if (!unavailable) { setTimeSlot(slot); setStatus('idle'); } }}
                           style={{
                             padding: '7px 13px',
                             fontFamily: "'DM Sans', sans-serif",
@@ -580,15 +765,17 @@ export default function AdminBookAGamePage() {
                             letterSpacing: '.04em',
                             border: '1.5px solid',
                             borderRadius: '2px',
-                            cursor: taken ? 'not-allowed' : 'pointer',
-                            borderColor: taken ? 'rgba(0,0,0,.1)' : selected ? 'var(--green-deep)' : 'rgba(45,90,61,.25)',
-                            background: taken ? 'rgba(0,0,0,.04)' : selected ? 'var(--green-deep)' : 'transparent',
-                            color: taken ? 'rgba(0,0,0,.3)' : selected ? 'var(--cream)' : 'var(--green-deep)',
+                            cursor: unavailable ? 'not-allowed' : 'pointer',
+                            borderColor: taken ? 'rgba(0,0,0,.1)' : greenBlocked ? 'rgba(26,95,122,.3)' : selected ? 'var(--green-deep)' : 'rgba(45,90,61,.25)',
+                            background: taken ? 'rgba(0,0,0,.04)' : greenBlocked ? 'rgba(26,95,122,.08)' : selected ? 'var(--green-deep)' : 'transparent',
+                            color: taken ? 'rgba(0,0,0,.3)' : greenBlocked ? '#1a5f7a' : selected ? 'var(--cream)' : 'var(--green-deep)',
                             textDecoration: taken ? 'line-through' : 'none',
+                            opacity: greenBlocked ? 0.7 : 1,
                           }}
                         >
                           {slot}
                           {taken && <span style={{ fontSize: '9px', marginLeft: '4px', fontWeight: 400 }}>booked</span>}
+                          {greenBlocked && <span style={{ fontSize: '9px', marginLeft: '4px', fontWeight: 400 }}>corporate</span>}
                         </button>
                       );
                     })}
@@ -596,7 +783,44 @@ export default function AdminBookAGamePage() {
                 </div>
               )}
 
-              {date && bookings.length > 0 && (
+              {/* Green: start/end time selects */}
+              {bookingType === 'green' && date && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '1rem' }}>
+                    <div style={sectionHeadStyle}>Time Window</div>
+                    {loadingSlots && <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>loading…</span>}
+                  </div>
+                  <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                    <div>
+                      <label style={labelStyle}>Start Time *</label>
+                      <select
+                        value={startTime}
+                        onChange={e => { setStartTime(e.target.value); setStatus('idle'); setErrorMsg(''); }}
+                        style={{ ...inputStyle, maxWidth: '150px' }}
+                        required
+                      >
+                        <option value="">Select…</option>
+                        {TIME_SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>End Time *</label>
+                      <select
+                        value={endTime}
+                        onChange={e => { setEndTime(e.target.value); setStatus('idle'); setErrorMsg(''); }}
+                        style={{ ...inputStyle, maxWidth: '150px' }}
+                        required
+                      >
+                        <option value="">Select…</option>
+                        {TIME_SLOTS.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Already booked on this date */}
+              {date && (bookings.length > 0 || greenBookingsForDate.length > 0) && (
                 <div style={{ marginBottom: '2rem', padding: '1.25rem 1.5rem', background: 'rgba(45,90,61,.03)', border: '1px solid rgba(45,90,61,.1)' }}>
                   <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
                     Already booked on {new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -607,6 +831,13 @@ export default function AdminBookAGamePage() {
                         <span style={{ fontWeight: 700, color: 'var(--green-deep)', minWidth: '3rem' }}>{b.time_slot}</span>
                         <span style={{ color: 'var(--text-muted)' }}>{compLabel(b.competition)}</span>
                         <span style={{ color: 'var(--text-mid)' }}>{formatBookingPlayers(b)}</span>
+                      </div>
+                    ))}
+                    {greenBookingsForDate.map(gb => (
+                      <div key={gb.id} style={{ display: 'flex', gap: '1rem', fontFamily: "'DM Sans', sans-serif", fontSize: '13px' }}>
+                        <span style={{ fontWeight: 700, color: GREEN_COLOR.text, minWidth: '3rem' }}>{gb.start_time}</span>
+                        <span style={{ color: GREEN_COLOR.text, fontStyle: 'italic' }}>Corporate · {gb.organisation_name}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>until {gb.end_time}</span>
                       </div>
                     ))}
                   </div>
@@ -621,13 +852,13 @@ export default function AdminBookAGamePage() {
 
               {status === 'success' && (
                 <div style={{ marginBottom: '1.25rem', padding: '12px 16px', background: 'rgba(45,90,61,.07)', border: '1px solid rgba(45,90,61,.2)', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-deep)', fontWeight: 500 }}>
-                  Booking confirmed and registered.
+                  {bookingType === 'green' ? 'Corporate booking confirmed.' : 'Booking confirmed and registered.'}
                 </div>
               )}
 
               <button
                 type="submit"
-                disabled={submitting || !player1.trim() || !player2.trim() || !date || !timeSlot}
+                disabled={isSubmitDisabled}
                 style={{
                   padding: '11px 28px',
                   fontFamily: "'DM Sans', sans-serif",
@@ -637,12 +868,14 @@ export default function AdminBookAGamePage() {
                   textTransform: 'uppercase',
                   border: 'none',
                   borderRadius: '2px',
-                  cursor: submitting || !player1.trim() || !player2.trim() || !date || !timeSlot ? 'not-allowed' : 'pointer',
-                  background: submitting || !player1.trim() || !player2.trim() || !date || !timeSlot ? 'rgba(45,90,61,.35)' : 'var(--green-deep)',
+                  cursor: isSubmitDisabled ? 'not-allowed' : 'pointer',
+                  background: isSubmitDisabled
+                    ? (bookingType === 'green' ? 'rgba(26,95,122,.35)' : 'rgba(45,90,61,.35)')
+                    : (bookingType === 'green' ? '#1a5f7a' : 'var(--green-deep)'),
                   color: 'var(--cream)',
                 }}
               >
-                {submitting ? 'Booking…' : 'Submit Booking'}
+                {submitting ? 'Booking…' : bookingType === 'green' ? 'Book Corporate Slot' : 'Submit Booking'}
               </button>
             </form>
           )}

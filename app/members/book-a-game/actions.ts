@@ -252,6 +252,35 @@ export async function createFixtureBooking(input: {
   return { success: true, id: data.id };
 }
 
+export interface GreenBooking {
+  id: string;
+  organisation_name: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  notes: string | null;
+}
+
+export async function getGreenBookingsForDate(date: string): Promise<GreenBooking[]> {
+  const { data } = await supabaseAdmin
+    .from('green_bookings')
+    .select('id, organisation_name, date, start_time, end_time, notes')
+    .eq('date', date)
+    .order('start_time');
+  return (data ?? []) as GreenBooking[];
+}
+
+export async function getGreenBookingsForRange(startDate: string, endDate: string): Promise<GreenBooking[]> {
+  const { data } = await supabaseAdmin
+    .from('green_bookings')
+    .select('id, organisation_name, date, start_time, end_time, notes')
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date')
+    .order('start_time');
+  return (data ?? []) as GreenBooking[];
+}
+
 export async function cancelFixtureBooking(id: string): Promise<{ success: boolean; error?: string }> {
   const session = await getSession();
   if (!session) return { success: false, error: 'Not authenticated.' };

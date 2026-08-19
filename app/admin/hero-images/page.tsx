@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { uploadImage } from '@/lib/images';
+import { useEffect, useState } from 'react';
+import { getHeroImages, uploadImage } from '@/lib/images';
 
 type ImageSlot = {
   label: string;
@@ -31,6 +31,21 @@ export default function AdminHeroImagesPage() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [uploaded, setUploaded] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    let active = true;
+    getHeroImages()
+      .then(images => {
+        if (active) setUploaded(images);
+      })
+      .catch(() => {
+        // Fallback thumbnails remain visible if the existing images cannot be loaded.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   async function handleUpload(label: string, file: File) {
     setUploading(label);
     try {
@@ -55,7 +70,7 @@ export default function AdminHeroImagesPage() {
               onChange={e => { const file = e.target.files && e.target.files[0]; if (file) handleUpload(slot.label, file); }} />
           </label>
           {uploaded[slot.label] && (
-            <span style={{ marginLeft: '0.75rem', fontSize: '12px', color: 'green' }}>Updated</span>
+            <span style={{ marginLeft: '0.75rem', fontSize: '12px', color: 'green' }}>Current image</span>
           )}
         </div>
       </div>

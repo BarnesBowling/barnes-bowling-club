@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllUpcomingBookings, type FixtureBooking } from '../book-a-game/actions';
+import { getAllUpcomingBookings, getGreenBookingsForRange, type FixtureBooking, type GreenBooking } from '../book-a-game/actions';
 import { EVENTS, type Category, type CalEvent } from '@/data/season-calendar-2026';
 
 const CATEGORY_META: Record<Category, { label: string; dot: string; badge: string; text: string }> = {
@@ -49,10 +49,12 @@ export function MiniCalendar() {
   const [calYear,  setCalYear]  = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth());
   const [bookedMatches, setBookedMatches] = useState<FixtureBooking[]>([]);
+  const [greenBookings, setGreenBookings] = useState<GreenBooking[]>([]);
   const [selectedDay, setSelectedDay] = useState<{ day: number; month: number; year: number } | null>(null);
 
   useEffect(() => {
     getAllUpcomingBookings().then(setBookedMatches).catch(() => setBookedMatches([]));
+    getGreenBookingsForRange('2026-01-01', '2026-12-31').then(setGreenBookings).catch(() => setGreenBookings([]));
   }, []);
 
   function prevMonth() {
@@ -77,6 +79,12 @@ export function MiniCalendar() {
       .map(bm => Number(bm.date.split('-')[2]))
   );
 
+  const bookedGreenDaysInView = new Set(
+    greenBookings
+      .filter(gb => { const [y, mo] = gb.date.split('-').map(Number); return y === calYear && mo === calMonth + 1; })
+      .map(gb => Number(gb.date.split('-')[2]))
+  );
+
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
@@ -90,7 +98,11 @@ export function MiniCalendar() {
     const [y, mo, d] = bm.date.split('-').map(Number);
     return y === now.getFullYear() && mo === todayMonthOrder && d === todayDay;
   });
-  const hasTodayActivity = todayCalEvents.length > 0 || todayBooked.length > 0;
+  const todayGreenBookings = greenBookings.filter(gb => {
+    const [y, mo, d] = gb.date.split('-').map(Number);
+    return y === now.getFullYear() && mo === todayMonthOrder && d === todayDay;
+  });
+  const hasTodayActivity = todayCalEvents.length > 0 || todayBooked.length > 0 || todayGreenBookings.length > 0;
 
   return (
     <>
@@ -156,10 +168,12 @@ export function MiniCalendar() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', rowGap: '1px' }}>
             {cells.map((day, i) => {
               if (!day) return <div key={i} />;
-              const dayEvents     = eventsForMonth[day] ?? [];
-              const isToday       = isCurrentMonth && day === todayDate;
-              const hasEvents     = dayEvents.length > 0;
+              const dayEvents      = eventsForMonth[day] ?? [];
+              const isToday        = isCurrentMonth && day === todayDate;
+              const hasEvents      = dayEvents.length > 0;
               const hasBookedMatch = bookedMatchDaysInView.has(day);
+              const hasGreenBooking = bookedGreenDaysInView.has(day);
+              const hasAny         = hasEvents || hasBookedMatch || hasGreenBooking;
               return (
                 <div
                   key={i}
@@ -172,13 +186,13 @@ export function MiniCalendar() {
                     borderRadius: '50%',
                     fontFamily: "'DM Sans', sans-serif",
                     fontSize: '14px',
-                    fontWeight: isToday ? 700 : (hasEvents || hasBookedMatch) ? 600 : 400,
-                    color: isToday ? 'white' : (hasEvents || hasBookedMatch) ? 'var(--green-deep)' : 'rgba(45,90,61,.5)',
+                    fontWeight: isToday ? 700 : hasAny ? 600 : 400,
+                    color: isToday ? 'white' : hasAny ? 'var(--green-deep)' : 'rgba(45,90,61,.5)',
                     background: isToday ? 'var(--green-deep)' : 'transparent',
                   }}>
                     {day}
                   </div>
-                  {(hasEvents || hasBookedMatch) && (
+                  {hasAny && (
                     <div style={{ display: 'flex', gap: '3px', marginTop: '1px', height: '5px' }}>
                       {dayEvents.slice(0, 2).map((ev, j) => (
                         <div key={j} style={{
@@ -191,6 +205,13 @@ export function MiniCalendar() {
                         <div style={{
                           width: '5px', height: '5px', borderRadius: '50%',
                           background: isToday ? 'rgba(255,255,255,0.7)' : CATEGORY_META.competition.dot,
+                          flexShrink: 0,
+                        }} />
+                      )}
+                      {hasGreenBooking && (
+                        <div style={{
+                          width: '5px', height: '5px', borderRadius: '50%',
+                          background: isToday ? 'rgba(255,255,255,0.7)' : '#1a5f7a',
                           flexShrink: 0,
                         }} />
                       )}
@@ -236,7 +257,11 @@ export function MiniCalendar() {
           const [y, mo, d] = bm.date.split('-').map(Number);
           return y === year && mo === month + 1 && d === day;
         });
-        const hasAnything   = dayEvents.length > 0 || dayBookedMatches.length > 0;
+        const dayGreenBookings = greenBookings.filter(gb => {
+          const [y, mo, d] = gb.date.split('-').map(Number);
+          return y === year && mo === month + 1 && d === day;
+        });
+        const hasAnything   = dayEvents.length > 0 || dayBookedMatches.length > 0 || dayGreenBookings.length > 0;
         const fullDateLabel = new Date(year, month, day).toLocaleDateString('en-GB', {
           weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
         });
@@ -333,6 +358,23 @@ export function MiniCalendar() {
                         </div>
                       );
                     })}
+                    {dayGreenBookings.map((gb, i) => (
+                      <div key={`gb-${i}`} style={{ background: 'var(--cream)', padding: '1.1rem 1.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.45rem' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#1a5f7a', flexShrink: 0 }} />
+                          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#1a5f7a', background: 'rgba(26,95,122,.12)', border: '1px solid rgba(26,95,122,.25)', padding: '2px 7px' }}>
+                            Corporate
+                          </span>
+                        </div>
+                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '17px', fontWeight: 500, color: '#1a5f7a', marginBottom: '0.35rem' }}>
+                          {gb.organisation_name}
+                        </div>
+                        <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', lineHeight: 1.7, color: 'var(--text-mid)', margin: 0 }}>
+                          Green hire · {gb.start_time}–{gb.end_time}
+                          {gb.notes && ` · ${gb.notes}`}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

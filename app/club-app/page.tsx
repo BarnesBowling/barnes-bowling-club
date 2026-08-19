@@ -78,14 +78,18 @@ export default async function ClubAppPage() {
   }
 
   const gallery = galleryRows ?? [];
-  const hero = gallery[0]?.public_url
+
+  // Phone app images use their own admin slots. Existing site images remain as
+  // fallbacks until a phone-specific image has been uploaded for each slot.
+  const hero = heroImages['club-app-hero']
+    ?? gallery[0]?.public_url
     ?? heroImages['whats-happening-3']
     ?? '/images/gallery2.JPG';
 
   const cardImages = [
-    heroImages['whats-happening-1'] ?? '/images/gallery1.JPG',
-    gallery[1]?.public_url ?? heroImages['whats-happening-2'] ?? '/images/gallery5.JPG',
-    gallery[2]?.public_url ?? heroImages['whats-happening-3'] ?? '/images/gallery2.JPG',
+    heroImages['club-app-card-1'] ?? heroImages['whats-happening-1'] ?? '/images/gallery1.JPG',
+    heroImages['club-app-card-2'] ?? gallery[1]?.public_url ?? heroImages['whats-happening-2'] ?? '/images/gallery5.JPG',
+    heroImages['club-app-card-3'] ?? gallery[2]?.public_url ?? heroImages['whats-happening-3'] ?? '/images/gallery2.JPG',
   ];
 
   const shortcuts = [
@@ -129,7 +133,7 @@ export default async function ClubAppPage() {
         .hero { position:relative; height:224px; background-size:cover; background-position:center 43%; }
         .hero:after { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(10,24,16,.72) 0%,rgba(10,24,16,.08) 70%); }
         .hero-copy { position:absolute; left:22px; right:22px; bottom:27px; z-index:1; color:white; }
-        .hero-title { margin:0; max-width:370px; font-family:'Playfair Display',Georgia,serif; font-size:31px; line-height:1.02; font-weight:500; text-shadow:0 2px 12px rgba(0,0,0,.22); }
+        .hero-title { margin:0; max-width:370px; font-family:'Playfair Display',Georgia,serif; font-size:25px; line-height:1.06; font-weight:500; text-shadow:0 2px 12px rgba(0,0,0,.22); }
         .hero-sub { margin:7px 0 0; font-family:'Libre Baskerville',Georgia,serif; font-size:12px; color:rgba(255,255,255,.92); }
         .hero-dots { position:absolute; z-index:2; left:50%; bottom:10px; transform:translateX(-50%); display:flex; gap:7px; }
         .hero-dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.55); }
@@ -181,7 +185,7 @@ export default async function ClubAppPage() {
           .app-header svg:first-child { width:48px; height:48px; }
           .brand-title { font-size:19px; }
           .hero { height:205px; }
-          .hero-title { font-size:28px; }
+          .hero-title { font-size:23px; }
           .app-content { padding-left:10px; padding-right:10px; }
           .quick-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
           .quick-card { min-height:82px; }

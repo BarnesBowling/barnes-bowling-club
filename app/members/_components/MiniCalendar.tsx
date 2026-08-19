@@ -102,7 +102,10 @@ export function MiniCalendar() {
     const [y, mo, d] = gb.date.split('-').map(Number);
     return y === now.getFullYear() && mo === todayMonthOrder && d === todayDay;
   });
-  const hasTodayActivity = todayCalEvents.length > 0 || todayBooked.length > 0 || todayGreenBookings.length > 0;
+  const todayState: 'match' | 'green' | 'none' =
+    todayBooked.length > 0 ? 'match' :
+    todayGreenBookings.length > 0 ? 'green' :
+    'none';
 
   return (
     <>
@@ -238,10 +241,10 @@ export function MiniCalendar() {
         }}>
           <span style={{
             width: '7px', height: '7px', borderRadius: '50%', flexShrink: 0,
-            background: hasTodayActivity ? '#c9a84c' : 'rgba(45,90,61,.35)',
+            background: todayState === 'match' ? '#c9a84c' : todayState === 'green' ? '#1a5f7a' : 'rgba(45,90,61,.35)',
           }} />
-          <span style={{ color: hasTodayActivity ? '#1b3b26' : 'rgba(45,90,61,.6)' }}>
-            {hasTodayActivity ? 'Matches today' : 'No matches today'}
+          <span style={{ color: todayState !== 'none' ? '#1b3b26' : 'rgba(45,90,61,.6)' }}>
+            {todayState === 'match' ? 'Match today' : todayState === 'green' ? 'Green in Use' : 'No Match today'}
             <span style={{ margin: '0 6px', opacity: 0.4 }}>•</span>
             Click date to view
           </span>

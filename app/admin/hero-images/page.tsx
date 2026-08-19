@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getHeroImages, uploadImage } from '@/lib/images';
+import { getHeroImages } from '@/lib/images';
 
 type ImageSlot = {
   label: string;
@@ -30,6 +30,8 @@ const PHONE_SLOTS: ImageSlot[] = [
 export default function AdminHeroImagesPage() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [uploaded, setUploaded] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [justUpdated, setJustUpdated] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -38,7 +40,7 @@ export default function AdminHeroImagesPage() {
         if (active) setUploaded(images);
       })
       .catch(() => {
-        // Fallback thumbnails remain visible if the existing images cannot be loaded.
+        // Fallback thumbnails remain visible if the saved images cannot be loaded.
       });
 
     return () => {
@@ -48,30 +50,115 @@ export default function AdminHeroImagesPage() {
 
   async function handleUpload(label: string, file: File) {
     setUploading(label);
+    setJustUpdated(null);
+    setErrors(prev => ({ ...prev, [label]: '' }));
+
     try {
-      const img = await uploadImage(file, 'hero', undefined, label);
-      setUploaded(prev => ({ ...prev, [label]: img.public_url }));
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('context', 'hero');
+      fd.append('alt_text', label);
+
+      const res = await fetch('/api/admin/gallery-upload', {
+        method: 'POST',
+        body: fd,
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body.error ?? `Upload failed (${res.status})`);
+      }
+
+      if (!body.public_url) {
+        throw new Error('Upload completed but no image URL was returned.');
+      }
+
+      setUploaded(prev => ({ ...prev, [label]: body.public_url }));
+      setJustUpdated(label);
+    } catch (err) {
+      setErrors(prev => ({
+        ...prev,
+        [label]: err instanceof Error ? err.message : String(err),
+      }));
     } finally {
       setUploading(null);
     }
   }
 
   function renderSlot(slot: ImageSlot) {
+    const isUploading = uploading === slot.label;
+    const imageUrl = uploaded[slot.label] || slot.fallback;
+
     return (
-      <div key={slot.label} style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', padding: '1.25rem', border: '1px solid rgba(45,90,61,.15)', background: 'white' }}>
-        <div style={{ width: '140px', height: '90px', flexShrink: 0, backgroundImage: 'url(' + (uploaded[slot.label] || slot.fallback) + ')', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '15px', color: 'var(--green-deep)', marginBottom: '0.25rem' }}>
+      <div
+        key={slot.label}
+        style={{
+          display: 'flex',
+          gap: '1.5rem',
+          alignItems: 'center',
+          padding: '1.25rem',
+          border: '1px solid rgba(45,90,61,.15)',
+          background: 'white',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div
+          style={{
+            width: '140px',
+            height: '90px',
+            flexShrink: 0,
+            backgroundImage: `url('${imageUrl}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            border: '1px solid rgba(45,90,61,.12)',
+          }}
+        />
+
+        <div style={{ flex: '1 1 280px' }}>
+          <div
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: '15px',
+              color: 'var(--green-deep)',
+              marginBottom: '0.5rem',
+            }}
+          >
             {slot.title}
           </div>
-          <label style={{ display: 'inline-block', padding: '0.45rem 1rem', background: uploading === slot.label ? 'rgba(45,90,61,.4)' : 'var(--green-deep)', color: 'white', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', cursor: 'pointer' }}>
-            {uploading === slot.label ? 'Uploading...' : uploaded[slot.label] ? 'Replace Image' : 'Upload Image'}
-            <input type="file" accept="image/*" style={{ display: 'none' }}
-              onChange={e => { const file = e.target.files && e.target.files[0]; if (file) handleUpload(slot.label, file); }} />
-          </label>
-          {uploaded[slot.label] && (
-            <span style={{ marginLeft: '0.75rem', fontSize: '12px', color: 'green' }}>Current image</span>
-          )}
+
+          <input
+            type="file"
+            accept="image/*"
+            disabled={isUploading}
+            onChange={async e => {
+              const input = e.currentTarget;
+              const file = input.files?.[0];
+              if (file) await handleUpload(slot.label, file);
+              input.value = '';
+            }}
+            style={{
+              display: 'block',
+              maxWidth: '100%',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '13px',
+              color: 'var(--green-deep)',
+            }}
+          />
+
+          <div style={{ marginTop: '0.5rem', minHeight: '18px' }}>
+            {isUploading && (
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Uploading…</span>
+            )}
+            {!isUploading && justUpdated === slot.label && (
+              <span style={{ fontSize: '12px', color: '#15803d', fontWeight: 600 }}>Uploaded ✓</span>
+            )}
+            {!isUploading && justUpdated !== slot.label && uploaded[slot.label] && !errors[slot.label] && (
+              <span style={{ fontSize: '12px', color: '#15803d' }}>Current image</span>
+            )}
+            {errors[slot.label] && (
+              <span style={{ fontSize: '12px', color: '#b91c1c' }}>Upload failed: {errors[slot.label]}</span>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -81,13 +168,13 @@ export default function AdminHeroImagesPage() {
     <div style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
         <a href="/admin" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-mid)', textDecoration: 'none' }}>
-          Back to Admin
+          ← Back to Admin
         </a>
         <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: '28px', color: 'var(--green-deep)', margin: '0.5rem 0 0.25rem' }}>
           Website & Phone App Images
         </h1>
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
-          Phone app and desktop website images are controlled separately.
+          Phone app and desktop website images are controlled separately. Choose a file and it will upload automatically.
         </p>
       </div>
 

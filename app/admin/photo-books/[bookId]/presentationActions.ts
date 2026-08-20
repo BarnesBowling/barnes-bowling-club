@@ -5,13 +5,19 @@ import { requireAdminSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export type CaptionPlacement = 'below' | 'above' | 'overlay-top' | 'overlay-bottom';
+export type CaptionFont = 'Libre Baskerville' | 'Playfair Display' | 'DM Sans' | 'Josefin Sans' | 'Optima';
+export type PhotoHorizontalPosition = 'left' | 'center' | 'right';
+export type PhotoVerticalPosition = 'top' | 'center' | 'bottom';
 
 export interface PhotoPresentationSettings {
   caption: string;
   captionFontSize: number;
   captionColor: string;
   captionPlacement: CaptionPlacement;
+  captionFont: CaptionFont;
   photoScale: number;
+  photoHorizontal: PhotoHorizontalPosition;
+  photoVertical: PhotoVerticalPosition;
 }
 
 const LAYOUTS = new Set([
@@ -30,6 +36,26 @@ const CAPTION_PLACEMENTS = new Set<CaptionPlacement>([
   'above',
   'overlay-top',
   'overlay-bottom',
+]);
+
+const CAPTION_FONTS = new Set<CaptionFont>([
+  'Libre Baskerville',
+  'Playfair Display',
+  'DM Sans',
+  'Josefin Sans',
+  'Optima',
+]);
+
+const PHOTO_HORIZONTAL_POSITIONS = new Set<PhotoHorizontalPosition>([
+  'left',
+  'center',
+  'right',
+]);
+
+const PHOTO_VERTICAL_POSITIONS = new Set<PhotoVerticalPosition>([
+  'top',
+  'center',
+  'bottom',
 ]);
 
 export async function updatePageLayout(
@@ -91,6 +117,15 @@ export async function updatePhotoPresentation(
   const captionPlacement = CAPTION_PLACEMENTS.has(settings.captionPlacement)
     ? settings.captionPlacement
     : 'below';
+  const captionFont = CAPTION_FONTS.has(settings.captionFont)
+    ? settings.captionFont
+    : 'Libre Baskerville';
+  const photoHorizontal = PHOTO_HORIZONTAL_POSITIONS.has(settings.photoHorizontal)
+    ? settings.photoHorizontal
+    : 'center';
+  const photoVertical = PHOTO_VERTICAL_POSITIONS.has(settings.photoVertical)
+    ? settings.photoVertical
+    : 'center';
 
   photos[photoIndex] = {
     ...photos[photoIndex],
@@ -98,7 +133,10 @@ export async function updatePhotoPresentation(
     captionFontSize: fontSize,
     captionColor,
     captionPlacement,
+    captionFont,
     photoScale,
+    photoHorizontal,
+    photoVertical,
   };
 
   const { error } = await supabaseAdmin

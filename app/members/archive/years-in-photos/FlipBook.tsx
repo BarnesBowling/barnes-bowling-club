@@ -6,10 +6,6 @@ import type { RichPage } from '@/data/photo-books';
 const PAGE_W = 550;
 const PAGE_H = 733;
 
-const CANVAS_TEXTURE = [
-  'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 3px)',
-  'repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 3px)',
-].join(', ');
 
 const TAB_DEFS: Array<Record<string, string>> = [
   { top: '-10px',    left: '-10px',   clipPath: 'polygon(0 0, 100% 0, 0 100%)'       },
@@ -31,10 +27,10 @@ function addCornerTabs(mount: HTMLElement): void {
 function spineShadeEl(isLeft: boolean): HTMLDivElement {
   const el = document.createElement('div');
   Object.assign(el.style, {
-    position: 'absolute', top: '0', bottom: '0', width: '18%', pointerEvents: 'none', zIndex: '2',
+    position: 'absolute', top: '0', bottom: '0', width: '22%', pointerEvents: 'none', zIndex: '2',
     ...(isLeft
-      ? { right: '0', background: 'linear-gradient(to right, transparent 60%, rgba(0,0,0,0.09) 100%)' }
-      : { left: '0',  background: 'linear-gradient(to left,  transparent 60%, rgba(0,0,0,0.09) 100%)' }),
+      ? { right: '0', background: 'linear-gradient(to right, transparent 40%, rgba(0,0,0,0.18) 100%)' }
+      : { left: '0',  background: 'linear-gradient(to left,  transparent 40%, rgba(0,0,0,0.18) 100%)' }),
   });
   return el;
 }
@@ -43,7 +39,7 @@ function albumPageBase(isLeft: boolean): HTMLDivElement {
   const page = document.createElement('div');
   page.className = 'album-page';
   Object.assign(page.style, {
-    backgroundColor: '#fafaf8', backgroundImage: CANVAS_TEXTURE,
+    backgroundColor: '#ffffff',
     boxSizing: 'border-box', width: '100%', height: '100%',
     position: 'relative', overflow: 'hidden',
   });
@@ -104,12 +100,13 @@ function buildAlbumPage(src: string, index: number): HTMLDivElement {
   return page;
 }
 
-// Full-bleed image — same look as pf.loadFromImages() used by 2025 book.
-function buildSinglePage(rp: RichPage, _isLeft: boolean): HTMLDivElement {
+// Full-bleed image — matches pf.loadFromImages() look used by 2025 book.
+function buildSinglePage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   const page = document.createElement('div');
   page.className = 'album-page';
-  Object.assign(page.style, { width: '100%', height: '100%', position: 'relative', overflow: 'hidden' });
+  Object.assign(page.style, { backgroundColor: '#ffffff', width: '100%', height: '100%', position: 'relative', overflow: 'hidden' });
   if (rp.photos[0]) page.appendChild(coverImgEl(rp.photos[0].src));
+  page.appendChild(spineShadeEl(isLeft));
   return page;
 }
 

@@ -21,19 +21,19 @@ const ARCHIVE_SECTIONS = [
     ],
   },
   {
+    title: 'Years in Photos',
+    description: 'A photographic record of club life, seasons and events through the years.',
+    items: [
+      { label: 'Years in Photos', href: '/members/archive/years-in-photos' },
+    ],
+  },
+  {
     title: 'Historical documents',
     description: 'Club history, founding records and archival material.',
     items: [
       { label: 'Club history documents',  href: null },
       { label: 'Original rules & bylaws', href: null },
       { label: 'Centenary records',       href: null },
-    ],
-  },
-  {
-    title: 'Years in Photos',
-    description: 'A photographic record of club life, seasons and events through the years.',
-    items: [
-      { label: 'Years in Photos', href: '/members/archive/years-in-photos' },
     ],
   },
 ];

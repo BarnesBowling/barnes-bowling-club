@@ -16,6 +16,9 @@ export default async function BookEditorPage({ params }: PageProps) {
 
   const { bookId } = await params;
 
+  // The 2025 book is deliberately preserved exactly as it is.
+  if (bookId === 'book-2025') redirect('/admin/photo-books');
+
   const [{ data: book }, { data: pages }] = await Promise.all([
     supabaseAdmin.from('photo_books').select('*').eq('id', bookId).maybeSingle(),
     supabaseAdmin.from('photo_book_pages').select('*').eq('book_id', bookId).order('sort_order'),

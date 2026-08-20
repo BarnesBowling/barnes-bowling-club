@@ -41,6 +41,7 @@ export default async function BookEditorPage({ params }: PageProps) {
           </div>
         </div>
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
+          {/* Original integrated editor: thumbnails, captions, positioning and styling controls. */}
           <BookEditor book={book} pages={pages ?? []} />
         </div>
       </main>

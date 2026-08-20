@@ -42,6 +42,7 @@ export default async function BookEditorPage({ params }: PageProps) {
           </div>
         </div>
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
+          {/* Full presentation controls restored separately from the uploader. */}
           <RestoredPhotoControls bookId={book.id} pages={pages ?? []} />
           <BookEditor book={book} pages={pages ?? []} />
         </div>

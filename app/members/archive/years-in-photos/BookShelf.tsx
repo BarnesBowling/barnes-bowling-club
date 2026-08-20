@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import type { RichPage, RichPageLayout } from '@/data/photo-books';
 import { FlipBook } from './FlipBook';
 
-// Heights ×1.2 of original [210,195,215,198,207,192]
 const SPINE_HEIGHTS = [252, 234, 258, 238, 248, 230];
 
 const shelfSurface: React.CSSProperties = {
@@ -20,7 +19,6 @@ const shelfFloor: React.CSSProperties = {
 };
 
 function uprightTransform(i: number, hovered: boolean): string {
-  // Book at index 4 leans against the book at index 3
   if (i === 4) return hovered ? 'translateY(-8px) rotate(12deg)' : 'rotate(12deg)';
   return hovered ? 'translateY(-8px)' : 'none';
 }
@@ -79,19 +77,16 @@ export function BookShelf({ books, pagesByBook }: Props) {
   }, [selected]);
 
   const sorted = [...books].sort((a, b) => a.sort_order - b.sort_order);
-
-  // First up to 10 books: upright. Next 2: flat. Any beyond 12: upright at end.
   const uprightBooks = sorted.slice(0, 10);
   const flatBooks = sorted.slice(10, 12);
   const extraBooks = sorted.slice(12);
-
-  // For flat layout: intl on top, the one before it on bottom — preserve original stacking order
   const flatDisplay = [...flatBooks].reverse();
 
   function openBook(book: DbBook) {
     const dbPages = pagesByBook[book.id] ?? [];
     const hasSingleLayout = dbPages.length > 0 && dbPages.every(p => p.layout === 'single');
     const hasRichLayouts = dbPages.some(p => p.layout !== 'single');
+    const is2026Book = /^2026\b/i.test(book.title.trim());
 
     if (book.single_page) {
       setSelected({
@@ -101,6 +96,18 @@ export function BookShelf({ books, pagesByBook }: Props) {
         singlePage: true,
         pages: dbPages.map(p => p.photos[0]?.src ?? '').filter(Boolean),
         richPages: undefined,
+      });
+    } else if (is2026Book && dbPages.length > 0) {
+      // 2026 must always use the rich HTML renderer, even when every page is
+      // currently set to “single”. This is what enables the white album pages,
+      // mounted photos, custom cover and shaded 3D centre gutter.
+      setSelected({
+        id: book.id,
+        title: book.title,
+        spineColour: book.spine_colour,
+        singlePage: false,
+        pages: [],
+        richPages: dbPages.map(toRichPage),
       });
     } else if (hasRichLayouts || (!hasSingleLayout && dbPages.length > 0)) {
       setSelected({
@@ -194,13 +201,11 @@ export function BookShelf({ books, pagesByBook }: Props) {
 
   return (
     <>
-      {/* Library background */}
       <div style={{
         background: 'linear-gradient(180deg, #F5EDD8 0%, #E8D9BC 100%)',
         borderRadius: '6px',
         padding: '4rem 2rem 0',
       }}>
-        {/* Books row */}
         <div style={{
           display: 'flex',
           alignItems: 'flex-end',
@@ -211,11 +216,8 @@ export function BookShelf({ books, pagesByBook }: Props) {
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
         } as React.CSSProperties}>
-
-          {/* Upright books 0–9 */}
           {uprightBooks.map((book, i) => renderUprightBook(book, i))}
 
-          {/* Flat books (stacked at right end) */}
           {flatBooks.length > 0 && (
             <div style={{
               flexShrink: 0,
@@ -274,18 +276,13 @@ export function BookShelf({ books, pagesByBook }: Props) {
             </div>
           )}
 
-          {/* Extra upright books beyond index 11 */}
           {extraBooks.map((book, i) => renderUprightBook(book, i + 12))}
-
         </div>
 
-        {/* Wooden shelf surface */}
         <div style={shelfSurface} />
-        {/* Floor shadow */}
         <div style={shelfFloor} />
       </div>
 
-      {/* Hint */}
       <p style={{
         fontFamily: "'DM Sans', sans-serif",
         fontSize: '12px',
@@ -297,7 +294,6 @@ export function BookShelf({ books, pagesByBook }: Props) {
         Click a book spine to open
       </p>
 
-      {/* Full-screen modal */}
       {selected && (
         <div
           onClick={(e) => { if (e.target === e.currentTarget) setSelected(null); }}

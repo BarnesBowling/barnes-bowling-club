@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { uploadPhoto, addPage, deletePage, reorderPages, updateCaption, updateBook } from './actions';
+import { uploadPhoto, addPage, deletePage, reorderPages, updateBook } from './actions';
+import {
+  updatePageLayout,
+  updatePhotoPresentation,
+  type CaptionPlacement,
+  type PhotoPresentationSettings,
+} from './presentationActions';
 
 export interface DbPhotoBook {
   id: string;
@@ -10,6 +16,15 @@ export interface DbPhotoBook {
   spine_colour: string;
   single_page: boolean;
   sort_order: number;
+}
+
+export interface DbPhoto {
+  src: string;
+  caption?: string;
+  captionFontSize?: number;
+  captionColor?: string;
+  captionPlacement?: CaptionPlacement;
+  photoScale?: number;
 }
 
 export interface DbPhotoBookPage {
@@ -20,7 +35,7 @@ export interface DbPhotoBookPage {
   page_title: string | null;
   page_subtitle: string | null;
   shared_caption: string | null;
-  photos: { src: string; caption?: string }[];
+  photos: DbPhoto[];
 }
 
 interface Props {
@@ -47,6 +62,15 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 };
 
+const compactInputStyle: React.CSSProperties = {
+  padding: '5px 7px',
+  border: '1px solid rgba(45,90,61,.22)',
+  fontFamily: "'DM Sans', sans-serif",
+  fontSize: '12px',
+  color: 'var(--green-deep)',
+  background: 'white',
+};
+
 const btnStyle: React.CSSProperties = {
   padding: '7px 14px',
   border: 'none',
@@ -70,6 +94,15 @@ const deleteBtnStyle: React.CSSProperties = {
   color: '#a00',
 };
 
+const LAYOUT_OPTIONS = [
+  { value: 'single', label: 'Single photo' },
+  { value: 'sf-single', label: 'Single photo — fit to page' },
+  { value: 'sf-pair', label: 'Two photos — stacked' },
+  { value: 'two-photos', label: 'Two photos — stacked / cropped' },
+  { value: 'grid-2x2', label: 'Grid — 2 × 2' },
+  { value: 'title-hero', label: 'Title + hero photo' },
+];
+
 export function BookEditor({ book, pages: initialPages }: Props) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -87,8 +120,9 @@ export function BookEditor({ book, pages: initialPages }: Props) {
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
-  const [savingCaption, setSavingCaption] = useState<Record<string, boolean>>({});
   const [deletingPage, setDeletingPage] = useState<Record<string, boolean>>({});
+  const [savingLayout, setSavingLayout] = useState<Record<string, boolean>>({});
+  const [savingPhoto, setSavingPhoto] = useState<Record<string, boolean>>({});
   const [pages, setPages] = useState(initialPages);
   const [reordering, setReordering] = useState(false);
   const [reorderError, setReorderError] = useState<string | null>(null);
@@ -102,11 +136,8 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     setMetaError(null);
     startMetaSave(async () => {
       const result = await updateBook(book.id, title, spineColour);
-      if (result.error) {
-        setMetaError(result.error);
-      } else {
-        router.refresh();
-      }
+      if (result.error) setMetaError(result.error);
+      else router.refresh();
     });
   }
 
@@ -131,11 +162,8 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     const { error: pageErr } = await addPage(book.id, url);
     setUploading(false);
     if (fileRef.current) fileRef.current.value = '';
-    if (pageErr) {
-      setUploadError(pageErr);
-    } else {
-      router.refresh();
-    }
+    if (pageErr) setUploadError(pageErr);
+    else router.refresh();
   }
 
   async function handleAddByUrl() {
@@ -162,9 +190,7 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     const result = await reorderPages(book.id, nextPages.map(page => page.id));
     setReordering(false);
 
-    if (result.error) {
-      setReorderError(result.error);
-    }
+    if (result.error) setReorderError(result.error);
     router.refresh();
   }
 
@@ -212,17 +238,39 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     router.refresh();
   }
 
-  async function handleCaptionBlur(pageId: string, caption: string) {
-    setSavingCaption(prev => ({ ...prev, [pageId]: true }));
-    await updateCaption(pageId, caption);
-    setSavingCaption(prev => ({ ...prev, [pageId]: false }));
-    router.refresh();
+  async function handleLayoutChange(pageId: string, layout: string) {
+    setSavingLayout(prev => ({ ...prev, [pageId]: true }));
+    setPages(prev => prev.map(page => page.id === pageId ? { ...page, layout } : page));
+    const result = await updatePageLayout(pageId, layout);
+    setSavingLayout(prev => ({ ...prev, [pageId]: false }));
+    if (result.error) {
+      setReorderError(result.error);
+      router.refresh();
+    }
+  }
+
+  async function handlePhotoSave(
+    pageId: string,
+    photoIndex: number,
+    settings: PhotoPresentationSettings
+  ) {
+    const key = `${pageId}:${photoIndex}`;
+    setSavingPhoto(prev => ({ ...prev, [key]: true }));
+
+    setPages(prev => prev.map(page => {
+      if (page.id !== pageId) return page;
+      const nextPhotos = [...page.photos];
+      nextPhotos[photoIndex] = { ...nextPhotos[photoIndex], ...settings };
+      return { ...page, photos: nextPhotos };
+    }));
+
+    const result = await updatePhotoPresentation(pageId, photoIndex, settings);
+    setSavingPhoto(prev => ({ ...prev, [key]: false }));
+    if (result.error) setReorderError(result.error);
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-
-      {/* ── Book metadata ── */}
       <section>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
           Book details
@@ -238,11 +286,7 @@ export function BookEditor({ book, pages: initialPages }: Props) {
         }}>
           <div>
             <label style={labelStyle}>Title</label>
-            <input
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              style={inputStyle}
-            />
+            <input value={title} onChange={e => setTitle(e.target.value)} style={inputStyle} />
           </div>
           <div>
             <label style={labelStyle}>Spine colour</label>
@@ -253,13 +297,7 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                 onChange={e => setSpineColour(e.target.value)}
                 style={{ width: '48px', height: '36px', padding: '2px', border: '1px solid rgba(45,90,61,.2)', cursor: 'pointer' }}
               />
-              <div style={{
-                width: '36px',
-                height: '36px',
-                background: spineColour,
-                border: '1px solid rgba(0,0,0,.15)',
-                borderRadius: '2px',
-              }} />
+              <div style={{ width: '36px', height: '36px', background: spineColour, border: '1px solid rgba(0,0,0,.15)', borderRadius: '2px' }} />
               <span style={{ fontFamily: 'monospace', fontSize: '13px', color: 'var(--text-muted)' }}>{spineColour}</span>
             </div>
           </div>
@@ -274,17 +312,11 @@ export function BookEditor({ book, pages: initialPages }: Props) {
         </div>
       </section>
 
-      {/* ── Upload new photo ── */}
       <section>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
           Upload new photo
         </h2>
-        <div style={{
-          background: 'white',
-          border: '1px solid rgba(45,90,61,.12)',
-          padding: '1.75rem',
-          maxWidth: '480px',
-        }}>
+        <div style={{ background: 'white', border: '1px solid rgba(45,90,61,.12)', padding: '1.75rem', maxWidth: '480px' }}>
           <label style={labelStyle}>Choose image (added to end of book)</label>
           <input
             ref={fileRef}
@@ -300,28 +332,11 @@ export function BookEditor({ book, pages: initialPages }: Props) {
               cursor: uploading ? 'not-allowed' : 'pointer',
             }}
           />
-          {uploading && (
-            <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{
-                width: '16px', height: '16px',
-                border: '2px solid rgba(45,90,61,.2)',
-                borderTopColor: 'var(--green-deep)',
-                borderRadius: '50%',
-                animation: 'spin 0.7s linear infinite',
-              }} />
-              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>
-                Uploading…
-              </span>
-              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-            </div>
-          )}
-          {uploadError && (
-            <p style={{ color: '#a00', fontSize: '13px', margin: '0.5rem 0 0' }}>{uploadError}</p>
-          )}
+          {uploading && <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Uploading…</p>}
+          {uploadError && <p style={{ color: '#a00', fontSize: '13px', margin: '0.5rem 0 0' }}>{uploadError}</p>}
         </div>
       </section>
 
-      {/* ── Add page from URL ── */}
       <section>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
           Add page from URL
@@ -364,18 +379,15 @@ export function BookEditor({ book, pages: initialPages }: Props) {
         </div>
       </section>
 
-      {/* ── Pages list ── */}
       <section>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '.35rem' }}>
           Pages ({pages.length})
         </h2>
         <p style={{ margin: '0 0 1.25rem', fontSize: '13px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>
-          Drag a page using the ☰ handle, or type the position number you want.
+          Drag a page using the ☰ handle, type a position number, choose the page layout, then style each photo and caption.
           {reordering && <span> Saving order…</span>}
         </p>
-        {reorderError && (
-          <p style={{ color: '#a00', fontSize: '13px', margin: '0 0 1rem' }}>{reorderError}</p>
-        )}
+        {reorderError && <p style={{ color: '#a00', fontSize: '13px', margin: '0 0 1rem' }}>{reorderError}</p>}
 
         {pages.length === 0 && (
           <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', fontStyle: 'italic', color: 'var(--text-muted)' }}>
@@ -383,12 +395,9 @@ export function BookEditor({ book, pages: initialPages }: Props) {
           </p>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {pages.map((page, i) => {
-            const src = page.photos[0]?.src ?? '';
-            const caption = page.photos[0]?.caption ?? '';
             const isDragging = draggedPageId === page.id;
-
             return (
               <div
                 key={page.id}
@@ -408,94 +417,87 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                     ? '1px solid rgba(45,90,61,.28)'
                     : '1px solid rgba(45,90,61,.12)',
                   padding: '1rem 1.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  flexWrap: 'wrap',
                   opacity: isDragging ? 0.5 : 1,
                 }}
               >
-                {/* Drag handle */}
-                <div
-                  draggable={!reordering}
-                  onDragStart={e => {
-                    setDraggedPageId(page.id);
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/plain', page.id);
-                  }}
-                  onDragEnd={() => setDraggedPageId(null)}
-                  title="Drag to move this page"
-                  aria-label={`Drag page ${i + 1}`}
-                  style={{
-                    flexShrink: 0,
-                    width: '30px',
-                    height: '44px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px solid rgba(45,90,61,.18)',
-                    color: 'var(--green-deep)',
-                    background: '#fff',
-                    borderRadius: '2px',
-                    cursor: reordering ? 'wait' : 'grab',
-                    fontSize: '20px',
-                    lineHeight: 1,
-                    userSelect: 'none',
-                  }}
-                >
-                  ☰
-                </div>
-
-                {/* Thumbnail */}
-                <div style={{ flexShrink: 0, width: '80px', height: '80px', overflow: 'hidden', background: '#f0ece4', borderRadius: '2px' }}>
-                  {src && (
-                    <img
-                      src={src}
-                      alt=""
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    />
-                  )}
-                </div>
-
-                {/* Info + caption */}
-                <div style={{ flex: 1, minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <PositionInput
-                      position={i + 1}
-                      max={pages.length}
-                      disabled={reordering}
-                      onMove={position => void handlePositionChange(page.id, position)}
-                    />
-                    <span style={{
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      letterSpacing: '.08em',
-                      textTransform: 'uppercase',
-                      color: 'rgba(255,255,255,0.9)',
-                      background: 'var(--green-deep)',
-                      padding: '1px 7px',
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                  <div
+                    draggable={!reordering}
+                    onDragStart={e => {
+                      setDraggedPageId(page.id);
+                      e.dataTransfer.effectAllowed = 'move';
+                      e.dataTransfer.setData('text/plain', page.id);
+                    }}
+                    onDragEnd={() => setDraggedPageId(null)}
+                    title="Drag to move this page"
+                    aria-label={`Drag page ${i + 1}`}
+                    style={{
+                      flexShrink: 0,
+                      width: '30px',
+                      height: '36px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid rgba(45,90,61,.18)',
+                      color: 'var(--green-deep)',
+                      background: '#fff',
                       borderRadius: '2px',
-                    }}>
-                      {page.layout}
-                    </span>
+                      cursor: reordering ? 'wait' : 'grab',
+                      fontSize: '20px',
+                      lineHeight: 1,
+                      userSelect: 'none',
+                    }}
+                  >
+                    ☰
                   </div>
-                  <CaptionInput
-                    pageId={page.id}
-                    initialCaption={caption}
-                    saving={savingCaption[page.id] ?? false}
-                    onSave={handleCaptionBlur}
-                  />
-                </div>
 
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                  <PositionInput
+                    position={i + 1}
+                    max={pages.length}
+                    disabled={reordering}
+                    onMove={position => void handlePositionChange(page.id, position)}
+                  />
+
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Layout
+                    <select
+                      value={page.layout}
+                      disabled={savingLayout[page.id] ?? false}
+                      onChange={e => void handleLayoutChange(page.id, e.target.value)}
+                      style={{ ...compactInputStyle, minWidth: '180px' }}
+                    >
+                      {!LAYOUT_OPTIONS.some(option => option.value === page.layout) && (
+                        <option value={page.layout}>{page.layout}</option>
+                      )}
+                      {LAYOUT_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  {savingLayout[page.id] && (
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>saving layout…</span>
+                  )}
+
                   <button
                     onClick={() => handleDelete(page.id)}
                     disabled={deletingPage[page.id] ?? false}
-                    style={{ ...deleteBtnStyle, opacity: (deletingPage[page.id] ?? false) ? 0.6 : 1 }}
+                    style={{ ...deleteBtnStyle, marginLeft: 'auto', opacity: (deletingPage[page.id] ?? false) ? 0.6 : 1 }}
                   >
-                    Delete
+                    Delete page
                   </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {page.photos.map((photo, photoIndex) => (
+                    <PhotoEditor
+                      key={`${page.id}:${photoIndex}`}
+                      photo={photo}
+                      photoNumber={photoIndex + 1}
+                      saving={savingPhoto[`${page.id}:${photoIndex}`] ?? false}
+                      onSave={settings => void handlePhotoSave(page.id, photoIndex, settings)}
+                    />
+                  ))}
                 </div>
               </div>
             );
@@ -552,54 +554,154 @@ function PositionInput({
             e.currentTarget.blur();
           }
         }}
-        style={{
-          width: '54px',
-          padding: '4px 5px',
-          border: '1px solid rgba(45,90,61,.22)',
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize: '12px',
-          color: 'var(--green-deep)',
-          textAlign: 'center',
-          background: disabled ? '#f3f1ec' : 'white',
-        }}
+        style={{ ...compactInputStyle, width: '54px', textAlign: 'center', background: disabled ? '#f3f1ec' : 'white' }}
       />
     </label>
   );
 }
 
-function CaptionInput({
-  pageId,
-  initialCaption,
+function PhotoEditor({
+  photo,
+  photoNumber,
   saving,
   onSave,
 }: {
-  pageId: string;
-  initialCaption: string;
+  photo: DbPhoto;
+  photoNumber: number;
   saving: boolean;
-  onSave: (pageId: string, caption: string) => void;
+  onSave: (settings: PhotoPresentationSettings) => void;
 }) {
-  const [value, setValue] = useState(initialCaption);
+  const [caption, setCaption] = useState(photo.caption ?? '');
+  const [fontSize, setFontSize] = useState(photo.captionFontSize ?? 11);
+  const [colour, setColour] = useState(photo.captionColor ?? '#888888');
+  const [placement, setPlacement] = useState<CaptionPlacement>(photo.captionPlacement ?? 'below');
+  const [photoScale, setPhotoScale] = useState(photo.photoScale ?? 100);
+
+  useEffect(() => {
+    setCaption(photo.caption ?? '');
+    setFontSize(photo.captionFontSize ?? 11);
+    setColour(photo.captionColor ?? '#888888');
+    setPlacement(photo.captionPlacement ?? 'below');
+    setPhotoScale(photo.photoScale ?? 100);
+  }, [photo]);
+
+  function commit(overrides: Partial<PhotoPresentationSettings> = {}) {
+    onSave({
+      caption,
+      captionFontSize: fontSize,
+      captionColor: colour,
+      captionPlacement: placement,
+      photoScale,
+      ...overrides,
+    });
+  }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-      <input
-        value={value}
-        onChange={e => setValue(e.target.value)}
-        onBlur={() => onSave(pageId, value)}
-        placeholder="Caption (optional)"
-        style={{
-          padding: '.4rem .6rem',
-          border: '1px solid rgba(45,90,61,.2)',
-          fontFamily: "'Libre Baskerville', serif",
-          fontStyle: 'italic',
-          fontSize: '13px',
-          flex: 1,
-          color: 'var(--text-mid)',
-        }}
-      />
-      {saving && (
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>saving…</span>
-      )}
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '90px minmax(180px, 1fr)',
+      gap: '12px',
+      alignItems: 'start',
+      padding: '10px',
+      background: '#faf9f6',
+      border: '1px solid rgba(45,90,61,.08)',
+    }}>
+      <div>
+        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', color: 'var(--text-muted)', marginBottom: '5px' }}>
+          PHOTO {photoNumber}
+        </div>
+        <div style={{ width: '80px', height: '80px', overflow: 'hidden', background: '#eee9df' }}>
+          {photo.src && <img src={photo.src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <input
+            value={caption}
+            onChange={e => setCaption(e.target.value)}
+            onBlur={() => commit()}
+            placeholder="Caption (optional)"
+            style={{
+              padding: '.45rem .6rem',
+              border: '1px solid rgba(45,90,61,.2)',
+              fontFamily: "'Libre Baskerville', serif",
+              fontStyle: 'italic',
+              fontSize: '13px',
+              flex: 1,
+              minWidth: 0,
+              color: 'var(--text-mid)',
+            }}
+          />
+          {saving && <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>saving…</span>}
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'end' }}>
+          <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>
+            Photo size
+            <select
+              value={photoScale}
+              onChange={e => {
+                const next = Number(e.target.value);
+                setPhotoScale(next);
+                commit({ photoScale: next });
+              }}
+              style={{ ...compactInputStyle, display: 'block', marginTop: '3px' }}
+            >
+              <option value={60}>60%</option>
+              <option value={75}>75%</option>
+              <option value={90}>90%</option>
+              <option value={100}>100%</option>
+            </select>
+          </label>
+
+          <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>
+            Caption size
+            <select
+              value={fontSize}
+              onChange={e => {
+                const next = Number(e.target.value);
+                setFontSize(next);
+                commit({ captionFontSize: next });
+              }}
+              style={{ ...compactInputStyle, display: 'block', marginTop: '3px' }}
+            >
+              {[10, 11, 12, 14, 16, 18, 20, 24].map(size => (
+                <option key={size} value={size}>{size}px</option>
+              ))}
+            </select>
+          </label>
+
+          <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>
+            Caption colour
+            <input
+              type="color"
+              value={colour}
+              onChange={e => setColour(e.target.value)}
+              onBlur={() => commit()}
+              style={{ display: 'block', width: '44px', height: '31px', marginTop: '3px', border: '1px solid rgba(45,90,61,.22)', padding: '2px', background: 'white' }}
+            />
+          </label>
+
+          <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>
+            Caption placement
+            <select
+              value={placement}
+              onChange={e => {
+                const next = e.target.value as CaptionPlacement;
+                setPlacement(next);
+                commit({ captionPlacement: next });
+              }}
+              style={{ ...compactInputStyle, display: 'block', marginTop: '3px' }}
+            >
+              <option value="below">Below photo</option>
+              <option value="above">Above photo</option>
+              <option value="overlay-top">Over photo — top</option>
+              <option value="overlay-bottom">Over photo — bottom</option>
+            </select>
+          </label>
+        </div>
+      </div>
     </div>
   );
 }

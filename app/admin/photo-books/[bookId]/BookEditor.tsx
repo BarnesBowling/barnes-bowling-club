@@ -93,6 +93,11 @@ export function BookEditor({ book, pages: initialPages }: Props) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const [addUrl, setAddUrl] = useState('');
+  const [addCaption, setAddCaption] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+
   const [savingCaption, setSavingCaption] = useState<Record<string, boolean>>({});
   const [movingPage, setMovingPage] = useState<Record<string, boolean>>({});
   const [deletingPage, setDeletingPage] = useState<Record<string, boolean>>({});
@@ -135,6 +140,22 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     if (pageErr) {
       setUploadError(pageErr);
     } else {
+      router.refresh();
+    }
+  }
+
+  async function handleAddByUrl() {
+    const url = addUrl.trim();
+    if (!url) return;
+    setAdding(true);
+    setAddError(null);
+    const { error } = await addPage(book.id, url, addCaption.trim() || undefined);
+    setAdding(false);
+    if (error) {
+      setAddError(error);
+    } else {
+      setAddUrl('');
+      setAddCaption('');
       router.refresh();
     }
   }
@@ -260,6 +281,49 @@ export function BookEditor({ book, pages: initialPages }: Props) {
           {uploadError && (
             <p style={{ color: '#a00', fontSize: '13px', margin: '0.5rem 0 0' }}>{uploadError}</p>
           )}
+        </div>
+      </section>
+
+      {/* ── Add page from URL ── */}
+      <section>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
+          Add page from URL
+        </h2>
+        <div style={{
+          background: 'white',
+          border: '1px solid rgba(45,90,61,.12)',
+          padding: '1.75rem',
+          maxWidth: '480px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+        }}>
+          <div>
+            <label style={labelStyle}>Image URL or path (added to end of book)</label>
+            <input
+              value={addUrl}
+              onChange={e => setAddUrl(e.target.value)}
+              placeholder="/archive/years-photos/2026/page-01.jpg"
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Caption (optional)</label>
+            <input
+              value={addCaption}
+              onChange={e => setAddCaption(e.target.value)}
+              placeholder="e.g. Club dinner, July 2026"
+              style={inputStyle}
+            />
+          </div>
+          {addError && <p style={{ color: '#a00', fontSize: '13px', margin: 0 }}>{addError}</p>}
+          <button
+            onClick={handleAddByUrl}
+            disabled={adding || !addUrl.trim()}
+            style={{ ...btnStyle, opacity: (adding || !addUrl.trim()) ? 0.6 : 1, alignSelf: 'flex-start' }}
+          >
+            {adding ? 'Adding…' : 'Add page'}
+          </button>
         </div>
       </section>
 

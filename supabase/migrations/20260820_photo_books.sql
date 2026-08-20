@@ -53,8 +53,7 @@ INSERT INTO public.photo_books (id, title, spine_colour, single_page, sort_order
   ('book-2011-13', '2011–13 Season',         '#6B2737', false,  8),
   ('book-2008-10', '2008–10 Season',         '#2D5A3D', false,  9),
   ('book-2003-07', '2003–07 Season',         '#7B4F2E', false, 10),
-  ('book-intl',    'Past International Days','#6B2737', true,  11)
-ON CONFLICT (id) DO NOTHING;
+  ('book-intl',    'Past International Days','#6B2737', true,  11);
 
 -- ── Seed 2026 pages (44 pages) ────────────────────────────────────────────────
 
@@ -102,8 +101,7 @@ INSERT INTO public.photo_book_pages (book_id, sort_order, layout, page_title, pa
   ('book-2026', 40, 'single',    NULL, NULL, '[{"src":"/archive/years-photos/2026/page-15.jpg"}]'),
   ('book-2026', 41, 'single',    NULL, NULL, '[{"src":"/archive/years-photos/2026/page-16.jpg"}]'),
   ('book-2026', 42, 'single',    NULL, NULL, '[{"src":"/archive/years-photos/2026/page-17.jpg"}]'),
-  ('book-2026', 43, 'single',    NULL, NULL, '[{"src":"/archive/years-photos/2026/page-18.jpg"}]')
-ON CONFLICT (book_id, sort_order) DO NOTHING;
+  ('book-2026', 43, 'single',    NULL, NULL, '[{"src":"/archive/years-photos/2026/page-18.jpg"}]');
 
 -- ── Seed 2025 pages (50 pages) ────────────────────────────────────────────────
 
@@ -157,8 +155,7 @@ INSERT INTO public.photo_book_pages (book_id, sort_order, layout, photos) VALUES
   ('book-2025', 46, 'single', '[{"src":"/archive/years-photos/page-47.jpg"}]'),
   ('book-2025', 47, 'single', '[{"src":"/archive/years-photos/page-48.jpg"}]'),
   ('book-2025', 48, 'single', '[{"src":"/archive/years-photos/page-49.jpg"}]'),
-  ('book-2025', 49, 'single', '[{"src":"/archive/years-photos/page-50.jpg"}]')
-ON CONFLICT (book_id, sort_order) DO NOTHING;
+  ('book-2025', 49, 'single', '[{"src":"/archive/years-photos/page-50.jpg"}]');
 
 -- ── Seed intl pages (21 pages) ────────────────────────────────────────────────
 
@@ -183,5 +180,4 @@ INSERT INTO public.photo_book_pages (book_id, sort_order, layout, photos) VALUES
   ('book-intl', 17, 'single', '[{"src":"/archive/intl-days/International_Day18.jpg"}]'),
   ('book-intl', 18, 'single', '[{"src":"/archive/intl-days/International_Day19.jpg"}]'),
   ('book-intl', 19, 'single', '[{"src":"/archive/intl-days/International_Day20.jpg"}]'),
-  ('book-intl', 20, 'single', '[{"src":"/archive/intl-days/International_Day21.jpg"}]')
-ON CONFLICT (book_id, sort_order) DO NOTHING;
+  ('book-intl', 20, 'single', '[{"src":"/archive/intl-days/International_Day21.jpg"}]');

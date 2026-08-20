@@ -1,6 +1,6 @@
 'use client';
 
-// Keep the Club Admin navigation grouped without changing the existing page links or tab names.
+// Keep the Club Admin navigation in the agreed grouped order.
 const CARD_ORDER: Record<string, number> = {
   'Club Roster': 11,
   'Member Management': 12,
@@ -37,6 +37,7 @@ export function AdminLinkCard({
     <>
       {groupStart && (
         <div
+          data-admin-nav-group={groupStart.label}
           style={{
             order: groupStart.order,
             flex: '1 0 100%',
@@ -55,6 +56,7 @@ export function AdminLinkCard({
       )}
       <a
         href={href}
+        data-admin-nav-order={CARD_ORDER[title] ?? 99}
         style={{
           order: CARD_ORDER[title] ?? 99,
           display: 'flex',

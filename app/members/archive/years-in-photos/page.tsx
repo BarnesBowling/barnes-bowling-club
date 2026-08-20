@@ -1,10 +1,24 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { BookShelf } from './BookShelf';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import { BookShelf, type DbPage } from './BookShelf';
 
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Years in Photos — Barnes Bowling Club' };
 
-export default function YearsInPhotosPage() {
+export default async function YearsInPhotosPage() {
+  const [{ data: books }, { data: pages }] = await Promise.all([
+    supabaseAdmin.from('photo_books').select('*').order('sort_order'),
+    supabaseAdmin.from('photo_book_pages').select('*').order('sort_order'),
+  ]);
+
+  const pagesByBook = (pages ?? []).reduce<Record<string, DbPage[]>>((acc, page) => {
+    const bookId = (page as { book_id: string } & DbPage).book_id;
+    if (!acc[bookId]) acc[bookId] = [];
+    acc[bookId].push(page as DbPage);
+    return acc;
+  }, {});
+
   return (
     <>
       <Navbar />
@@ -28,7 +42,7 @@ export default function YearsInPhotosPage() {
 
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
 
-          <BookShelf />
+          <BookShelf books={books ?? []} pagesByBook={pagesByBook} />
 
           {/* Back links */}
           <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem', flexWrap: 'wrap' }}>
@@ -39,7 +53,7 @@ export default function YearsInPhotosPage() {
               textDecoration: 'none',
               letterSpacing: '.05em',
             }}>
-              ← Back to Archive
+              Back to Archive
             </a>
             <a href="/members/dashboard" style={{
               fontFamily: "'DM Sans', sans-serif",
@@ -48,7 +62,7 @@ export default function YearsInPhotosPage() {
               textDecoration: 'none',
               letterSpacing: '.05em',
             }}>
-              ← Back to dashboard
+              Back to dashboard
             </a>
           </div>
 

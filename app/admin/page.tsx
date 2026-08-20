@@ -281,6 +281,11 @@ export default async function Admin() {
                 description="Upload and manage public gallery photos"
               />
               <AdminLinkCard
+                href="/admin/photo-books"
+                title="Photo Books"
+                description="Manage years-in-photos flipbooks — upload, reorder and caption photos"
+              />
+              <AdminLinkCard
                 href="/admin/accounts"
                 title="Member Accounts"
                 description="Post charges and payments to member account statements"

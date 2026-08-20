@@ -87,7 +87,7 @@ export function AccountsOverview({ balances, recentPayments }: Props) {
                 {owing.map((m, i) => (
                   <tr key={m.member_id} style={{ background: i % 2 === 0 ? '#fff' : 'rgba(45,90,61,.018)' }}>
                     <td style={td}>
-                      <a href="/admin/accounts" style={{ color: 'var(--green-deep)', textDecoration: 'none', fontWeight: 500 }}>
+                      <a href={`/admin/members/${m.member_id}/statement`} style={{ color: 'var(--green-deep)', textDecoration: 'underline', textUnderlineOffset: '2px', fontWeight: 500 }}>
                         {m.full_name}
                       </a>
                     </td>

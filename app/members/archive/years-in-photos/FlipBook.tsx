@@ -5,8 +5,6 @@ import type { RichPage } from '@/data/photo-books';
 
 const PAGE_W = 550;
 const PAGE_H = 733;
-const RICH_BOOK_TITLE = '2026 Season';
-const RICH_BOOK_SPINE_COLOUR = '#2D5A3D';
 
 type CaptionPlacement = 'below' | 'above' | 'overlay-top' | 'overlay-bottom';
 type CaptionFont = 'Libre Baskerville' | 'Playfair Display' | 'DM Sans' | 'Josefin Sans' | 'Optima';
@@ -544,9 +542,17 @@ interface Props {
   pages: string[];
   richPages?: RichPage[];
   singlepage?: boolean;
+  title?: string;
+  spineColour?: string;
 }
 
-export function FlipBook({ pages, richPages, singlepage }: Props) {
+export function FlipBook({
+  pages,
+  richPages,
+  singlepage,
+  title = '2026 Season',
+  spineColour = '#2D5A3D',
+}: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const flipRef = useRef<{ flipPrev(): void; flipNext(): void; destroy?: () => void } | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -584,7 +590,7 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
       } as object);
 
       if (richPages) {
-        wrapper.appendChild(buildFrontCover(RICH_BOOK_TITLE, RICH_BOOK_SPINE_COLOUR));
+        wrapper.appendChild(buildFrontCover(title, spineColour));
         richPages.forEach((rp, i) => wrapper.appendChild(buildRichPage(rp, i + 1)));
         pf.loadFromHTML(Array.from(wrapper.querySelectorAll('.album-page')) as HTMLElement[]);
 
@@ -611,7 +617,7 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
       flipRef.current?.destroy?.();
       flipRef.current = null;
     };
-  }, [pages, richPages, singlepage]);
+  }, [pages, richPages, singlepage, title, spineColour]);
 
   const buttonStyle: React.CSSProperties = {
     padding: '9px 24px',

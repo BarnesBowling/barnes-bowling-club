@@ -53,10 +53,6 @@ function verticalFlex(position: PhotoVerticalPosition): string {
   return 'center';
 }
 
-function imageObjectPosition(horizontal: PhotoHorizontalPosition, vertical: PhotoVerticalPosition): string {
-  return `${horizontal} ${vertical}`;
-}
-
 function addCornerTabs(mount: HTMLElement): void {
   TAB_DEFS.forEach(def => {
     const tab = document.createElement('div');
@@ -71,27 +67,25 @@ function addCornerTabs(mount: HTMLElement): void {
   });
 }
 
-// Grey shading is applied only at the inner edge of each white page. When two
-// pages are open together these gradients meet and create a recessed 3D gutter.
 function spineShadeEl(isLeft: boolean): HTMLDivElement {
   const shade = document.createElement('div');
   Object.assign(shade.style, {
     position: 'absolute',
     top: '0',
     bottom: '0',
-    width: '24%',
+    width: '18%',
     pointerEvents: 'none',
-    zIndex: '8',
+    zIndex: '20',
     ...(isLeft
       ? {
           right: '0',
-          background: 'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(195,195,195,0.05) 38%, rgba(165,165,165,0.12) 60%, rgba(128,128,128,0.23) 80%, rgba(92,92,92,0.36) 96%, rgba(78,78,78,0.43) 100%)',
-          boxShadow: 'inset -2px 0 2px rgba(80,80,80,0.20)',
+          background: 'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(220,220,220,0.18) 48%, rgba(170,170,170,0.34) 72%, rgba(108,108,108,0.52) 94%, rgba(74,74,74,0.62) 100%)',
+          boxShadow: 'inset -2px 0 2px rgba(60,60,60,0.20)',
         }
       : {
           left: '0',
-          background: 'linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(195,195,195,0.05) 38%, rgba(165,165,165,0.12) 60%, rgba(128,128,128,0.23) 80%, rgba(92,92,92,0.36) 96%, rgba(78,78,78,0.43) 100%)',
-          boxShadow: 'inset 2px 0 2px rgba(80,80,80,0.20)',
+          background: 'linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(220,220,220,0.18) 48%, rgba(170,170,170,0.34) 72%, rgba(108,108,108,0.52) 94%, rgba(74,74,74,0.62) 100%)',
+          boxShadow: 'inset 2px 0 2px rgba(60,60,60,0.20)',
         }),
   });
 
@@ -100,8 +94,8 @@ function spineShadeEl(isLeft: boolean): HTMLDivElement {
     position: 'absolute',
     top: '0',
     bottom: '0',
-    width: '1px',
-    background: 'rgba(85,85,85,0.38)',
+    width: '2px',
+    background: 'rgba(70,70,70,0.46)',
     ...(isLeft ? { right: '0' } : { left: '0' }),
   });
   shade.appendChild(crease);
@@ -113,14 +107,16 @@ function albumPageBase(isLeft: boolean): HTMLDivElement {
   page.className = 'album-page';
   Object.assign(page.style, {
     background: '#ffffff',
+    backgroundColor: '#ffffff',
     boxSizing: 'border-box',
     width: '100%',
     height: '100%',
     position: 'relative',
     overflow: 'hidden',
+    isolation: 'isolate',
     boxShadow: isLeft
-      ? 'inset -1px 0 rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.16)'
-      : 'inset 1px 0 rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.16)',
+      ? 'inset -1px 0 rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.24)'
+      : 'inset 1px 0 rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.24)',
   });
   page.appendChild(spineShadeEl(isLeft));
   return page;
@@ -136,27 +132,26 @@ function buildFrontCover(title: string, spineColour: string): HTMLDivElement {
     overflow: 'hidden',
     boxSizing: 'border-box',
     background: '#ffffff',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.22)',
+    backgroundColor: '#ffffff',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.24)',
   });
 
-  // A full-height band down the LEFT edge, matching the 2026 shelf spine.
-  // Five per cent of page width gives the substantial border used on the 2025 cover.
   const spineBand = document.createElement('div');
   Object.assign(spineBand.style, {
     position: 'absolute',
     top: '0',
     left: '0',
     bottom: '0',
-    width: '5%',
-    minWidth: '24px',
+    width: '7%',
+    minWidth: '30px',
     background: spineColour,
-    boxShadow: '2px 0 3px rgba(0,0,0,0.12)',
+    boxShadow: '2px 0 3px rgba(0,0,0,0.13)',
   });
 
   const titleBlock = document.createElement('div');
   Object.assign(titleBlock.style, {
     position: 'absolute',
-    inset: '12% 12% 12% 14%',
+    inset: '12% 12% 12% 16%',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -182,7 +177,6 @@ function buildFrontCover(title: string, spineColour: string): HTMLDivElement {
     lineHeight: '1.15',
     fontWeight: '700',
     color: '#1a3a2a',
-    letterSpacing: '0.01em',
   });
 
   const subtitle = document.createElement('div');
@@ -223,9 +217,9 @@ function captionEl(photo: StyledPhoto, overlay = false): HTMLDivElement {
       position: 'absolute',
       left: '5%',
       right: '5%',
-      zIndex: '3',
+      zIndex: '12',
       padding: '6px 8px',
-      background: 'rgba(255,255,255,0.82)',
+      background: 'rgba(255,255,255,0.84)',
       borderRadius: '2px',
       ...(photo.captionPlacement === 'overlay-top' ? { top: '5%' } : { bottom: '5%' }),
     });
@@ -236,11 +230,9 @@ function captionEl(photo: StyledPhoto, overlay = false): HTMLDivElement {
       padding: '6px 2px 2px',
     });
   }
-
   return el;
 }
 
-// The photo is mounted on top of the white page rather than becoming the page.
 function photoFrame(photo: StyledPhoto, fit: 'contain' | 'cover' = 'contain'): HTMLDivElement {
   const scale = Math.min(Math.max(photo.photoScale ?? 100, 40), 100);
   const horizontal = photo.photoHorizontal ?? 'center';
@@ -277,7 +269,7 @@ function photoFrame(photo: StyledPhoto, fit: 'contain' | 'cover' = 'contain'): H
     width: '100%',
     height: '100%',
     objectFit: fit,
-    objectPosition: imageObjectPosition(horizontal, vertical),
+    objectPosition: `${horizontal} ${vertical}`,
     display: 'block',
   });
   imageWell.appendChild(img);
@@ -357,7 +349,6 @@ function addHeader(inner: HTMLElement, rp: RichPage, titleSize = '22px'): void {
   }
 }
 
-// International Day books retain their existing mounted-corner format.
 function buildAlbumPage(src: string, index: number): HTMLDivElement {
   const isLeft = index % 2 === 0;
   const page = albumPageBase(isLeft);
@@ -535,6 +526,20 @@ function buildRichPage(rp: RichPage, index: number): HTMLDivElement {
   }
 }
 
+function forceWhiteBookSurfaces(wrapper: HTMLElement): void {
+  wrapper.style.backgroundColor = 'transparent';
+
+  wrapper.querySelectorAll<HTMLElement>('.album-page').forEach(page => {
+    page.style.background = '#ffffff';
+    page.style.backgroundColor = '#ffffff';
+  });
+
+  wrapper.querySelectorAll<HTMLElement>('.stf__item').forEach(pageSurface => {
+    pageSurface.style.background = '#ffffff';
+    pageSurface.style.backgroundColor = '#ffffff';
+  });
+}
+
 interface Props {
   pages: string[];
   richPages?: RichPage[];
@@ -548,6 +553,7 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
   const [ready, setReady] = useState(false);
 
   const totalPages = richPages ? richPages.length + 1 : pages.length;
+  const richBook = Boolean(richPages);
 
   useEffect(() => {
     if (!wrapperRef.current) return;
@@ -581,15 +587,21 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
         wrapper.appendChild(buildFrontCover(RICH_BOOK_TITLE, RICH_BOOK_SPINE_COLOUR));
         richPages.forEach((rp, i) => wrapper.appendChild(buildRichPage(rp, i + 1)));
         pf.loadFromHTML(Array.from(wrapper.querySelectorAll('.album-page')) as HTMLElement[]);
+
+        forceWhiteBookSurfaces(wrapper);
+        requestAnimationFrame(() => forceWhiteBookSurfaces(wrapper));
+        window.setTimeout(() => forceWhiteBookSurfaces(wrapper), 120);
       } else if (singlepage) {
         pages.forEach((src, i) => wrapper.appendChild(buildAlbumPage(src, i)));
         pf.loadFromHTML(Array.from(wrapper.querySelectorAll('.album-page')) as HTMLElement[]);
       } else {
-        // Preserve the established 2025 image-book presentation.
         pf.loadFromImages(pages);
       }
 
-      pf.on('flip', (e: { data: number }) => setCurrentPage(e.data));
+      pf.on('flip', (e: { data: number }) => {
+        setCurrentPage(e.data);
+        if (richPages) requestAnimationFrame(() => forceWhiteBookSurfaces(wrapper));
+      });
       flipRef.current = pf;
       setReady(true);
     });
@@ -614,6 +626,17 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
     cursor: 'pointer',
   };
 
+  const bookBacking: React.CSSProperties = richBook
+    ? {
+        width: '100%',
+        maxWidth: '1100px',
+        margin: '0 auto',
+        background: 'linear-gradient(to right, #ffffff 0%, #ffffff 45%, #f0f0f0 48%, #b8b8b8 49.5%, #777777 50%, #b8b8b8 50.5%, #f0f0f0 52%, #ffffff 55%, #ffffff 100%)',
+        boxShadow: '0 8px 28px rgba(0,0,0,0.58)',
+        overflow: 'hidden',
+      }
+    : { width: '100%' };
+
   return (
     <div style={{
       width: '100%',
@@ -633,7 +656,18 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
           Loading flipbook…
         </p>
       )}
-      <div ref={wrapperRef} style={{ width: '100%', minHeight: '60vh' }} />
+
+      <div style={bookBacking}>
+        <div
+          ref={wrapperRef}
+          style={{
+            width: '100%',
+            minHeight: '60vh',
+            background: 'transparent',
+          }}
+        />
+      </div>
+
       {ready && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
           <button onClick={() => flipRef.current?.flipPrev()} style={buttonStyle}>← Previous</button>

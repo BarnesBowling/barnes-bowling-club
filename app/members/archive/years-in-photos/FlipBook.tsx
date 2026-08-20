@@ -6,6 +6,11 @@ import type { RichPage } from '@/data/photo-books';
 const PAGE_W = 550;
 const PAGE_H = 733;
 
+// The rich-page book is currently the 2026 season book. These defaults keep
+// its front page aligned with the existing 2026 shelf spine.
+const RICH_BOOK_TITLE = '2026 Season';
+const RICH_BOOK_SPINE_COLOUR = '#2D5A3D';
+
 type CaptionPlacement = 'below' | 'above' | 'overlay-top' | 'overlay-bottom';
 type CaptionFont = 'Libre Baskerville' | 'Playfair Display' | 'DM Sans' | 'Josefin Sans' | 'Optima';
 type PhotoHorizontalPosition = 'left' | 'center' | 'right';
@@ -69,18 +74,29 @@ function addCornerTabs(mount: HTMLElement): void {
   });
 }
 
+// Every left page shades its right edge and every right page shades its left
+// edge. Together these two gradients make the open spread look recessed at the
+// centre, like the established 2025 book.
 function spineShadeEl(isLeft: boolean): HTMLDivElement {
   const el = document.createElement('div');
   Object.assign(el.style, {
     position: 'absolute',
     top: '0',
     bottom: '0',
-    width: '22%',
+    width: '20%',
     pointerEvents: 'none',
-    zIndex: '5',
+    zIndex: '8',
     ...(isLeft
-      ? { right: '0', background: 'linear-gradient(to right, transparent 38%, rgba(0,0,0,0.2) 100%)' }
-      : { left: '0', background: 'linear-gradient(to left, transparent 38%, rgba(0,0,0,0.2) 100%)' }),
+      ? {
+          right: '0',
+          background: 'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(170,170,170,0.08) 42%, rgba(130,130,130,0.16) 67%, rgba(92,92,92,0.29) 91%, rgba(58,58,58,0.38) 100%)',
+          boxShadow: 'inset -2px 0 2px rgba(45,45,45,0.18)',
+        }
+      : {
+          left: '0',
+          background: 'linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(170,170,170,0.08) 42%, rgba(130,130,130,0.16) 67%, rgba(92,92,92,0.29) 91%, rgba(58,58,58,0.38) 100%)',
+          boxShadow: 'inset 2px 0 2px rgba(45,45,45,0.18)',
+        }),
   });
   return el;
 }
@@ -95,8 +111,85 @@ function albumPageBase(isLeft: boolean): HTMLDivElement {
     height: '100%',
     position: 'relative',
     overflow: 'hidden',
+    boxShadow: isLeft
+      ? 'inset -1px 0 rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.18)'
+      : 'inset 1px 0 rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.18)',
   });
   page.appendChild(spineShadeEl(isLeft));
+  return page;
+}
+
+function buildFrontCover(title: string, spineColour: string): HTMLDivElement {
+  const page = document.createElement('div');
+  page.className = 'album-page';
+  Object.assign(page.style, {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+    background: '#ffffff',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.24)',
+  });
+
+  const titleBlock = document.createElement('div');
+  Object.assign(titleBlock.style, {
+    position: 'absolute',
+    inset: '12% 15% 12% 12%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+  });
+
+  const club = document.createElement('div');
+  club.textContent = 'Barnes Bowling Club';
+  Object.assign(club.style, {
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: '12px',
+    fontWeight: '600',
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    color: '#A89560',
+    marginBottom: '12px',
+  });
+
+  const heading = document.createElement('div');
+  heading.textContent = title;
+  Object.assign(heading.style, {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: '36px',
+    lineHeight: '1.15',
+    fontWeight: '700',
+    color: '#1a3a2a',
+    letterSpacing: '0.01em',
+  });
+
+  const subtitle = document.createElement('div');
+  subtitle.textContent = 'A year in photographs';
+  Object.assign(subtitle.style, {
+    fontFamily: "'Libre Baskerville', serif",
+    fontSize: '13px',
+    fontStyle: 'italic',
+    color: '#77746c',
+    marginTop: '12px',
+  });
+
+  const spineLine = document.createElement('div');
+  Object.assign(spineLine.style, {
+    position: 'absolute',
+    top: '7%',
+    right: '7%',
+    bottom: '7%',
+    width: '5px',
+    background: spineColour,
+    boxShadow: '1px 0 2px rgba(0,0,0,0.14)',
+  });
+
+  titleBlock.appendChild(club);
+  titleBlock.appendChild(heading);
+  titleBlock.appendChild(subtitle);
+  page.appendChild(titleBlock);
+  page.appendChild(spineLine);
   return page;
 }
 
@@ -122,7 +215,7 @@ function captionEl(photo: StyledPhoto, overlay = false): HTMLDivElement {
       right: '5%',
       zIndex: '3',
       padding: '6px 8px',
-      background: 'rgba(255,255,255,0.78)',
+      background: 'rgba(255,255,255,0.82)',
       borderRadius: '2px',
       ...(photo.captionPlacement === 'overlay-top' ? { top: '5%' } : { bottom: '5%' }),
     });
@@ -130,24 +223,40 @@ function captionEl(photo: StyledPhoto, overlay = false): HTMLDivElement {
     Object.assign(el.style, {
       flexShrink: '0',
       minHeight: '18px',
-      padding: '5px 2px',
+      padding: '6px 2px 2px',
     });
   }
 
   return el;
 }
 
+// Photos are mounted on a white matte rather than becoming the page itself.
+// The slight edge and shadow make the mount visible against the white album page.
 function photoFrame(photo: StyledPhoto, fit: 'contain' | 'cover' = 'contain'): HTMLDivElement {
   const scale = Math.min(Math.max(photo.photoScale ?? 100, 40), 100);
   const horizontal = photo.photoHorizontal ?? 'center';
   const vertical = photo.photoVertical ?? 'center';
-  const frame = document.createElement('div');
-  Object.assign(frame.style, {
+
+  const mount = document.createElement('div');
+  Object.assign(mount.style, {
     width: `${scale}%`,
     height: `${scale}%`,
     position: 'relative',
-    overflow: 'hidden',
     flexShrink: '0',
+    background: '#ffffff',
+    padding: '12px',
+    boxSizing: 'border-box',
+    border: '1px solid rgba(65,65,65,0.10)',
+    boxShadow: '0 2px 9px rgba(0,0,0,0.14)',
+  });
+
+  const imageWell = document.createElement('div');
+  Object.assign(imageWell.style, {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    overflow: 'hidden',
+    background: '#fdfdfc',
   });
 
   const img = document.createElement('img');
@@ -162,16 +271,17 @@ function photoFrame(photo: StyledPhoto, fit: 'contain' | 'cover' = 'contain'): H
     objectPosition: imageObjectPosition(horizontal, vertical),
     display: 'block',
   });
-  frame.appendChild(img);
+  imageWell.appendChild(img);
 
   if (
     (photo.captionPlacement === 'overlay-top' || photo.captionPlacement === 'overlay-bottom') &&
     photo.caption
   ) {
-    frame.appendChild(captionEl(photo, true));
+    imageWell.appendChild(captionEl(photo, true));
   }
 
-  return frame;
+  mount.appendChild(imageWell);
+  return mount;
 }
 
 function buildPhotoBlock(photoRaw: RichPage['photos'][number], fit: 'contain' | 'cover' = 'contain'): HTMLDivElement {
@@ -278,7 +388,7 @@ function buildSinglePage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   const inner = document.createElement('div');
   Object.assign(inner.style, {
     position: 'absolute',
-    inset: '6%',
+    inset: '7%',
   });
   if (rp.photos[0]) inner.appendChild(buildPhotoBlock(rp.photos[0]));
   page.appendChild(inner);
@@ -317,7 +427,7 @@ function buildTwoPhotosPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
     flexDirection: 'column',
     height: '100%',
     boxSizing: 'border-box',
-    gap: '10px',
+    gap: '12px',
   });
 
   addHeader(inner, rp);
@@ -354,7 +464,7 @@ function buildGrid2x2Page(rp: RichPage, isLeft: boolean): HTMLDivElement {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gridTemplateRows: '1fr 1fr',
-    gap: '8px',
+    gap: '10px',
   });
 
   rp.photos.slice(0, 4).forEach(photo => {
@@ -378,7 +488,7 @@ function buildGridPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
     flexDirection: 'column',
     height: '100%',
     boxSizing: 'border-box',
-    gap: '10px',
+    gap: '12px',
   });
 
   rp.photos.slice(0, 2).forEach(photo => {
@@ -439,7 +549,7 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
   const [currentPage, setCurrentPage] = useState(0);
   const [ready, setReady] = useState(false);
 
-  const totalPages = richPages?.length ?? pages.length;
+  const totalPages = richPages ? richPages.length + 1 : pages.length;
 
   useEffect(() => {
     if (!wrapperRef.current) return;
@@ -471,7 +581,8 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
       } as object);
 
       if (richPages) {
-        richPages.forEach((rp, i) => wrapper.appendChild(buildRichPage(rp, i)));
+        wrapper.appendChild(buildFrontCover(RICH_BOOK_TITLE, RICH_BOOK_SPINE_COLOUR));
+        richPages.forEach((rp, i) => wrapper.appendChild(buildRichPage(rp, i + 1)));
         pf.loadFromHTML(Array.from(wrapper.querySelectorAll('.album-page')) as HTMLElement[]);
       } else if (singlepage) {
         pages.forEach((src, i) => wrapper.appendChild(buildAlbumPage(src, i)));
@@ -509,9 +620,10 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
   return (
     <div style={{
       width: '100%',
-      background: singlepage ? 'transparent' : '#050505',
-      padding: singlepage ? 0 : '1rem',
+      background: singlepage ? 'transparent' : '#000000',
+      padding: singlepage ? 0 : '1.5rem',
       boxSizing: 'border-box',
+      minHeight: singlepage ? undefined : '70vh',
     }}>
       {!ready && (
         <p style={{

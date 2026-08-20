@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { uploadPhoto, addPage, deletePage, movePage, updateCaption, updateBook } from './actions';
+import { uploadPhoto, addPage, deletePage, reorderPages, updateCaption, updateBook } from './actions';
 
 export interface DbPhotoBook {
   id: string;
@@ -59,17 +59,6 @@ const btnStyle: React.CSSProperties = {
   color: '#fff',
 };
 
-const smallBtnStyle: React.CSSProperties = {
-  padding: '4px 10px',
-  border: '1px solid rgba(45,90,61,.25)',
-  fontFamily: "'DM Sans', sans-serif",
-  fontSize: '11px',
-  fontWeight: 600,
-  cursor: 'pointer',
-  background: 'white',
-  color: 'var(--green-deep)',
-};
-
 const deleteBtnStyle: React.CSSProperties = {
   padding: '4px 10px',
   border: '1px solid rgba(180,0,0,.25)',
@@ -99,10 +88,15 @@ export function BookEditor({ book, pages: initialPages }: Props) {
   const [addError, setAddError] = useState<string | null>(null);
 
   const [savingCaption, setSavingCaption] = useState<Record<string, boolean>>({});
-  const [movingPage, setMovingPage] = useState<Record<string, boolean>>({});
   const [deletingPage, setDeletingPage] = useState<Record<string, boolean>>({});
+  const [pages, setPages] = useState(initialPages);
+  const [reordering, setReordering] = useState(false);
+  const [reorderError, setReorderError] = useState<string | null>(null);
+  const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
 
-  const pages = initialPages;
+  useEffect(() => {
+    setPages(initialPages);
+  }, [initialPages]);
 
   function handleSaveMeta() {
     setMetaError(null);
@@ -160,11 +154,54 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     }
   }
 
-  async function handleMove(pageId: string, direction: 'up' | 'down') {
-    setMovingPage(prev => ({ ...prev, [pageId]: true }));
-    await movePage(pageId, direction);
-    setMovingPage(prev => ({ ...prev, [pageId]: false }));
+  async function savePageOrder(nextPages: DbPhotoBookPage[]) {
+    setPages(nextPages);
+    setReordering(true);
+    setReorderError(null);
+
+    const result = await reorderPages(book.id, nextPages.map(page => page.id));
+    setReordering(false);
+
+    if (result.error) {
+      setReorderError(result.error);
+    }
     router.refresh();
+  }
+
+  async function handlePositionChange(pageId: string, requestedPosition: number) {
+    if (reordering || pages.length < 2) return;
+
+    const fromIndex = pages.findIndex(page => page.id === pageId);
+    if (fromIndex === -1) return;
+
+    const clampedPosition = Math.min(Math.max(requestedPosition, 1), pages.length);
+    const toIndex = clampedPosition - 1;
+    if (fromIndex === toIndex) return;
+
+    const nextPages = [...pages];
+    const [movedPage] = nextPages.splice(fromIndex, 1);
+    nextPages.splice(toIndex, 0, movedPage);
+    await savePageOrder(nextPages);
+  }
+
+  async function handleDrop(targetPageId: string) {
+    if (!draggedPageId || draggedPageId === targetPageId || reordering) {
+      setDraggedPageId(null);
+      return;
+    }
+
+    const fromIndex = pages.findIndex(page => page.id === draggedPageId);
+    const toIndex = pages.findIndex(page => page.id === targetPageId);
+    if (fromIndex === -1 || toIndex === -1) {
+      setDraggedPageId(null);
+      return;
+    }
+
+    const nextPages = [...pages];
+    const [movedPage] = nextPages.splice(fromIndex, 1);
+    nextPages.splice(toIndex, 0, movedPage);
+    setDraggedPageId(null);
+    await savePageOrder(nextPages);
   }
 
   async function handleDelete(pageId: string) {
@@ -329,9 +366,16 @@ export function BookEditor({ book, pages: initialPages }: Props) {
 
       {/* ── Pages list ── */}
       <section>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '.35rem' }}>
           Pages ({pages.length})
         </h2>
+        <p style={{ margin: '0 0 1.25rem', fontSize: '13px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>
+          Drag a page using the ☰ handle, or type the position number you want.
+          {reordering && <span> Saving order…</span>}
+        </p>
+        {reorderError && (
+          <p style={{ color: '#a00', fontSize: '13px', margin: '0 0 1rem' }}>{reorderError}</p>
+        )}
 
         {pages.length === 0 && (
           <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', fontStyle: 'italic', color: 'var(--text-muted)' }}>
@@ -343,22 +387,65 @@ export function BookEditor({ book, pages: initialPages }: Props) {
           {pages.map((page, i) => {
             const src = page.photos[0]?.src ?? '';
             const caption = page.photos[0]?.caption ?? '';
-            const isFirst = i === 0;
-            const isLast = i === pages.length - 1;
+            const isDragging = draggedPageId === page.id;
 
             return (
               <div
                 key={page.id}
+                onDragOver={e => {
+                  if (!reordering && draggedPageId) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                  }
+                }}
+                onDrop={e => {
+                  e.preventDefault();
+                  void handleDrop(page.id);
+                }}
                 style={{
                   background: 'white',
-                  border: '1px solid rgba(45,90,61,.12)',
+                  border: draggedPageId && !isDragging
+                    ? '1px solid rgba(45,90,61,.28)'
+                    : '1px solid rgba(45,90,61,.12)',
                   padding: '1rem 1.25rem',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '1rem',
                   flexWrap: 'wrap',
+                  opacity: isDragging ? 0.5 : 1,
                 }}
               >
+                {/* Drag handle */}
+                <div
+                  draggable={!reordering}
+                  onDragStart={e => {
+                    setDraggedPageId(page.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', page.id);
+                  }}
+                  onDragEnd={() => setDraggedPageId(null)}
+                  title="Drag to move this page"
+                  aria-label={`Drag page ${i + 1}`}
+                  style={{
+                    flexShrink: 0,
+                    width: '30px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(45,90,61,.18)',
+                    color: 'var(--green-deep)',
+                    background: '#fff',
+                    borderRadius: '2px',
+                    cursor: reordering ? 'wait' : 'grab',
+                    fontSize: '20px',
+                    lineHeight: 1,
+                    userSelect: 'none',
+                  }}
+                >
+                  ☰
+                </div>
+
                 {/* Thumbnail */}
                 <div style={{ flexShrink: 0, width: '80px', height: '80px', overflow: 'hidden', background: '#f0ece4', borderRadius: '2px' }}>
                   {src && (
@@ -372,10 +459,13 @@ export function BookEditor({ book, pages: initialPages }: Props) {
 
                 {/* Info + caption */}
                 <div style={{ flex: 1, minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>
-                      #{i + 1}
-                    </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <PositionInput
+                      position={i + 1}
+                      max={pages.length}
+                      disabled={reordering}
+                      onMove={position => void handlePositionChange(page.id, position)}
+                    />
                     <span style={{
                       fontSize: '10px',
                       fontWeight: 700,
@@ -400,22 +490,6 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                   <button
-                    onClick={() => handleMove(page.id, 'up')}
-                    disabled={isFirst || (movingPage[page.id] ?? false)}
-                    style={{ ...smallBtnStyle, opacity: isFirst ? 0.35 : 1 }}
-                    title="Move up"
-                  >
-                    Up
-                  </button>
-                  <button
-                    onClick={() => handleMove(page.id, 'down')}
-                    disabled={isLast || (movingPage[page.id] ?? false)}
-                    style={{ ...smallBtnStyle, opacity: isLast ? 0.35 : 1 }}
-                    title="Move down"
-                  >
-                    Down
-                  </button>
-                  <button
                     onClick={() => handleDelete(page.id)}
                     disabled={deletingPage[page.id] ?? false}
                     style={{ ...deleteBtnStyle, opacity: (deletingPage[page.id] ?? false) ? 0.6 : 1 }}
@@ -429,6 +503,67 @@ export function BookEditor({ book, pages: initialPages }: Props) {
         </div>
       </section>
     </div>
+  );
+}
+
+function PositionInput({
+  position,
+  max,
+  disabled,
+  onMove,
+}: {
+  position: number;
+  max: number;
+  disabled: boolean;
+  onMove: (position: number) => void;
+}) {
+  const [value, setValue] = useState(String(position));
+
+  useEffect(() => {
+    setValue(String(position));
+  }, [position]);
+
+  function applyPosition() {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed)) {
+      setValue(String(position));
+      return;
+    }
+    const nextPosition = Math.min(Math.max(parsed, 1), max);
+    setValue(String(nextPosition));
+    if (nextPosition !== position) onMove(nextPosition);
+  }
+
+  return (
+    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>
+      Position
+      <input
+        type="number"
+        min={1}
+        max={max}
+        value={value}
+        disabled={disabled}
+        onChange={e => setValue(e.target.value)}
+        onBlur={applyPosition}
+        onKeyDown={e => {
+          if (e.key === 'Enter') e.currentTarget.blur();
+          if (e.key === 'Escape') {
+            setValue(String(position));
+            e.currentTarget.blur();
+          }
+        }}
+        style={{
+          width: '54px',
+          padding: '4px 5px',
+          border: '1px solid rgba(45,90,61,.22)',
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '12px',
+          color: 'var(--green-deep)',
+          textAlign: 'center',
+          background: disabled ? '#f3f1ec' : 'white',
+        }}
+      />
+    </label>
   );
 }
 

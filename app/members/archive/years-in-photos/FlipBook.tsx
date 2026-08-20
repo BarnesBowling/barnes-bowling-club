@@ -7,12 +7,18 @@ const PAGE_W = 550;
 const PAGE_H = 733;
 
 type CaptionPlacement = 'below' | 'above' | 'overlay-top' | 'overlay-bottom';
+type CaptionFont = 'Libre Baskerville' | 'Playfair Display' | 'DM Sans' | 'Josefin Sans' | 'Optima';
+type PhotoHorizontalPosition = 'left' | 'center' | 'right';
+type PhotoVerticalPosition = 'top' | 'center' | 'bottom';
 
 type StyledPhoto = RichPage['photos'][number] & {
   captionFontSize?: number;
   captionColor?: string;
   captionPlacement?: CaptionPlacement;
+  captionFont?: CaptionFont;
   photoScale?: number;
+  photoHorizontal?: PhotoHorizontalPosition;
+  photoVertical?: PhotoVerticalPosition;
 };
 
 const TAB_DEFS: Array<Record<string, string>> = [
@@ -21,6 +27,33 @@ const TAB_DEFS: Array<Record<string, string>> = [
   { bottom: '-10px', left: '-10px', clipPath: 'polygon(0 0, 0 100%, 100% 100%)' },
   { bottom: '-10px', right: '-10px', clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' },
 ];
+
+function captionFontCss(font: CaptionFont): string {
+  switch (font) {
+    case 'Playfair Display': return "'Playfair Display', serif";
+    case 'DM Sans': return "'DM Sans', sans-serif";
+    case 'Josefin Sans': return "'Josefin Sans', sans-serif";
+    case 'Optima': return "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+    case 'Libre Baskerville':
+    default: return "'Libre Baskerville', serif";
+  }
+}
+
+function horizontalFlex(position: PhotoHorizontalPosition): string {
+  if (position === 'left') return 'flex-start';
+  if (position === 'right') return 'flex-end';
+  return 'center';
+}
+
+function verticalFlex(position: PhotoVerticalPosition): string {
+  if (position === 'top') return 'flex-start';
+  if (position === 'bottom') return 'flex-end';
+  return 'center';
+}
+
+function imageObjectPosition(horizontal: PhotoHorizontalPosition, vertical: PhotoVerticalPosition): string {
+  return `${horizontal} ${vertical}`;
+}
 
 function addCornerTabs(mount: HTMLElement): void {
   TAB_DEFS.forEach(def => {
@@ -70,11 +103,12 @@ function albumPageBase(isLeft: boolean): HTMLDivElement {
 function captionEl(photo: StyledPhoto, overlay = false): HTMLDivElement {
   const el = document.createElement('div');
   el.textContent = photo.caption ?? '';
+  const captionFont = photo.captionFont ?? 'Libre Baskerville';
 
   Object.assign(el.style, {
-    fontFamily: "'Libre Baskerville', serif",
+    fontFamily: captionFontCss(captionFont),
     fontSize: `${photo.captionFontSize ?? 11}px`,
-    fontStyle: 'italic',
+    fontStyle: captionFont === 'Libre Baskerville' ? 'italic' : 'normal',
     color: photo.captionColor ?? '#888888',
     textAlign: 'center',
     lineHeight: '1.4',
@@ -105,6 +139,8 @@ function captionEl(photo: StyledPhoto, overlay = false): HTMLDivElement {
 
 function photoFrame(photo: StyledPhoto, fit: 'contain' | 'cover' = 'contain'): HTMLDivElement {
   const scale = Math.min(Math.max(photo.photoScale ?? 100, 40), 100);
+  const horizontal = photo.photoHorizontal ?? 'center';
+  const vertical = photo.photoVertical ?? 'center';
   const frame = document.createElement('div');
   Object.assign(frame.style, {
     width: `${scale}%`,
@@ -123,7 +159,7 @@ function photoFrame(photo: StyledPhoto, fit: 'contain' | 'cover' = 'contain'): H
     width: '100%',
     height: '100%',
     objectFit: fit,
-    objectPosition: 'center center',
+    objectPosition: imageObjectPosition(horizontal, vertical),
     display: 'block',
   });
   frame.appendChild(img);
@@ -140,6 +176,8 @@ function photoFrame(photo: StyledPhoto, fit: 'contain' | 'cover' = 'contain'): H
 
 function buildPhotoBlock(photoRaw: RichPage['photos'][number], fit: 'contain' | 'cover' = 'contain'): HTMLDivElement {
   const photo = photoRaw as StyledPhoto;
+  const horizontal = photo.photoHorizontal ?? 'center';
+  const vertical = photo.photoVertical ?? 'center';
   const block = document.createElement('div');
   Object.assign(block.style, {
     width: '100%',
@@ -157,8 +195,8 @@ function buildPhotoBlock(photoRaw: RichPage['photos'][number], fit: 'contain' | 
     flex: '1',
     minHeight: '0',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: verticalFlex(vertical),
+    justifyContent: horizontalFlex(horizontal),
   });
   host.appendChild(photoFrame(photo, fit));
   block.appendChild(host);

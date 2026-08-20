@@ -114,7 +114,7 @@ export default function FishOpenGardens() {
             }}>
 
               <p style={{ marginBottom: '1.5rem' }}>
-                We're delighted to be opening the Barnes Bowling Club green as part of the{' '}
+                We were delighted to open the Barnes Bowling Club green as part of the{' '}
                 <strong>FiSH Barnes Open Gardens 2026</strong> — a wonderful afternoon of community
                 spirit, beautiful gardens, and a very good cause.
               </p>
@@ -245,7 +245,7 @@ export default function FishOpenGardens() {
               </div>
 
               <p style={{ marginBottom: '2.5rem' }}>
-                We can't wait to welcome you to the green on 31st May. Bring friends, bring family,
+                We can't wait to welcome you to the next Open Gardens. Bring friends, bring family,
                 bring sun cream — and bring an appetite for cake!
               </p>
 
@@ -270,7 +270,7 @@ export default function FishOpenGardens() {
                   textDecoration: 'none',
                 }}
               >
-                Buy Tickets / Find out more
+                Find out more
                 <svg width="12" height="10" viewBox="0 0 12 10" fill="none" aria-hidden="true">
                   <path d="M7 1l4 4-4 4M1 5h10" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>

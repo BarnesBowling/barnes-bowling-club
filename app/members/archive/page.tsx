@@ -1,6 +1,7 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 
+// Archive section display order is intentional.
 const ARCHIVE_SECTIONS = [
   {
     title: 'Past season results',

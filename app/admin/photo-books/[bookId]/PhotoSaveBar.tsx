@@ -1,23 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function PhotoSaveBar() {
   const router = useRouter();
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
+  useEffect(() => {
+    function hideAddPhotoControls() {
+      document.querySelectorAll('label').forEach(label => {
+        if (label.textContent?.trim() !== 'Add photo to this page') return;
+        const container = label.parentElement;
+        if (container) container.style.display = 'none';
+      });
+    }
+
+    hideAddPhotoControls();
+    const observer = new MutationObserver(hideAddPhotoControls);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   function handleSave() {
     const active = document.activeElement as HTMLElement | null;
     active?.blur?.();
 
     setStatus('saving');
-
     window.setTimeout(() => {
       router.refresh();
       setStatus('saved');
       window.setTimeout(() => setStatus('idle'), 1400);
-    }, 700);
+    }, 900);
   }
 
   return (
@@ -54,7 +68,7 @@ export function PhotoSaveBar() {
           onClick={handleSave}
           disabled={status === 'saving'}
           style={{
-            padding: '9px 16px',
+            padding: '9px 18px',
             border: 'none',
             background: 'var(--green-deep)',
             color: '#fff',
@@ -66,7 +80,7 @@ export function PhotoSaveBar() {
             opacity: status === 'saving' ? 0.65 : 1,
           }}
         >
-          {status === 'saving' ? 'Saving…' : 'Save photo changes'}
+          {status === 'saving' ? 'Saving…' : 'Save changes'}
         </button>
       </div>
     </div>

@@ -19,7 +19,7 @@ const CARDS = [
   {
     href: '/community/fish-open-gardens',
     title: 'FISH Open Gardens',
-    desc: 'Our annual participation in the Friends in Surrey Hills open gardens event.',
+    desc: 'Our annual participation in the Barnes open gardens event.',
     img: '/images/community/fish-open-gardens.png',
     alt: 'FISH Open Gardens',
   },

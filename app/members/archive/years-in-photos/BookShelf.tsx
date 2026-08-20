@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { RichPage, RichPageLayout } from '@/data/photo-books';
 import { FlipBook } from './FlipBook';
+import { ShelfAlbumBook } from './ShelfAlbumBook';
 
 const SPINE_HEIGHTS = [252, 234, 258, 238, 248, 230];
 
@@ -63,6 +64,7 @@ interface SelectedBook {
   singlePage: boolean;
   pages: string[];
   richPages?: RichPage[];
+  standardAlbum: boolean;
 }
 
 export function BookShelf({ books, pagesByBook }: Props) {
@@ -84,41 +86,11 @@ export function BookShelf({ books, pagesByBook }: Props) {
 
   function openBook(book: DbBook) {
     const dbPages = pagesByBook[book.id] ?? [];
-    const hasSingleLayout = dbPages.length > 0 && dbPages.every(p => p.layout === 'single');
-    const hasRichLayouts = dbPages.some(p => p.layout !== 'single');
+    const is2025Book = /^2025\b/i.test(book.title.trim());
     const is2026Book = /^2026\b/i.test(book.title.trim());
 
-    if (book.single_page) {
-      setSelected({
-        id: book.id,
-        title: book.title,
-        spineColour: book.spine_colour,
-        singlePage: true,
-        pages: dbPages.map(p => p.photos[0]?.src ?? '').filter(Boolean),
-        richPages: undefined,
-      });
-    } else if (is2026Book && dbPages.length > 0) {
-      // 2026 must always use the rich HTML renderer, even when every page is
-      // currently set to “single”. This is what enables the white album pages,
-      // mounted photos, custom cover and shaded 3D centre gutter.
-      setSelected({
-        id: book.id,
-        title: book.title,
-        spineColour: book.spine_colour,
-        singlePage: false,
-        pages: [],
-        richPages: dbPages.map(toRichPage),
-      });
-    } else if (hasRichLayouts || (!hasSingleLayout && dbPages.length > 0)) {
-      setSelected({
-        id: book.id,
-        title: book.title,
-        spineColour: book.spine_colour,
-        singlePage: false,
-        pages: [],
-        richPages: dbPages.map(toRichPage),
-      });
-    } else if (hasSingleLayout) {
+    if (is2025Book && dbPages.length > 0) {
+      // Leave the 2025 book exactly on its established image renderer.
       setSelected({
         id: book.id,
         title: book.title,
@@ -126,17 +98,53 @@ export function BookShelf({ books, pagesByBook }: Props) {
         singlePage: false,
         pages: dbPages.map(p => p.photos[0]?.src ?? '').filter(Boolean),
         richPages: undefined,
+        standardAlbum: false,
       });
-    } else {
-      setSelected({
-        id: book.id,
-        title: book.title,
-        spineColour: book.spine_colour,
-        singlePage: false,
-        pages: [],
-        richPages: undefined,
-      });
+      return;
     }
+
+    if (is2026Book && dbPages.length > 0) {
+      // Keep 2026 on the editable rich renderer with its custom layouts.
+      setSelected({
+        id: book.id,
+        title: book.title,
+        spineColour: book.spine_colour,
+        singlePage: false,
+        pages: [],
+        richPages: dbPages.map(toRichPage),
+        standardAlbum: false,
+      });
+      return;
+    }
+
+    if (dbPages.length > 0) {
+      // Every other shelf book uses the shared white album presentation.
+      // Flatten all stored photos so multi-photo historic pages are not lost.
+      const photoSources = dbPages
+        .flatMap(page => page.photos.map(photo => photo.src))
+        .filter(Boolean);
+
+      setSelected({
+        id: book.id,
+        title: book.title,
+        spineColour: book.spine_colour,
+        singlePage: false,
+        pages: photoSources,
+        richPages: undefined,
+        standardAlbum: true,
+      });
+      return;
+    }
+
+    setSelected({
+      id: book.id,
+      title: book.title,
+      spineColour: book.spine_colour,
+      singlePage: false,
+      pages: [],
+      richPages: undefined,
+      standardAlbum: false,
+    });
   }
 
   function hasContent(book: DbBook): boolean {
@@ -343,14 +351,23 @@ export function BookShelf({ books, pagesByBook }: Props) {
               </button>
             </div>
 
-            <div style={{ background: selected.singlePage ? '#fafaf8' : '#1c1c1c', borderRadius: '4px', padding: '1.5rem' }}>
+            <div style={{ background: '#1c1c1c', borderRadius: '4px', padding: '1.5rem' }}>
               {(selected.richPages?.length ?? selected.pages.length) > 0 ? (
-                <FlipBook
-                  key={selected.id}
-                  pages={selected.pages}
-                  richPages={selected.richPages}
-                  singlepage={selected.singlePage}
-                />
+                selected.standardAlbum ? (
+                  <ShelfAlbumBook
+                    key={selected.id}
+                    pages={selected.pages}
+                    title={selected.title}
+                    spineColour={selected.spineColour}
+                  />
+                ) : (
+                  <FlipBook
+                    key={selected.id}
+                    pages={selected.pages}
+                    richPages={selected.richPages}
+                    singlepage={selected.singlePage}
+                  />
+                )
               ) : (
                 <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
                   <p style={{

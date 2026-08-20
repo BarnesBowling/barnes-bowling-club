@@ -1,5 +1,6 @@
 'use client';
 
+// Keep the Club Admin navigation grouped without changing the existing page links or tab names.
 const CARD_ORDER: Record<string, number> = {
   'Club Roster': 11,
   'Member Management': 12,

@@ -117,6 +117,47 @@ export async function movePage(
   return {};
 }
 
+export async function reorderPages(
+  bookId: string,
+  pageIds: string[]
+): Promise<{ error?: string }> {
+  await requireAdminSession();
+
+  const { data: existing, error: fetchError } = await supabaseAdmin
+    .from('photo_book_pages')
+    .select('id')
+    .eq('book_id', bookId);
+
+  if (fetchError) return { error: fetchError.message };
+
+  const existingIds = (existing ?? []).map(page => page.id);
+  const uniquePageIds = new Set(pageIds);
+  if (
+    pageIds.length !== existingIds.length ||
+    uniquePageIds.size !== pageIds.length ||
+    existingIds.some(id => !uniquePageIds.has(id))
+  ) {
+    return { error: 'The page list changed. Please refresh and try again.' };
+  }
+
+  const results = await Promise.all(
+    pageIds.map((id, index) =>
+      supabaseAdmin
+        .from('photo_book_pages')
+        .update({ sort_order: index })
+        .eq('id', id)
+        .eq('book_id', bookId)
+    )
+  );
+
+  const updateError = results.find(result => result.error)?.error;
+  if (updateError) return { error: updateError.message };
+
+  revalidatePath(`/admin/photo-books/${bookId}`);
+  revalidatePath('/members/archive/years-in-photos');
+  return {};
+}
+
 export async function updateCaption(
   pageId: string,
   caption: string

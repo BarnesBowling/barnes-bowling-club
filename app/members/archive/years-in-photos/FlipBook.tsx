@@ -5,9 +5,6 @@ import type { RichPage } from '@/data/photo-books';
 
 const PAGE_W = 550;
 const PAGE_H = 733;
-
-// The rich-page book is currently the 2026 season book. These defaults keep
-// its front page aligned with the existing 2026 shelf spine.
 const RICH_BOOK_TITLE = '2026 Season';
 const RICH_BOOK_SPINE_COLOUR = '#2D5A3D';
 
@@ -74,46 +71,56 @@ function addCornerTabs(mount: HTMLElement): void {
   });
 }
 
-// Every left page shades its right edge and every right page shades its left
-// edge. Together these two gradients make the open spread look recessed at the
-// centre, like the established 2025 book.
+// Grey shading is applied only at the inner edge of each white page. When two
+// pages are open together these gradients meet and create a recessed 3D gutter.
 function spineShadeEl(isLeft: boolean): HTMLDivElement {
-  const el = document.createElement('div');
-  Object.assign(el.style, {
+  const shade = document.createElement('div');
+  Object.assign(shade.style, {
     position: 'absolute',
     top: '0',
     bottom: '0',
-    width: '20%',
+    width: '24%',
     pointerEvents: 'none',
     zIndex: '8',
     ...(isLeft
       ? {
           right: '0',
-          background: 'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(170,170,170,0.08) 42%, rgba(130,130,130,0.16) 67%, rgba(92,92,92,0.29) 91%, rgba(58,58,58,0.38) 100%)',
-          boxShadow: 'inset -2px 0 2px rgba(45,45,45,0.18)',
+          background: 'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(195,195,195,0.05) 38%, rgba(165,165,165,0.12) 60%, rgba(128,128,128,0.23) 80%, rgba(92,92,92,0.36) 96%, rgba(78,78,78,0.43) 100%)',
+          boxShadow: 'inset -2px 0 2px rgba(80,80,80,0.20)',
         }
       : {
           left: '0',
-          background: 'linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(170,170,170,0.08) 42%, rgba(130,130,130,0.16) 67%, rgba(92,92,92,0.29) 91%, rgba(58,58,58,0.38) 100%)',
-          boxShadow: 'inset 2px 0 2px rgba(45,45,45,0.18)',
+          background: 'linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(195,195,195,0.05) 38%, rgba(165,165,165,0.12) 60%, rgba(128,128,128,0.23) 80%, rgba(92,92,92,0.36) 96%, rgba(78,78,78,0.43) 100%)',
+          boxShadow: 'inset 2px 0 2px rgba(80,80,80,0.20)',
         }),
   });
-  return el;
+
+  const crease = document.createElement('div');
+  Object.assign(crease.style, {
+    position: 'absolute',
+    top: '0',
+    bottom: '0',
+    width: '1px',
+    background: 'rgba(85,85,85,0.38)',
+    ...(isLeft ? { right: '0' } : { left: '0' }),
+  });
+  shade.appendChild(crease);
+  return shade;
 }
 
 function albumPageBase(isLeft: boolean): HTMLDivElement {
   const page = document.createElement('div');
   page.className = 'album-page';
   Object.assign(page.style, {
-    backgroundColor: '#ffffff',
+    background: '#ffffff',
     boxSizing: 'border-box',
     width: '100%',
     height: '100%',
     position: 'relative',
     overflow: 'hidden',
     boxShadow: isLeft
-      ? 'inset -1px 0 rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.18)'
-      : 'inset 1px 0 rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.18)',
+      ? 'inset -1px 0 rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.16)'
+      : 'inset 1px 0 rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.16)',
   });
   page.appendChild(spineShadeEl(isLeft));
   return page;
@@ -129,13 +136,27 @@ function buildFrontCover(title: string, spineColour: string): HTMLDivElement {
     overflow: 'hidden',
     boxSizing: 'border-box',
     background: '#ffffff',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.24)',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.22)',
+  });
+
+  // A full-height band down the LEFT edge, matching the 2026 shelf spine.
+  // Five per cent of page width gives the substantial border used on the 2025 cover.
+  const spineBand = document.createElement('div');
+  Object.assign(spineBand.style, {
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    bottom: '0',
+    width: '5%',
+    minWidth: '24px',
+    background: spineColour,
+    boxShadow: '2px 0 3px rgba(0,0,0,0.12)',
   });
 
   const titleBlock = document.createElement('div');
   Object.assign(titleBlock.style, {
     position: 'absolute',
-    inset: '12% 15% 12% 12%',
+    inset: '12% 12% 12% 14%',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -174,22 +195,11 @@ function buildFrontCover(title: string, spineColour: string): HTMLDivElement {
     marginTop: '12px',
   });
 
-  const spineLine = document.createElement('div');
-  Object.assign(spineLine.style, {
-    position: 'absolute',
-    top: '7%',
-    right: '7%',
-    bottom: '7%',
-    width: '5px',
-    background: spineColour,
-    boxShadow: '1px 0 2px rgba(0,0,0,0.14)',
-  });
-
   titleBlock.appendChild(club);
   titleBlock.appendChild(heading);
   titleBlock.appendChild(subtitle);
+  page.appendChild(spineBand);
   page.appendChild(titleBlock);
-  page.appendChild(spineLine);
   return page;
 }
 
@@ -230,8 +240,7 @@ function captionEl(photo: StyledPhoto, overlay = false): HTMLDivElement {
   return el;
 }
 
-// Photos are mounted on a white matte rather than becoming the page itself.
-// The slight edge and shadow make the mount visible against the white album page.
+// The photo is mounted on top of the white page rather than becoming the page.
 function photoFrame(photo: StyledPhoto, fit: 'contain' | 'cover' = 'contain'): HTMLDivElement {
   const scale = Math.min(Math.max(photo.photoScale ?? 100, 40), 100);
   const horizontal = photo.photoHorizontal ?? 'center';
@@ -256,7 +265,7 @@ function photoFrame(photo: StyledPhoto, fit: 'contain' | 'cover' = 'contain'): H
     height: '100%',
     position: 'relative',
     overflow: 'hidden',
-    background: '#fdfdfc',
+    background: '#ffffff',
   });
 
   const img = document.createElement('img');
@@ -312,7 +321,6 @@ function buildPhotoBlock(photoRaw: RichPage['photos'][number], fit: 'contain' | 
   block.appendChild(host);
 
   if (placement === 'below' && photo.caption) block.appendChild(captionEl(photo));
-
   return block;
 }
 
@@ -349,6 +357,7 @@ function addHeader(inner: HTMLElement, rp: RichPage, titleSize = '22px'): void {
   }
 }
 
+// International Day books retain their existing mounted-corner format.
 function buildAlbumPage(src: string, index: number): HTMLDivElement {
   const isLeft = index % 2 === 0;
   const page = albumPageBase(isLeft);
@@ -386,11 +395,8 @@ function buildAlbumPage(src: string, index: number): HTMLDivElement {
 function buildSinglePage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   const page = albumPageBase(isLeft);
   const inner = document.createElement('div');
-  Object.assign(inner.style, {
-    position: 'absolute',
-    inset: '7%',
-  });
-  if (rp.photos[0]) inner.appendChild(buildPhotoBlock(rp.photos[0]));
+  Object.assign(inner.style, { position: 'absolute', inset: '7%' });
+  if (rp.photos[0]) inner.appendChild(buildPhotoBlock(rp.photos[0], 'contain'));
   page.appendChild(inner);
   return page;
 }
@@ -410,7 +416,7 @@ function buildTitleHeroPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   if (rp.photos[0]) {
     const photoArea = document.createElement('div');
     Object.assign(photoArea.style, { flex: '1', minHeight: '0' });
-    photoArea.appendChild(buildPhotoBlock(rp.photos[0]));
+    photoArea.appendChild(buildPhotoBlock(rp.photos[0], 'contain'));
     inner.appendChild(photoArea);
   }
 
@@ -418,7 +424,7 @@ function buildTitleHeroPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   return page;
 }
 
-function buildTwoPhotosPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
+function buildTwoPhotosPage(rp: RichPage, isLeft: boolean, fit: 'contain' | 'cover'): HTMLDivElement {
   const page = albumPageBase(isLeft);
   const inner = document.createElement('div');
   Object.assign(inner.style, {
@@ -429,13 +435,12 @@ function buildTwoPhotosPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
     boxSizing: 'border-box',
     gap: '12px',
   });
-
   addHeader(inner, rp);
 
   rp.photos.slice(0, 2).forEach(photo => {
     const slot = document.createElement('div');
     Object.assign(slot.style, { flex: '1', minHeight: '0' });
-    slot.appendChild(buildPhotoBlock(photo));
+    slot.appendChild(buildPhotoBlock(photo, fit));
     inner.appendChild(slot);
   });
 
@@ -454,7 +459,6 @@ function buildGrid2x2Page(rp: RichPage, isLeft: boolean): HTMLDivElement {
     boxSizing: 'border-box',
     gap: '8px',
   });
-
   addHeader(inner, rp, '20px');
 
   const grid = document.createElement('div');
@@ -470,7 +474,7 @@ function buildGrid2x2Page(rp: RichPage, isLeft: boolean): HTMLDivElement {
   rp.photos.slice(0, 4).forEach(photo => {
     const cell = document.createElement('div');
     Object.assign(cell.style, { minHeight: '0', minWidth: '0' });
-    cell.appendChild(buildPhotoBlock(photo));
+    cell.appendChild(buildPhotoBlock(photo, 'contain'));
     grid.appendChild(cell);
   });
 
@@ -494,7 +498,7 @@ function buildGridPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   rp.photos.slice(0, 2).forEach(photo => {
     const slot = document.createElement('div');
     Object.assign(slot.style, { flex: '1', minHeight: '0' });
-    slot.appendChild(buildPhotoBlock(photo));
+    slot.appendChild(buildPhotoBlock(photo, 'contain'));
     inner.appendChild(slot);
   });
 
@@ -518,22 +522,16 @@ function buildGridPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
 
 function buildRichPage(rp: RichPage, index: number): HTMLDivElement {
   const isLeft = index % 2 === 0;
-
   switch (rp.layout) {
-    case 'title-hero':
-      return buildTitleHeroPage(rp, isLeft);
-    case 'two-photos':
-    case 'sf-pair':
-      return buildTwoPhotosPage(rp, isLeft);
+    case 'title-hero': return buildTitleHeroPage(rp, isLeft);
+    case 'two-photos': return buildTwoPhotosPage(rp, isLeft, 'cover');
+    case 'sf-pair': return buildTwoPhotosPage(rp, isLeft, 'contain');
     case 'grid-left':
-    case 'grid-right':
-      return buildGridPage(rp, isLeft);
-    case 'grid-2x2':
-      return buildGrid2x2Page(rp, isLeft);
+    case 'grid-right': return buildGridPage(rp, isLeft);
+    case 'grid-2x2': return buildGrid2x2Page(rp, isLeft);
     case 'sf-single':
     case 'single':
-    default:
-      return buildSinglePage(rp, isLeft);
+    default: return buildSinglePage(rp, isLeft);
   }
 }
 
@@ -556,7 +554,6 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
     const wrapper = wrapperRef.current;
     wrapper.replaceChildren();
     setReady(false);
-
     let cancelled = false;
 
     import('page-flip').then(({ PageFlip }) => {
@@ -588,7 +585,7 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
         pages.forEach((src, i) => wrapper.appendChild(buildAlbumPage(src, i)));
         pf.loadFromHTML(Array.from(wrapper.querySelectorAll('.album-page')) as HTMLElement[]);
       } else {
-        // Keep the established 2025 book behaviour unchanged.
+        // Preserve the established 2025 image-book presentation.
         pf.loadFromImages(pages);
       }
 

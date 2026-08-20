@@ -302,8 +302,8 @@ export default async function Admin() {
               />
               <AdminLinkCard
                 href="/admin/archive"
-                title="Archive Roles"
-                description="Edit past presidents and captains and add new years"
+                title="Archive Season"
+                description="Archive the current season, reset competition sheets, and edit past presidents and captains"
               />
             </div>
           </section>

@@ -6,6 +6,7 @@ const ARCHIVE_SECTIONS = [
     title: 'Past season results',
     description: 'Final standings, competition results and match records from previous seasons.',
     items: [
+      { label: '2026 season results', href: '/members/archive/results/2026' },
       { label: '2025 season results', href: '/members/archive/results/2025' },
       { label: '2024 season results', href: '/members/archive/results/2024' },
       { label: '2023 season results', href: '/members/archive/results/2023' },

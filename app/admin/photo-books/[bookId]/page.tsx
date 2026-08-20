@@ -4,7 +4,6 @@ import { Footer } from '@/components/Footer';
 import { requireAdminSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { BookEditor } from './BookEditor';
-import { RestoredPhotoControls } from './RestoredPhotoControls';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,8 +41,6 @@ export default async function BookEditorPage({ params }: PageProps) {
           </div>
         </div>
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
-          {/* Full presentation controls restored separately from the uploader. */}
-          <RestoredPhotoControls bookId={book.id} pages={pages ?? []} />
           <BookEditor book={book} pages={pages ?? []} />
         </div>
       </main>

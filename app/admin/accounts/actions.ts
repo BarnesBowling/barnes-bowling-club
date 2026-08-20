@@ -69,6 +69,7 @@ export async function addTransaction(formData: FormData): Promise<void> {
   const rawAmount   = String(formData.get('amount')).trim();
   const type        = String(formData.get('type'));
   const metaRaw     = formData.get('metadata_json');
+  const guestNamesRaw = String(formData.get('guest_names') ?? '').trim();
 
   if (!member_id || !date || !description || !category || !rawAmount) return;
 
@@ -88,6 +89,11 @@ export async function addTransaction(formData: FormData): Promise<void> {
     amount,
     type,
     metadata,
+    guest_names: guestNamesRaw || null,
+    ...(category === 'guest_fee' && metadata ? {
+      num_guests:    (metadata.num_guests as number)    ?? null,
+      cost_per_guest:(metadata.cost_per_guest as number) ?? null,
+    } : {}),
     created_by: adminSession.email,
   });
 

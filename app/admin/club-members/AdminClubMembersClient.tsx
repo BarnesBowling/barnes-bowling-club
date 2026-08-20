@@ -922,6 +922,17 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                               {invitePending === m.id ? 'Sending…' : invitedIds.has(m.id) ? 'Re-invite' : 'Invite'}
                             </button>
                           )}
+                          <a
+                            href={`/admin/members/${m.id}/statement`}
+                            style={{
+                              ...btnSecondary,
+                              textDecoration: 'none',
+                              borderColor: 'var(--gold)',
+                              color: 'var(--gold)',
+                            }}
+                          >
+                            Statement
+                          </a>
                           <button onClick={() => startEdit(m)} style={btnSecondary}>
                             Edit
                           </button>

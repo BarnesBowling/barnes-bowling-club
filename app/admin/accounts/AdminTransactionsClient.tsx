@@ -316,9 +316,12 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
                     <div>
-                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, color: 'var(--green-deep)' }}>
+                      <a
+                        href={`/admin/members/${m.id}/statement`}
+                        style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, color: 'var(--green-deep)', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                      >
                         {m.full_name}
-                      </div>
+                      </a>
                       {m.membership_number && (
                         <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(45,90,61,.45)' }}>
                           {m.membership_number}

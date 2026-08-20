@@ -129,6 +129,7 @@ export function AdminAccountForm({ members, today }: Props) {
   const [numGuests,    setNumGuests]    = useState(1);
   const [costPerGuest, setCostPerGuest] = useState(GUEST_FEE_RATE);
   const [dateOfPlay,   setDateOfPlay]   = useState(today);
+  const [guestNames,   setGuestNames]   = useState('');
   const [guestNotes,   setGuestNotes]   = useState('');
   const [metadataJson, setMetadataJson] = useState('');
 
@@ -139,9 +140,9 @@ export function AdminAccountForm({ members, today }: Props) {
     if (!isGuestFee) { setMetadataJson(''); return; }
     setMetadataJson(JSON.stringify({
       type: 'guest_fee', num_guests: numGuests, cost_per_guest: costPerGuest,
-      date_of_play: dateOfPlay, notes: guestNotes || null,
+      date_of_play: dateOfPlay, guest_names: guestNames || null, notes: guestNotes || null,
     }));
-  }, [isGuestFee, numGuests, costPerGuest, dateOfPlay, guestNotes]);
+  }, [isGuestFee, numGuests, costPerGuest, dateOfPlay, guestNames, guestNotes]);
 
   const inp: React.CSSProperties = {
     padding: '.65rem .75rem', border: '1px solid rgba(45,90,61,.2)',
@@ -207,9 +208,14 @@ export function AdminAccountForm({ members, today }: Props) {
             </div>
           </div>
           <div>
-            <label style={lbl}>Notes (optional)</label>
-            <input type="text" style={inp} placeholder="e.g. Guest names, occasion" value={guestNotes} onChange={e => setGuestNotes(e.target.value)} autoComplete="off" />
+            <label style={lbl}>Guest Name(s)</label>
+            <input type="text" style={inp} placeholder="e.g. John Smith, Jane Doe" value={guestNames} onChange={e => setGuestNames(e.target.value)} autoComplete="off" />
           </div>
+          <div>
+            <label style={lbl}>Notes (optional)</label>
+            <input type="text" style={inp} placeholder="e.g. Occasion, other details" value={guestNotes} onChange={e => setGuestNotes(e.target.value)} autoComplete="off" />
+          </div>
+          <input type="hidden" name="guest_names" value={guestNames} />
           <input type="hidden" name="metadata_json" value={metadataJson} />
         </div>
       )}

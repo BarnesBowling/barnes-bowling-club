@@ -6,8 +6,11 @@ import { uploadPhoto, addPage, deletePage, reorderPages, updateBook } from './ac
 import {
   updatePageLayout,
   updatePhotoPresentation,
+  type CaptionFont,
   type CaptionPlacement,
+  type PhotoHorizontalPosition,
   type PhotoPresentationSettings,
+  type PhotoVerticalPosition,
 } from './presentationActions';
 
 export interface DbPhotoBook {
@@ -24,7 +27,10 @@ export interface DbPhoto {
   captionFontSize?: number;
   captionColor?: string;
   captionPlacement?: CaptionPlacement;
+  captionFont?: CaptionFont;
   photoScale?: number;
+  photoHorizontal?: PhotoHorizontalPosition;
+  photoVertical?: PhotoVerticalPosition;
 }
 
 export interface DbPhotoBookPage {
@@ -102,6 +108,25 @@ const LAYOUT_OPTIONS = [
   { value: 'grid-2x2', label: 'Grid — 2 × 2' },
   { value: 'title-hero', label: 'Title + hero photo' },
 ];
+
+const CAPTION_FONT_OPTIONS: Array<{ value: CaptionFont; label: string }> = [
+  { value: 'Libre Baskerville', label: 'Libre Baskerville' },
+  { value: 'Playfair Display', label: 'Playfair Display' },
+  { value: 'DM Sans', label: 'DM Sans' },
+  { value: 'Josefin Sans', label: 'Josefin Sans' },
+  { value: 'Optima', label: 'Optima' },
+];
+
+function captionFontCss(font: CaptionFont): string {
+  switch (font) {
+    case 'Playfair Display': return "'Playfair Display', serif";
+    case 'DM Sans': return "'DM Sans', sans-serif";
+    case 'Josefin Sans': return "'Josefin Sans', sans-serif";
+    case 'Optima': return "'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+    case 'Libre Baskerville':
+    default: return "'Libre Baskerville', serif";
+  }
+}
 
 export function BookEditor({ book, pages: initialPages }: Props) {
   const router = useRouter();
@@ -384,7 +409,7 @@ export function BookEditor({ book, pages: initialPages }: Props) {
           Pages ({pages.length})
         </h2>
         <p style={{ margin: '0 0 1.25rem', fontSize: '13px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>
-          Drag a page using the ☰ handle, type a position number, choose the page layout, then style each photo and caption.
+          Drag a page using the ☰ handle, type a position number, choose the page layout, then set each photo size and its left/centre/right and top/centre/bottom position.
           {reordering && <span> Saving order…</span>}
         </p>
         {reorderError && <p style={{ color: '#a00', fontSize: '13px', margin: '0 0 1rem' }}>{reorderError}</p>}
@@ -575,14 +600,20 @@ function PhotoEditor({
   const [fontSize, setFontSize] = useState(photo.captionFontSize ?? 11);
   const [colour, setColour] = useState(photo.captionColor ?? '#888888');
   const [placement, setPlacement] = useState<CaptionPlacement>(photo.captionPlacement ?? 'below');
+  const [captionFont, setCaptionFont] = useState<CaptionFont>(photo.captionFont ?? 'Libre Baskerville');
   const [photoScale, setPhotoScale] = useState(photo.photoScale ?? 100);
+  const [photoHorizontal, setPhotoHorizontal] = useState<PhotoHorizontalPosition>(photo.photoHorizontal ?? 'center');
+  const [photoVertical, setPhotoVertical] = useState<PhotoVerticalPosition>(photo.photoVertical ?? 'center');
 
   useEffect(() => {
     setCaption(photo.caption ?? '');
     setFontSize(photo.captionFontSize ?? 11);
     setColour(photo.captionColor ?? '#888888');
     setPlacement(photo.captionPlacement ?? 'below');
+    setCaptionFont(photo.captionFont ?? 'Libre Baskerville');
     setPhotoScale(photo.photoScale ?? 100);
+    setPhotoHorizontal(photo.photoHorizontal ?? 'center');
+    setPhotoVertical(photo.photoVertical ?? 'center');
   }, [photo]);
 
   function commit(overrides: Partial<PhotoPresentationSettings> = {}) {
@@ -591,7 +622,10 @@ function PhotoEditor({
       captionFontSize: fontSize,
       captionColor: colour,
       captionPlacement: placement,
+      captionFont,
       photoScale,
+      photoHorizontal,
+      photoVertical,
       ...overrides,
     });
   }
@@ -625,8 +659,8 @@ function PhotoEditor({
             style={{
               padding: '.45rem .6rem',
               border: '1px solid rgba(45,90,61,.2)',
-              fontFamily: "'Libre Baskerville', serif",
-              fontStyle: 'italic',
+              fontFamily: captionFontCss(captionFont),
+              fontStyle: captionFont === 'Libre Baskerville' ? 'italic' : 'normal',
               fontSize: '13px',
               flex: 1,
               minWidth: 0,
@@ -648,10 +682,63 @@ function PhotoEditor({
               }}
               style={{ ...compactInputStyle, display: 'block', marginTop: '3px' }}
             >
+              <option value={40}>40%</option>
+              <option value={50}>50%</option>
               <option value={60}>60%</option>
               <option value={75}>75%</option>
               <option value={90}>90%</option>
               <option value={100}>100%</option>
+            </select>
+          </label>
+
+          <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>
+            Left / Right
+            <select
+              value={photoHorizontal}
+              onChange={e => {
+                const next = e.target.value as PhotoHorizontalPosition;
+                setPhotoHorizontal(next);
+                commit({ photoHorizontal: next });
+              }}
+              style={{ ...compactInputStyle, display: 'block', marginTop: '3px' }}
+            >
+              <option value="left">Left</option>
+              <option value="center">Centre</option>
+              <option value="right">Right</option>
+            </select>
+          </label>
+
+          <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>
+            Top / Bottom
+            <select
+              value={photoVertical}
+              onChange={e => {
+                const next = e.target.value as PhotoVerticalPosition;
+                setPhotoVertical(next);
+                commit({ photoVertical: next });
+              }}
+              style={{ ...compactInputStyle, display: 'block', marginTop: '3px' }}
+            >
+              <option value="top">Top</option>
+              <option value="center">Centre</option>
+              <option value="bottom">Bottom</option>
+            </select>
+          </label>
+
+          <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>
+            Caption font
+            <select
+              value={captionFont}
+              onChange={e => {
+                const next = e.target.value as CaptionFont;
+                setCaptionFont(next);
+                commit({ captionFont: next });
+              }}
+              style={{ ...compactInputStyle, display: 'block', marginTop: '3px', minWidth: '145px' }}
+            >
+              {CAPTION_FONT_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </select>
           </label>
 

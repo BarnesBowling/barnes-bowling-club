@@ -30,3 +30,26 @@ export async function requireAdminSession(): Promise<{ email: string }> {
   if (!profile || profile.role !== 'admin') throw new Error('forbidden');
   return { email: session.email };
 }
+
+/**
+ * Allows read-only statement access to either an admin or viewer profile.
+ * All other admin pages continue to use requireAdminSession().
+ */
+export async function requireViewerSession(): Promise<{ email: string; role: 'admin' | 'viewer' }> {
+  const cookieStore = await cookies();
+  const sc = cookieStore.get(SESSION_COOKIE);
+  const session = sc ? await verifyMemberSession(sc.value) : null;
+  if (!session) throw new Error('unauthenticated');
+
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('role')
+    .eq('email', session.email)
+    .maybeSingle();
+
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'viewer')) {
+    throw new Error('forbidden');
+  }
+
+  return { email: session.email, role: profile.role as 'admin' | 'viewer' };
+}

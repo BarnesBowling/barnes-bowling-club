@@ -83,10 +83,15 @@ export default async function MembersAdmin({
   const successMsg = params.success;
   const errorMsg   = params.error;
 
-  const { data: { users = [] } } = await supabaseAdmin.auth.admin.listUsers({
-    page: 1,
-    perPage: 1000,
-  });
+  const [{ data: { users = [] } }, { data: clubRows }] = await Promise.all([
+    supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    supabaseAdmin.from('club_members').select('id, auth_user_id').not('auth_user_id', 'is', null),
+  ]);
+
+  // Map auth_user_id → club_members.id for statement links
+  const statementIdByAuthId = new Map<string, string>(
+    (clubRows ?? []).map(r => [r.auth_user_id as string, r.id])
+  );
 
   const members = [...users].sort((a, b) => {
     const aActive = !!a.email_confirmed_at;
@@ -319,6 +324,27 @@ export default async function MembersAdmin({
                                     Resend invite
                                   </button>
                                 </form>
+                              )}
+
+                              {/* Statement — only for members linked to a club_members record */}
+                              {statementIdByAuthId.has(u.id) && (
+                                <a
+                                  href={`/admin/members/${statementIdByAuthId.get(u.id)}/statement`}
+                                  style={{
+                                    padding: '4px 11px',
+                                    background: 'none',
+                                    border: '1px solid var(--gold)',
+                                    color: 'var(--gold)',
+                                    fontFamily: "'DM Sans', sans-serif",
+                                    fontSize: '11px',
+                                    fontWeight: 500,
+                                    letterSpacing: '.04em',
+                                    textDecoration: 'none',
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  Statement
+                                </a>
                               )}
 
                               {/* Remove — client component for confirm dialog */}

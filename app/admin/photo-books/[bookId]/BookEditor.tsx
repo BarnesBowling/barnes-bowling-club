@@ -2,7 +2,15 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { uploadPhoto, addPage, deletePage, reorderPages, updateBook } from './actions';
+import {
+  uploadPhoto,
+  addPage,
+  addBlankPage,
+  addPhotoToPage,
+  deletePage,
+  reorderPages,
+  updateBook,
+} from './actions';
 import {
   updatePageLayout,
   updatePhotoPresentation,
@@ -78,7 +86,7 @@ const compactInputStyle: React.CSSProperties = {
 };
 
 const btnStyle: React.CSSProperties = {
-  padding: '7px 14px',
+  padding: '8px 15px',
   border: 'none',
   fontFamily: "'DM Sans', sans-serif",
   fontSize: '12px',
@@ -139,11 +147,10 @@ export function BookEditor({ book, pages: initialPages }: Props) {
 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-
-  const [addUrl, setAddUrl] = useState('');
-  const [addCaption, setAddCaption] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [addError, setAddError] = useState<string | null>(null);
+  const [addingBlank, setAddingBlank] = useState(false);
+  const [blankError, setBlankError] = useState<string | null>(null);
+  const [pageUploading, setPageUploading] = useState<Record<string, boolean>>({});
+  const [pageUploadError, setPageUploadError] = useState<Record<string, string | null>>({});
 
   const [deletingPage, setDeletingPage] = useState<Record<string, boolean>>({});
   const [savingLayout, setSavingLayout] = useState<Record<string, boolean>>({});
@@ -172,38 +179,75 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     setUploading(true);
     setUploadError(null);
 
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('bookId', book.id);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('bookId', book.id);
 
-    const { url, error: upErr } = await uploadPhoto(fd);
-    if (upErr || !url) {
-      setUploadError(upErr ?? 'Upload failed');
+      const { url, error: upErr } = await uploadPhoto(fd);
+      if (upErr || !url) {
+        setUploadError(upErr ?? 'Upload failed');
+        return;
+      }
+
+      const { error: pageErr } = await addPage(book.id, url);
+      if (pageErr) setUploadError(pageErr);
+      else router.refresh();
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : 'Upload failed');
+    } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
-      return;
     }
-
-    const { error: pageErr } = await addPage(book.id, url);
-    setUploading(false);
-    if (fileRef.current) fileRef.current.value = '';
-    if (pageErr) setUploadError(pageErr);
-    else router.refresh();
   }
 
-  async function handleAddByUrl() {
-    const url = addUrl.trim();
-    if (!url) return;
-    setAdding(true);
-    setAddError(null);
-    const { error } = await addPage(book.id, url, addCaption.trim() || undefined);
-    setAdding(false);
-    if (error) {
-      setAddError(error);
-    } else {
-      setAddUrl('');
-      setAddCaption('');
-      router.refresh();
+  async function handleAddBlankPage() {
+    setAddingBlank(true);
+    setBlankError(null);
+    try {
+      const result = await addBlankPage(book.id);
+      if (result.error) setBlankError(result.error);
+      else router.refresh();
+    } catch (error) {
+      setBlankError(error instanceof Error ? error.message : 'Could not add page');
+    } finally {
+      setAddingBlank(false);
+    }
+  }
+
+  async function handleAddPhotoToPage(pageId: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    setPageUploading(prev => ({ ...prev, [pageId]: true }));
+    setPageUploadError(prev => ({ ...prev, [pageId]: null }));
+
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('bookId', book.id);
+
+      const { url, error: uploadErr } = await uploadPhoto(fd);
+      if (uploadErr || !url) {
+        setPageUploadError(prev => ({ ...prev, [pageId]: uploadErr ?? 'Upload failed' }));
+        return;
+      }
+
+      const result = await addPhotoToPage(pageId, url);
+      if (result.error) {
+        setPageUploadError(prev => ({ ...prev, [pageId]: result.error ?? 'Could not add photo' }));
+      } else {
+        router.refresh();
+      }
+    } catch (error) {
+      setPageUploadError(prev => ({
+        ...prev,
+        [pageId]: error instanceof Error ? error.message : 'Upload failed',
+      }));
+    } finally {
+      setPageUploading(prev => ({ ...prev, [pageId]: false }));
+      input.value = '';
     }
   }
 
@@ -258,9 +302,10 @@ export function BookEditor({ book, pages: initialPages }: Props) {
   async function handleDelete(pageId: string) {
     if (!window.confirm('Delete this page? This cannot be undone.')) return;
     setDeletingPage(prev => ({ ...prev, [pageId]: true }));
-    await deletePage(pageId);
+    const result = await deletePage(pageId);
     setDeletingPage(prev => ({ ...prev, [pageId]: false }));
-    router.refresh();
+    if (result.error) setReorderError(result.error);
+    else router.refresh();
   }
 
   async function handleLayoutChange(pageId: string, layout: string) {
@@ -342,7 +387,7 @@ export function BookEditor({ book, pages: initialPages }: Props) {
           Upload new photo
         </h2>
         <div style={{ background: 'white', border: '1px solid rgba(45,90,61,.12)', padding: '1.75rem', maxWidth: '480px' }}>
-          <label style={labelStyle}>Choose image (added to end of book)</label>
+          <label style={labelStyle}>Choose image — creates a new page at the end</label>
           <input
             ref={fileRef}
             type="file"
@@ -364,42 +409,24 @@ export function BookEditor({ book, pages: initialPages }: Props) {
 
       <section>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
-          Add page from URL
+          Add another white page
         </h2>
         <div style={{
           background: 'white',
           border: '1px solid rgba(45,90,61,.12)',
           padding: '1.75rem',
           maxWidth: '480px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
         }}>
-          <div>
-            <label style={labelStyle}>Image URL or path (added to end of book)</label>
-            <input
-              value={addUrl}
-              onChange={e => setAddUrl(e.target.value)}
-              placeholder="/archive/years-photos/2026/page-01.jpg"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Caption (optional)</label>
-            <input
-              value={addCaption}
-              onChange={e => setAddCaption(e.target.value)}
-              placeholder="e.g. Club dinner, July 2026"
-              style={inputStyle}
-            />
-          </div>
-          {addError && <p style={{ color: '#a00', fontSize: '13px', margin: 0 }}>{addError}</p>}
+          <p style={{ margin: '0 0 1rem', fontSize: '13px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}>
+            Adds a blank white page to the end of the book. You can then add photos directly to that page below.
+          </p>
+          {blankError && <p style={{ color: '#a00', fontSize: '13px', margin: '0 0 .75rem' }}>{blankError}</p>}
           <button
-            onClick={handleAddByUrl}
-            disabled={adding || !addUrl.trim()}
-            style={{ ...btnStyle, opacity: (adding || !addUrl.trim()) ? 0.6 : 1, alignSelf: 'flex-start' }}
+            onClick={() => void handleAddBlankPage()}
+            disabled={addingBlank}
+            style={{ ...btnStyle, opacity: addingBlank ? 0.6 : 1 }}
           >
-            {adding ? 'Adding…' : 'Add page'}
+            {addingBlank ? 'Adding page…' : '+ Add blank white page'}
           </button>
         </div>
       </section>
@@ -409,20 +436,21 @@ export function BookEditor({ book, pages: initialPages }: Props) {
           Pages ({pages.length})
         </h2>
         <p style={{ margin: '0 0 1.25rem', fontSize: '13px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>
-          Drag a page using the ☰ handle, type a position number, choose the page layout, then set each photo size and its left/centre/right and top/centre/bottom position.
+          Drag a page using the ☰ handle, type a position number, choose the page layout, then set each photo size and position.
           {reordering && <span> Saving order…</span>}
         </p>
         {reorderError && <p style={{ color: '#a00', fontSize: '13px', margin: '0 0 1rem' }}>{reorderError}</p>}
 
         {pages.length === 0 && (
           <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', fontStyle: 'italic', color: 'var(--text-muted)' }}>
-            No pages yet — upload a photo above to add the first page.
+            No pages yet — upload a photo or add a blank white page above.
           </p>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {pages.map((page, i) => {
             const isDragging = draggedPageId === page.id;
+            const isUploadingToPage = pageUploading[page.id] ?? false;
             return (
               <div
                 key={page.id}
@@ -505,13 +533,27 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                   )}
 
                   <button
-                    onClick={() => handleDelete(page.id)}
+                    onClick={() => void handleDelete(page.id)}
                     disabled={deletingPage[page.id] ?? false}
                     style={{ ...deleteBtnStyle, marginLeft: 'auto', opacity: (deletingPage[page.id] ?? false) ? 0.6 : 1 }}
                   >
-                    Delete page
+                    {(deletingPage[page.id] ?? false) ? 'Deleting…' : 'Delete page'}
                   </button>
                 </div>
+
+                {page.photos.length === 0 && (
+                  <div style={{
+                    padding: '1.25rem',
+                    marginBottom: '10px',
+                    background: '#fbfbfa',
+                    border: '1px dashed rgba(45,90,61,.22)',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '13px',
+                    color: 'var(--text-muted)',
+                  }}>
+                    Blank white page — add a photo below, or leave it blank.
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {page.photos.map((photo, photoIndex) => (
@@ -524,6 +566,33 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                     />
                   ))}
                 </div>
+
+                {page.photos.length < 4 && (
+                  <div style={{
+                    marginTop: '12px',
+                    paddingTop: '12px',
+                    borderTop: '1px solid rgba(45,90,61,.10)',
+                  }}>
+                    <label style={{ ...labelStyle, marginBottom: '5px' }}>
+                      Add photo to this page
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploadingToPage}
+                      onChange={e => void handleAddPhotoToPage(page.id, e)}
+                      style={{
+                        display: 'block',
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: '12px',
+                        color: 'var(--text-muted)',
+                        cursor: isUploadingToPage ? 'not-allowed' : 'pointer',
+                      }}
+                    />
+                    {isUploadingToPage && <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '.4rem 0 0' }}>Uploading to this page…</p>}
+                    {pageUploadError[page.id] && <p style={{ color: '#a00', fontSize: '12px', margin: '.4rem 0 0' }}>{pageUploadError[page.id]}</p>}
+                  </div>
+                )}
               </div>
             );
           })}

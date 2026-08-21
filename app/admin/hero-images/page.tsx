@@ -54,26 +54,48 @@ export default function AdminHeroImagesPage() {
     setErrors(prev => ({ ...prev, [label]: '' }));
 
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('context', 'hero');
-      fd.append('alt_text', label);
-
-      const res = await fetch('/api/admin/gallery-upload', {
+      // Step 1: get a signed URL (tiny JSON — admin auth + path generation only)
+      const urlResp = await fetch('/api/admin/gallery-signed-url', {
         method: 'POST',
-        body: fd,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context: 'hero', filename: file.name }),
       });
-
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(body.error ?? `Upload failed (${res.status})`);
+      if (!urlResp.ok) {
+        const body = await urlResp.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error ?? `Could not get upload URL (${urlResp.status})`);
+      }
+      const { signedUrl, path, publicUrl, error: signedErr } =
+        await urlResp.json() as { signedUrl?: string; path?: string; publicUrl?: string; error?: string };
+      if (signedErr || !signedUrl || !path || !publicUrl) {
+        throw new Error(signedErr ?? 'Server returned no upload URL');
       }
 
+      // Step 2: upload directly to Supabase storage — bypasses Netlify entirely
+      const uploadResp = await fetch(signedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      });
+      if (!uploadResp.ok) {
+        const detail = await uploadResp.text().catch(() => '');
+        throw new Error(`Storage upload failed (${uploadResp.status})${detail ? ': ' + detail : ''}`);
+      }
+
+      // Step 3: register/update in DB (handles hero slot dedup + old file deletion)
+      const dbResp = await fetch('/api/admin/gallery-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context: 'hero', altText: label, path, publicUrl }),
+      });
+      const body = await dbResp.json().catch(() => ({})) as { public_url?: string; error?: string };
+      if (!dbResp.ok) {
+        throw new Error(body.error ?? `Failed to save image (${dbResp.status})`);
+      }
       if (!body.public_url) {
         throw new Error('Upload completed but no image URL was returned.');
       }
 
-      setUploaded(prev => ({ ...prev, [label]: body.public_url }));
+      setUploaded(prev => ({ ...prev, [label]: body.public_url! }));
       setJustUpdated(label);
     } catch (err) {
       setErrors(prev => ({

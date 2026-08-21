@@ -50,13 +50,42 @@ export default function AdminGalleryPage() {
 
     try {
       for (const file of files) {
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('context', 'gallery');
-        const res = await fetch('/api/admin/gallery-upload', { method: 'POST', body: fd });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.error ?? `Upload failed (${res.status})`);
+        // Step 1: get a signed URL (tiny JSON — admin auth + path generation only)
+        const urlResp = await fetch('/api/admin/gallery-signed-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ context: 'gallery', filename: file.name }),
+        });
+        if (!urlResp.ok) {
+          const body = await urlResp.json().catch(() => ({}));
+          throw new Error((body as { error?: string }).error ?? `Could not get upload URL (${urlResp.status})`);
+        }
+        const { signedUrl, path, publicUrl, error: signedErr } =
+          await urlResp.json() as { signedUrl?: string; path?: string; publicUrl?: string; error?: string };
+        if (signedErr || !signedUrl || !path || !publicUrl) {
+          throw new Error(signedErr ?? 'Server returned no upload URL');
+        }
+
+        // Step 2: upload directly to Supabase storage — bypasses Netlify entirely
+        const uploadResp = await fetch(signedUrl, {
+          method: 'PUT',
+          body: file,
+          headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        });
+        if (!uploadResp.ok) {
+          const detail = await uploadResp.text().catch(() => '');
+          throw new Error(`Storage upload failed (${uploadResp.status})${detail ? ': ' + detail : ''}`);
+        }
+
+        // Step 3: register the uploaded file in the DB
+        const dbResp = await fetch('/api/admin/gallery-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ context: 'gallery', path, publicUrl }),
+        });
+        if (!dbResp.ok) {
+          const body = await dbResp.json().catch(() => ({}));
+          throw new Error((body as { error?: string }).error ?? `Failed to save image (${dbResp.status})`);
         }
       }
       await load();

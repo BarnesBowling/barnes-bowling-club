@@ -30,3 +30,21 @@ export async function requireAdminSession(): Promise<{ email: string }> {
   if (!profile || profile.role !== 'admin') throw new Error('forbidden');
   return { email: session.email };
 }
+
+// Allows 'admin' and 'viewer' roles. Returns the role so callers can
+// conditionally render read-only vs full-admin UI.
+export async function requireViewerSession(): Promise<{ email: string; role: string }> {
+  const cookieStore = await cookies();
+  const sc = cookieStore.get(SESSION_COOKIE);
+  const session = sc ? await verifyMemberSession(sc.value) : null;
+  if (!session) throw new Error('unauthenticated');
+
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('role')
+    .eq('email', session.email)
+    .maybeSingle();
+
+  if (!profile || !['admin', 'viewer'].includes(profile.role)) throw new Error('forbidden');
+  return { email: session.email, role: profile.role };
+}

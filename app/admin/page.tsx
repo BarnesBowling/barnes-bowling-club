@@ -252,65 +252,53 @@ export default async function Admin() {
           </div>
 
           {/* ── Quick links ── */}
-          <section>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>Admin pages</h2>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <AdminLinkCard
-                href="/admin/club-members"
-                title="Club Roster"
-                description="Add members, update handicaps and membership numbers — single source of truth"
-              />
-              <AdminLinkCard
-                href="/admin/members"
-                title="Member Management"
-                description="Invite members, resend invitations, remove login accounts"
-              />
-              <AdminLinkCard
-                href="/admin/results"
-                title="Results & Leaderboard"
-                description="Enter match results and manage the Manser leaderboard"
-              />
-              <AdminLinkCard
-                href="/admin/hero-images"
-                title="Home Page Images"
-                description="Replace hero, What's Happening, Come and Play, and Get Involved photos"
-              />
-              <AdminLinkCard
-                href="/admin/gallery"
-                title="Gallery"
-                description="Upload and manage public gallery photos"
-              />
-              <AdminLinkCard
-                href="/admin/photo-books"
-                title="Photo Books"
-                description="Manage years-in-photos flipbooks — upload, reorder and caption photos"
-              />
-              <AdminLinkCard
-                href="/admin/accounts"
-                title="Member Accounts"
-                description="Post charges and payments to member account statements"
-              />
-              <AdminLinkCard
-                href="/admin/book-a-game"
-                title="Book a Match"
-                description="Book a fixture on behalf of any member"
-              />
-              <AdminLinkCard
-                href="/admin/newsletters"
-                title="Newsletters"
-                description="Upload new editions and manage the newsletter archive"
-              />
-              <AdminLinkCard
-                href="/admin/committee"
-                title="Committee Photos"
-                description="Upload and manage photos for General Committee and Handicap Committee members"
-              />
-              <AdminLinkCard
-                href="/admin/archive"
-                title="Archive Season"
-                description="Archive the current season, reset competition sheets, and edit past presidents and captains"
-              />
-            </div>
+          <section style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--green-deep)', marginBottom: 0 }}>Admin pages</h2>
+            {([
+              {
+                group: 'Member',
+                items: [
+                  { href: '/admin/club-members', title: 'Club Roster',       description: 'Add members, update handicaps and membership numbers — single source of truth' },
+                  { href: '/admin/members',      title: 'Member Management', description: 'Invite members, resend invitations, remove login accounts' },
+                  { href: '/admin/accounts',     title: 'Member Accounts',   description: 'Post charges and payments to member account statements' },
+                  { href: '/admin/committee',    title: 'Committee Photos',  description: 'Upload and manage photos for General Committee and Handicap Committee members' },
+                ],
+              },
+              {
+                group: 'Play',
+                items: [
+                  { href: '/admin/book-a-game', title: 'Book a Match',   description: 'Book a fixture on behalf of any member' },
+                  { href: '/admin/results',     title: 'Leader Board',   description: 'Enter match results and manage the Manser leaderboard' },
+                  { href: '/admin/archive',     title: 'Archive Season', description: 'Archive the current season, reset competition sheets, and edit past presidents and captains' },
+                ],
+              },
+              {
+                group: 'Site',
+                items: [
+                  { href: '/admin/site-content', title: 'Site Content', description: 'Edit text on public pages — Opening Hours, Membership, Contact, and Corporate Hire' },
+                  { href: '/admin/newsletters',  title: 'Newsletters',  description: 'Upload new editions and manage the newsletter archive' },
+                ],
+              },
+              {
+                group: 'Images',
+                items: [
+                  { href: '/admin/hero-images', title: 'Homepage Images', description: "Replace hero, What's Happening, Come and Play, and Get Involved photos" },
+                  { href: '/admin/gallery',     title: 'Gallery',         description: 'Upload and manage public gallery photos' },
+                  { href: '/admin/photo-books', title: 'Photo Books',     description: 'Manage years-in-photos flipbooks — upload, reorder and caption photos' },
+                ],
+              },
+            ] as const).map(({ group, items }) => (
+              <div key={group}>
+                <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: '0.75rem' }}>
+                  {group}
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  {items.map(item => (
+                    <AdminLinkCard key={item.href} href={item.href} title={item.title} description={item.description} />
+                  ))}
+                </div>
+              </div>
+            ))}
           </section>
 
           {/* ACCOUNTS OVERVIEW */}

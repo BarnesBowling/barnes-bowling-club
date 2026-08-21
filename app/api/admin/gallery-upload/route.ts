@@ -3,6 +3,9 @@ import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { requireAdminSession } from '@/lib/adminAuth';
 
+// Registers an already-uploaded file in the site_images DB table.
+// The file was uploaded directly from the browser to Supabase storage via a
+// signed URL — this function only handles the DB insert/update logic.
 export async function POST(request: NextRequest) {
   try {
     await requireAdminSession();
@@ -11,34 +14,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File | null;
-    const context = String(formData.get('context') ?? 'gallery');
-    const altTextRaw = String(formData.get('alt_text') ?? '').trim();
-    const altText = altTextRaw || null;
+    const { context, altText, path, publicUrl } = await request.json() as {
+      context?: string;
+      altText?: string;
+      path?: string;
+      publicUrl?: string;
+    };
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+    if (!context || !path || !publicUrl) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const ext = file.name.split('.').pop() || 'jpg';
-    const path = `${context}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from('site-images')
-      .upload(path, file);
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabaseAdmin.storage
-      .from('site-images')
-      .getPublicUrl(path);
-
-    // Hero/home-page image slots are named by alt_text. Replacing a slot should
-    // update that slot rather than creating an ever-growing list of duplicates.
+    // Hero slot: if a row already exists for this alt_text, update it and delete the old file.
     if (context === 'hero' && altText) {
       const { data: matches, error: matchError } = await supabaseAdmin
         .from('site_images')
-        .select('id,storage_path,sort_order')
+        .select('id, storage_path, sort_order')
         .eq('context', 'hero')
         .eq('alt_text', altText)
         .limit(1);
@@ -48,12 +39,7 @@ export async function POST(request: NextRequest) {
       if (existing) {
         const { data, error } = await supabaseAdmin
           .from('site_images')
-          .update({
-            storage_path: path,
-            public_url: publicUrl,
-            caption: null,
-            alt_text: altText,
-          })
+          .update({ storage_path: path, public_url: publicUrl, caption: null, alt_text: altText })
           .eq('id', existing.id)
           .select()
           .single();
@@ -74,13 +60,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Gallery upload or new hero slot: insert a new row.
     const { data: existingRows } = await supabaseAdmin
       .from('site_images')
       .select('sort_order')
       .eq('context', context)
       .order('sort_order', { ascending: false })
       .limit(1);
-    const nextOrder = existingRows && existingRows.length > 0 ? existingRows[0].sort_order + 1 : 0;
+    const nextOrder = existingRows?.length ? existingRows[0].sort_order + 1 : 0;
 
     const { data, error } = await supabaseAdmin
       .from('site_images')
@@ -89,7 +76,7 @@ export async function POST(request: NextRequest) {
         storage_path: path,
         public_url: publicUrl,
         caption: null,
-        alt_text: altText,
+        alt_text: altText ?? null,
         sort_order: nextOrder,
       })
       .select()
@@ -105,7 +92,9 @@ export async function POST(request: NextRequest) {
     revalidatePath('/admin/hero-images');
     return NextResponse.json(data);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
   }
 }

@@ -1,7 +1,7 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { redirect, notFound } from 'next/navigation';
-import { requireAdminSession } from '@/lib/adminAuth';
+import { requireViewerSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { StatementPDFButton } from './StatementPDFButton';
 import type { StatementEntry } from './StatementPDFButton';
@@ -32,7 +32,8 @@ export default async function MemberStatementPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  try { await requireAdminSession(); } catch { redirect('/login?redirect=/admin/club-members'); }
+  let role = 'admin';
+  try { ({ role } = await requireViewerSession()); } catch { redirect('/login?redirect=/admin/statements'); }
 
   const { id } = await params;
 
@@ -102,7 +103,7 @@ export default async function MemberStatementPage({
           {/* ── Back + header ── */}
           <div>
             <a
-              href="/admin/club-members"
+              href={role === 'viewer' ? '/admin/statements' : '/admin/club-members'}
               style={{
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: '12px',
@@ -113,7 +114,7 @@ export default async function MemberStatementPage({
                 marginBottom: '.75rem',
               }}
             >
-              ← Back to Members
+              ← Back to Statements
             </a>
             <span className="section-tag">Admin</span>
             <h1 className="section-h2">Member Statement</h1>

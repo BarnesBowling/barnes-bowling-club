@@ -71,6 +71,14 @@ export async function signIn(_prev: ActionResult, formData: FormData): Promise<A
     path:     '/',
   });
 
+  // Viewer accounts go straight to their restricted landing page
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('role')
+    .eq('email', member.email)
+    .maybeSingle();
+  if (profile?.role === 'viewer') redirect('/admin/statements');
+
   const dest = redirectPath.startsWith('/') && !redirectPath.startsWith('//')
     ? redirectPath
     : '/members/dashboard';

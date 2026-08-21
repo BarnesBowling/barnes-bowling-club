@@ -67,11 +67,13 @@ function containImgEl(src: string): HTMLImageElement {
   return img;
 }
 
-function captionEl(text: string): HTMLDivElement {
+function captionEl(text: string, fontFamily?: string, fontSize?: string): HTMLDivElement {
   const el = document.createElement('div');
   el.textContent = text;
   Object.assign(el.style, {
-    fontFamily: "'Libre Baskerville', serif", fontSize: '11px', fontStyle: 'italic',
+    fontFamily: fontFamily ?? "'Libre Baskerville', serif",
+    fontSize: fontSize ?? '11px',
+    fontStyle: 'italic',
     color: '#888888', textAlign: 'center', lineHeight: '1.4',
     flexShrink: '0', minHeight: '18px', paddingTop: '6px',
   });
@@ -105,7 +107,7 @@ function buildSinglePage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   const page = document.createElement('div');
   page.className = 'album-page';
   Object.assign(page.style, { backgroundColor: '#ffffff', width: '100%', height: '100%', position: 'relative', overflow: 'hidden' });
-  if (rp.photos[0]) page.appendChild(coverImgEl(rp.photos[0].src));
+  if (rp.photos[0]) page.appendChild(coverImgEl(rp.photos[0].src, rp.photos[0].objectPosition ?? 'center top'));
   page.appendChild(spineShadeEl(isLeft));
   return page;
 }
@@ -142,9 +144,9 @@ function buildTitleHeroPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   if (photo) {
     const wrap = document.createElement('div');
     Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden' });
-    wrap.appendChild(coverImgEl(photo.src, 'center center'));
+    wrap.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center center'));
     inner.appendChild(wrap);
-    inner.appendChild(captionEl(photo.caption ?? ''));
+    inner.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize));
   }
 
   page.appendChild(inner);
@@ -166,9 +168,9 @@ function buildTwoPhotosPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
 
     const wrap = document.createElement('div');
     Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden' });
-    wrap.appendChild(coverImgEl(photo.src, 'center center'));
+    wrap.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center center'));
     block.appendChild(wrap);
-    block.appendChild(captionEl(photo.caption ?? ''));
+    block.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize));
     inner.appendChild(block);
   });
 
@@ -216,7 +218,7 @@ function buildGrid2x2Page(rp: RichPage, isLeft: boolean): HTMLDivElement {
   rp.photos.forEach(photo => {
     const cell = document.createElement('div');
     Object.assign(cell.style, { position: 'relative', overflow: 'hidden', minHeight: '0' });
-    cell.appendChild(coverImgEl(photo.src, 'center center'));
+    cell.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center center'));
     grid.appendChild(cell);
   });
 
@@ -237,7 +239,7 @@ function buildGridPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   rp.photos.forEach(photo => {
     const wrap = document.createElement('div');
     Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden' });
-    wrap.appendChild(coverImgEl(photo.src, 'center center'));
+    wrap.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center center'));
     inner.appendChild(wrap);
   });
 
@@ -291,7 +293,7 @@ function buildSfSinglePage(rp: RichPage, isLeft: boolean): HTMLDivElement {
     Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden', minHeight: '0' });
     wrap.appendChild(containImgEl(photo.src));
     inner.appendChild(wrap);
-    if (photo.caption !== undefined) inner.appendChild(captionEl(photo.caption ?? ''));
+    if (photo.caption !== undefined) inner.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize));
   }
   page.appendChild(inner);
   return page;
@@ -334,7 +336,7 @@ function buildSfPairPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
     Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden', minHeight: '0' });
     wrap.appendChild(containImgEl(photo.src));
     block.appendChild(wrap);
-    if (photo.caption !== undefined) block.appendChild(captionEl(photo.caption ?? ''));
+    if (photo.caption !== undefined) block.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize));
     inner.appendChild(block);
   });
 

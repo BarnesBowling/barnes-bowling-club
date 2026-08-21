@@ -83,6 +83,39 @@ export async function deletePage(pageId: string): Promise<{ error?: string }> {
   return {};
 }
 
+export async function updatePhotoStyle(
+  pageId: string,
+  photoIndex: number,
+  style: { captionFont?: string; captionSize?: string; objectPosition?: string }
+): Promise<{ error?: string }> {
+  await requireAdminSession();
+
+  const { data: page } = await supabaseAdmin
+    .from('photo_book_pages')
+    .select('photos, book_id')
+    .eq('id', pageId)
+    .single();
+
+  if (!page) return { error: 'Page not found' };
+
+  const photos = Array.isArray(page.photos)
+    ? [...(page.photos as { src: string; caption?: string; captionFont?: string; captionSize?: string; objectPosition?: string }[])]
+    : [];
+
+  if (photoIndex < 0 || photoIndex >= photos.length) return { error: 'Photo not found' };
+  photos[photoIndex] = { ...photos[photoIndex], ...style };
+
+  const { error } = await supabaseAdmin
+    .from('photo_book_pages')
+    .update({ photos })
+    .eq('id', pageId);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/photo-books/${page.book_id}`);
+  revalidatePath('/members/archive/years-in-photos');
+  return {};
+}
+
 export async function deletePhoto(
   pageId: string,
   photoIndex: number

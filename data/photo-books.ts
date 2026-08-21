@@ -1,6 +1,9 @@
 export interface RichPagePhoto {
   src: string;
   caption?: string;
+  captionFont?: string;
+  captionSize?: string;
+  objectPosition?: string;
 }
 
 export type RichPageLayout =

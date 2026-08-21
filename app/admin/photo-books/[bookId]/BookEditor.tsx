@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { uploadPhoto, addPage, deletePage, deletePhoto, movePage, updateCaption, updateBook } from './actions';
+import { uploadPhoto, addPage, deletePage, deletePhoto, movePage, updateCaption, updatePhotoStyle, updateBook } from './actions';
 
 export interface DbPhotoBook {
   id: string;
@@ -20,7 +20,7 @@ export interface DbPhotoBookPage {
   page_title: string | null;
   page_subtitle: string | null;
   shared_caption: string | null;
-  photos: { src: string; caption?: string }[];
+  photos: { src: string; caption?: string; captionFont?: string; captionSize?: string; objectPosition?: string }[];
 }
 
 interface Props {
@@ -102,6 +102,7 @@ export function BookEditor({ book, pages: initialPages }: Props) {
   const [movingPage, setMovingPage] = useState<Record<string, boolean>>({});
   const [deletingPage, setDeletingPage] = useState<Record<string, boolean>>({});
   const [deletingPhoto, setDeletingPhoto] = useState<Record<string, boolean>>({});
+  const [savingStyle, setSavingStyle] = useState<Record<string, boolean>>({});
 
   const pages = initialPages;
 
@@ -173,6 +174,13 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     setDeletingPage(prev => ({ ...prev, [pageId]: true }));
     await deletePage(pageId);
     setDeletingPage(prev => ({ ...prev, [pageId]: false }));
+    router.refresh();
+  }
+
+  async function handleStyleChange(pageId: string, photoIndex: number, style: { captionFont?: string; captionSize?: string; objectPosition?: string }) {
+    setSavingStyle(prev => ({ ...prev, [pageId]: true }));
+    await updatePhotoStyle(pageId, photoIndex, style);
+    setSavingStyle(prev => ({ ...prev, [pageId]: false }));
     router.refresh();
   }
 
@@ -405,6 +413,49 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                     saving={savingCaption[page.id] ?? false}
                     onSave={handleCaptionBlur}
                   />
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Font</label>
+                      <select
+                        value={page.photos[0]?.captionFont ?? "'Libre Baskerville', serif"}
+                        onChange={e => handleStyleChange(page.id, 0, { captionFont: e.target.value })}
+                        style={{ padding: '3px 5px', border: '1px solid rgba(45,90,61,.2)', fontFamily: 'inherit', fontSize: '11px' }}
+                      >
+                        <option value="'Libre Baskerville', serif">Libre Baskerville</option>
+                        <option value="'Playfair Display', serif">Playfair Display</option>
+                        <option value="'DM Sans', sans-serif">DM Sans</option>
+                        <option value="'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif">Optima</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Font Size</label>
+                      <select
+                        value={page.photos[0]?.captionSize ?? '11px'}
+                        onChange={e => handleStyleChange(page.id, 0, { captionSize: e.target.value })}
+                        style={{ padding: '3px 5px', border: '1px solid rgba(45,90,61,.2)', fontFamily: 'inherit', fontSize: '11px' }}
+                      >
+                        <option value="10px">10px</option>
+                        <option value="11px">11px</option>
+                        <option value="12px">12px</option>
+                        <option value="14px">14px</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Position of Photos</label>
+                      <select
+                        value={page.photos[0]?.objectPosition ?? 'center top'}
+                        onChange={e => handleStyleChange(page.id, 0, { objectPosition: e.target.value })}
+                        style={{ padding: '3px 5px', border: '1px solid rgba(45,90,61,.2)', fontFamily: 'inherit', fontSize: '11px' }}
+                      >
+                        <option value="center top">Top</option>
+                        <option value="center center">Center</option>
+                        <option value="center bottom">Bottom</option>
+                      </select>
+                    </div>
+                    {(savingStyle[page.id] ?? false) && (
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', paddingBottom: '3px' }}>saving…</span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Actions */}

@@ -24,26 +24,70 @@ function addCornerTabs(mount: HTMLElement): void {
   });
 }
 
-function spineShadeEl(isLeft: boolean): HTMLDivElement {
-  const el = document.createElement('div');
-  Object.assign(el.style, {
-    position: 'absolute', top: '0', bottom: '0', width: '22%', pointerEvents: 'none', zIndex: '2',
+function spineShadeEl(isLeft: boolean, strong = true): HTMLDivElement {
+  const shade = document.createElement('div');
+
+  if (!strong) {
+    Object.assign(shade.style, {
+      position: 'absolute', top: '0', bottom: '0', width: '22%', pointerEvents: 'none', zIndex: '2',
+      ...(isLeft
+        ? { right: '0', background: 'linear-gradient(to right, transparent 40%, rgba(0,0,0,0.18) 100%)' }
+        : { left: '0',  background: 'linear-gradient(to left,  transparent 40%, rgba(0,0,0,0.18) 100%)' }),
+    });
+    return shade;
+  }
+
+  Object.assign(shade.style, {
+    position: 'absolute',
+    top: '0',
+    bottom: '0',
+    width: '18%',
+    pointerEvents: 'none',
+    zIndex: '2',
     ...(isLeft
-      ? { right: '0', background: 'linear-gradient(to right, transparent 40%, rgba(0,0,0,0.18) 100%)' }
-      : { left: '0',  background: 'linear-gradient(to left,  transparent 40%, rgba(0,0,0,0.18) 100%)' }),
+      ? {
+          right: '0',
+          background: 'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(220,220,220,0.18) 48%, rgba(170,170,170,0.34) 72%, rgba(108,108,108,0.52) 94%, rgba(74,74,74,0.62) 100%)',
+          boxShadow: 'inset -2px 0 2px rgba(60,60,60,0.20)',
+        }
+      : {
+          left: '0',
+          background: 'linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(220,220,220,0.18) 48%, rgba(170,170,170,0.34) 72%, rgba(108,108,108,0.52) 94%, rgba(74,74,74,0.62) 100%)',
+          boxShadow: 'inset 2px 0 2px rgba(60,60,60,0.20)',
+        }),
   });
-  return el;
+
+  const crease = document.createElement('div');
+  Object.assign(crease.style, {
+    position: 'absolute',
+    top: '0',
+    bottom: '0',
+    width: '2px',
+    background: 'rgba(70,70,70,0.46)',
+    ...(isLeft ? { right: '0' } : { left: '0' }),
+  });
+  shade.appendChild(crease);
+  return shade;
 }
 
-function albumPageBase(isLeft: boolean): HTMLDivElement {
+function albumPageBase(isLeft: boolean, strongSpine = true): HTMLDivElement {
   const page = document.createElement('div');
   page.className = 'album-page';
   Object.assign(page.style, {
+    background: '#ffffff',
     backgroundColor: '#ffffff',
     boxSizing: 'border-box', width: '100%', height: '100%',
     position: 'relative', overflow: 'hidden',
+    ...(strongSpine
+      ? {
+          isolation: 'isolate',
+          boxShadow: isLeft
+            ? 'inset -1px 0 rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.24)'
+            : 'inset 1px 0 rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.24)',
+        }
+      : {}),
   });
-  page.appendChild(spineShadeEl(isLeft));
+  page.appendChild(spineShadeEl(isLeft, strongSpine));
   return page;
 }
 
@@ -85,7 +129,7 @@ function captionEl(text: string, fontFamily?: string, fontSize?: string, colour?
 // Used by the singlePage (International Days) books — unchanged from original.
 function buildAlbumPage(src: string, index: number): HTMLDivElement {
   const isLeft = index % 2 === 0;
-  const page = albumPageBase(isLeft);
+  const page = albumPageBase(isLeft, false);
   Object.assign(page.style, { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '11%' });
 
   const photoWrapper = document.createElement('div');
@@ -402,6 +446,7 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
   const [ready, setReady] = useState(false);
 
   const totalPages = richPages?.length ?? pages.length;
+  const richBook = Boolean(richPages);
 
   useEffect(() => {
     if (!wrapperRef.current) return;
@@ -444,6 +489,17 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
     letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer',
   };
 
+  const bookBacking: React.CSSProperties = richBook
+    ? {
+        width: '100%',
+        maxWidth: '1100px',
+        margin: '0 auto',
+        background: 'linear-gradient(to right, #ffffff 0%, #ffffff 45%, #f0f0f0 48%, #b8b8b8 49.5%, #777777 50%, #b8b8b8 50.5%, #f0f0f0 52%, #ffffff 55%, #ffffff 100%)',
+        boxShadow: '0 8px 28px rgba(0,0,0,0.58)',
+        overflow: 'hidden',
+      }
+    : { width: '100%' };
+
   return (
     <div style={{ width: '100%' }}>
       {!ready && (
@@ -451,7 +507,9 @@ export function FlipBook({ pages, richPages, singlepage }: Props) {
           Loading flipbook…
         </p>
       )}
-      <div ref={wrapperRef} style={{ width: '100%', minHeight: '60vh' }} />
+      <div style={bookBacking}>
+        <div ref={wrapperRef} style={{ width: '100%', minHeight: '60vh', background: 'transparent' }} />
+      </div>
       {ready && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', justifyContent: 'center', marginTop: '1rem' }}>
           <button onClick={() => flipRef.current?.flipPrev()} style={btnStyle}>← Previous</button>

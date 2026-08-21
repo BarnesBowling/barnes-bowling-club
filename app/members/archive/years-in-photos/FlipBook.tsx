@@ -146,35 +146,41 @@ function buildAlbumPage(src: string, index: number): HTMLDivElement {
   return page;
 }
 
-// Single photo — always full-bleed; caption overlaid at top or bottom when set.
+// Single photo — restored to the earlier album presentation with white margin
+// and a dedicated caption area above or below the image.
 function buildSinglePage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   const page = albumPageBase(isLeft);
   const photo = rp.photos[0];
   if (!photo) return page;
 
-  page.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center top'));
+  const inner = document.createElement('div');
+  Object.assign(inner.style, {
+    position: 'absolute',
+    inset: '7%',
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: '0',
+  });
 
-  if (photo.caption) {
-    const cap = document.createElement('div');
-    cap.textContent = photo.caption;
-    const atTop = photo.captionPosition === 'top';
-    Object.assign(cap.style, {
-      position: 'absolute',
-      [atTop ? 'top' : 'bottom']: '0',
-      left: '0', right: '0',
-      padding: '8px 12px',
-      background: 'rgba(255,255,255,0.88)',
-      fontFamily: photo.captionFont ?? "'Libre Baskerville', serif",
-      fontSize: photo.captionSize ?? '11px',
-      fontStyle: 'italic',
-      color: photo.captionColour ?? '#888888',
-      textAlign: 'center',
-      lineHeight: '1.4',
-      zIndex: '3',
-    });
-    page.appendChild(cap);
+  const wrap = document.createElement('div');
+  Object.assign(wrap.style, {
+    flex: '1',
+    minHeight: '0',
+    position: 'relative',
+    overflow: 'hidden',
+  });
+  wrap.appendChild(containImgEl(photo.src));
+
+  const cap = captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize, photo.captionColour);
+  if (photo.captionPosition === 'top') {
+    inner.appendChild(cap);
+    inner.appendChild(wrap);
+  } else {
+    inner.appendChild(wrap);
+    inner.appendChild(cap);
   }
 
+  page.appendChild(inner);
   return page;
 }
 
@@ -425,7 +431,7 @@ function buildRichPage(rp: RichPage, index: number): HTMLDivElement {
     case 'grid-left':
     case 'grid-right': return buildGridPage(rp, isLeft);
     case 'grid-2x2':   return buildGrid2x2Page(rp, isLeft);
-    case 'sf-single':  return buildSfSinglePage(rp, isLeft);
+    case 'sf-single':  return buildSinglePage(rp, isLeft);
     case 'sf-pair':    return buildSfPairPage(rp, isLeft);
     default:           return buildSinglePage(rp, isLeft);
   }

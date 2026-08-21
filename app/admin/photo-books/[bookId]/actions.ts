@@ -83,6 +83,47 @@ export async function deletePage(pageId: string): Promise<{ error?: string }> {
   return {};
 }
 
+export async function deletePhoto(
+  pageId: string,
+  photoIndex: number
+): Promise<{ error?: string; pageDeleted?: boolean }> {
+  await requireAdminSession();
+
+  const { data: page } = await supabaseAdmin
+    .from('photo_book_pages')
+    .select('photos, book_id')
+    .eq('id', pageId)
+    .single();
+
+  if (!page) return { error: 'Page not found' };
+
+  const photos = Array.isArray(page.photos)
+    ? [...(page.photos as { src: string; caption?: string }[])]
+    : [];
+
+  if (photoIndex < 0 || photoIndex >= photos.length) return { error: 'Photo not found' };
+
+  const removedSrc = photos[photoIndex].src;
+  photos.splice(photoIndex, 1);
+
+  if (photos.length === 0) {
+    const { error } = await supabaseAdmin.from('photo_book_pages').delete().eq('id', pageId);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabaseAdmin.from('photo_book_pages').update({ photos }).eq('id', pageId);
+    if (error) return { error: error.message };
+  }
+
+  const storageMatch = removedSrc.match(/\/storage\/v1\/object\/public\/photo-books\/(.+)$/);
+  if (storageMatch) {
+    await supabaseAdmin.storage.from('photo-books').remove([storageMatch[1]]).catch(() => {});
+  }
+
+  revalidatePath(`/admin/photo-books/${page.book_id}`);
+  revalidatePath('/members/archive/years-in-photos');
+  return { pageDeleted: photos.length === 0 };
+}
+
 export async function movePage(
   pageId: string,
   direction: 'up' | 'down'

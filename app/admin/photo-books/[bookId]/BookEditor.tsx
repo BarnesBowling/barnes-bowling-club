@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { uploadPhoto, addPage, deletePage, movePage, updateCaption, updateBook } from './actions';
+import { uploadPhoto, addPage, deletePage, deletePhoto, movePage, updateCaption, updateBook } from './actions';
 
 export interface DbPhotoBook {
   id: string;
@@ -101,6 +101,7 @@ export function BookEditor({ book, pages: initialPages }: Props) {
   const [savingCaption, setSavingCaption] = useState<Record<string, boolean>>({});
   const [movingPage, setMovingPage] = useState<Record<string, boolean>>({});
   const [deletingPage, setDeletingPage] = useState<Record<string, boolean>>({});
+  const [deletingPhoto, setDeletingPhoto] = useState<Record<string, boolean>>({});
 
   const pages = initialPages;
 
@@ -172,6 +173,15 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     setDeletingPage(prev => ({ ...prev, [pageId]: true }));
     await deletePage(pageId);
     setDeletingPage(prev => ({ ...prev, [pageId]: false }));
+    router.refresh();
+  }
+
+  async function handleDeletePhoto(pageId: string, photoIndex: number) {
+    const key = `${pageId}:${photoIndex}`;
+    if (!window.confirm('Delete this photo? This cannot be undone.')) return;
+    setDeletingPhoto(prev => ({ ...prev, [key]: true }));
+    await deletePhoto(pageId, photoIndex);
+    setDeletingPhoto(prev => ({ ...prev, [key]: false }));
     router.refresh();
   }
 
@@ -415,12 +425,21 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                   >
                     Down
                   </button>
+                  {src && (
+                    <button
+                      onClick={() => handleDeletePhoto(page.id, 0)}
+                      disabled={deletingPhoto[`${page.id}:0`] ?? false}
+                      style={{ ...deleteBtnStyle, opacity: (deletingPhoto[`${page.id}:0`] ?? false) ? 0.6 : 1 }}
+                    >
+                      Del Photo
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDelete(page.id)}
                     disabled={deletingPage[page.id] ?? false}
                     style={{ ...deleteBtnStyle, opacity: (deletingPage[page.id] ?? false) ? 0.6 : 1 }}
                   >
-                    Delete
+                    Delete Page
                   </button>
                 </div>
               </div>

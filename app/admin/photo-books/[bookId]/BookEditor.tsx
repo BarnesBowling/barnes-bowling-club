@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { uploadPhoto, addPage, deletePage, deletePhoto, movePage, updateCaption, updatePhotoStyle, updateBook } from './actions';
+import { uploadPhoto, addPage, deletePage, deletePhoto, reorderPage, updateCaption, updatePhotoStyle, updateBook } from './actions';
 
 export interface DbPhotoBook {
   id: string;
@@ -59,16 +59,6 @@ const btnStyle: React.CSSProperties = {
   color: '#fff',
 };
 
-const smallBtnStyle: React.CSSProperties = {
-  padding: '4px 10px',
-  border: '1px solid rgba(45,90,61,.25)',
-  fontFamily: "'DM Sans', sans-serif",
-  fontSize: '11px',
-  fontWeight: 600,
-  cursor: 'pointer',
-  background: 'white',
-  color: 'var(--green-deep)',
-};
 
 const deleteBtnStyle: React.CSSProperties = {
   padding: '4px 10px',
@@ -99,7 +89,7 @@ export function BookEditor({ book, pages: initialPages }: Props) {
   const [addError, setAddError] = useState<string | null>(null);
 
   const [savingCaption, setSavingCaption] = useState<Record<string, boolean>>({});
-  const [movingPage, setMovingPage] = useState<Record<string, boolean>>({});
+  const [reorderingPage, setReorderingPage] = useState<Record<string, boolean>>({});
   const [deletingPage, setDeletingPage] = useState<Record<string, boolean>>({});
   const [deletingPhoto, setDeletingPhoto] = useState<Record<string, boolean>>({});
   const [savingStyle, setSavingStyle] = useState<Record<string, boolean>>({});
@@ -162,10 +152,10 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     }
   }
 
-  async function handleMove(pageId: string, direction: 'up' | 'down') {
-    setMovingPage(prev => ({ ...prev, [pageId]: true }));
-    await movePage(pageId, direction);
-    setMovingPage(prev => ({ ...prev, [pageId]: false }));
+  async function handleReorder(pageId: string, newPosition: number) {
+    setReorderingPage(prev => ({ ...prev, [pageId]: true }));
+    await reorderPage(pageId, newPosition);
+    setReorderingPage(prev => ({ ...prev, [pageId]: false }));
     router.refresh();
   }
 
@@ -361,8 +351,6 @@ export function BookEditor({ book, pages: initialPages }: Props) {
           {pages.map((page, i) => {
             const src = page.photos[0]?.src ?? '';
             const caption = page.photos[0]?.caption ?? '';
-            const isFirst = i === 0;
-            const isLast = i === pages.length - 1;
 
             return (
               <div
@@ -459,23 +447,14 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                  <button
-                    onClick={() => handleMove(page.id, 'up')}
-                    disabled={isFirst || (movingPage[page.id] ?? false)}
-                    style={{ ...smallBtnStyle, opacity: isFirst ? 0.35 : 1 }}
-                    title="Move up"
-                  >
-                    Up
-                  </button>
-                  <button
-                    onClick={() => handleMove(page.id, 'down')}
-                    disabled={isLast || (movingPage[page.id] ?? false)}
-                    style={{ ...smallBtnStyle, opacity: isLast ? 0.35 : 1 }}
-                    title="Move down"
-                  >
-                    Down
-                  </button>
+                <div style={{ display: 'flex', gap: '6px', flexShrink: 0, alignItems: 'center' }}>
+                  <PositionInput
+                    pageId={page.id}
+                    currentPosition={i + 1}
+                    total={pages.length}
+                    reordering={reorderingPage[page.id] ?? false}
+                    onReorder={handleReorder}
+                  />
                   {src && (
                     <button
                       onClick={() => handleDeletePhoto(page.id, 0)}
@@ -498,6 +477,61 @@ export function BookEditor({ book, pages: initialPages }: Props) {
           })}
         </div>
       </section>
+    </div>
+  );
+}
+
+function PositionInput({
+  pageId,
+  currentPosition,
+  total,
+  reordering,
+  onReorder,
+}: {
+  pageId: string;
+  currentPosition: number;
+  total: number;
+  reordering: boolean;
+  onReorder: (pageId: string, newPosition: number) => void;
+}) {
+  const [value, setValue] = useState(String(currentPosition));
+
+  useEffect(() => {
+    setValue(String(currentPosition));
+  }, [currentPosition]);
+
+  function commit() {
+    const n = parseInt(value, 10);
+    if (!isNaN(n) && n >= 1 && n <= total && n !== currentPosition) {
+      onReorder(pageId, n);
+    } else {
+      setValue(String(currentPosition));
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif", letterSpacing: '.05em' }}>#</span>
+      <input
+        type="number"
+        min={1}
+        max={total}
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur(); }}
+        disabled={reordering}
+        title={`Page position (1–${total})`}
+        style={{
+          width: '44px',
+          padding: '3px 5px',
+          border: '1px solid rgba(45,90,61,.25)',
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '12px',
+          textAlign: 'center',
+          opacity: reordering ? 0.5 : 1,
+        }}
+      />
     </div>
   );
 }

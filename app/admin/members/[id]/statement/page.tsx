@@ -32,10 +32,17 @@ export default async function MemberStatementPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  let role = 'admin';
-  try { ({ role } = await requireViewerSession()); } catch { redirect('/login?redirect=/admin/statements'); }
-
   const { id } = await params;
+
+  let session: { email: string; role: 'admin' | 'viewer' };
+  try {
+    session = await requireViewerSession();
+  } catch {
+    redirect(`/login?redirect=/admin/members/${id}/statement`);
+  }
+
+  const backHref = session.role === 'viewer' ? '/admin/statements' : '/admin';
+  const backLabel = session.role === 'viewer' ? '← Back to Statements' : '← Admin panel';
 
   const [{ data: member }, { data: rawEntries }] = await Promise.all([
     supabaseAdmin
@@ -60,7 +67,6 @@ export default async function MemberStatementPage({
     metadata: e.metadata as Record<string, unknown> | null,
   }));
 
-  // Compute running balance (debit = positive, credit = negative)
   let running = 0;
   const rows = entries.map(e => {
     running += e.type === 'credit' ? -e.amount : e.amount;
@@ -68,8 +74,6 @@ export default async function MemberStatementPage({
   });
 
   const finalBalance = running;
-
-  // ── Styles ────────────────────────────────────────────────────────────────
 
   const thStyle: React.CSSProperties = {
     padding: '10px 12px',
@@ -99,11 +103,9 @@ export default async function MemberStatementPage({
       <Navbar />
       <main style={{ padding: '3rem 0', background: 'var(--cream)', minHeight: '80vh' }}>
         <div className="section-inner" style={{ padding: '0 2rem', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-
-          {/* ── Back + header ── */}
           <div>
             <a
-              href={role === 'viewer' ? '/admin/statements' : '/admin/club-members'}
+              href={backHref}
               style={{
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: '12px',
@@ -114,13 +116,12 @@ export default async function MemberStatementPage({
                 marginBottom: '.75rem',
               }}
             >
-              ← Back to Statements
+              {backLabel}
             </a>
-            <span className="section-tag">Admin</span>
+            <span className="section-tag">{session.role === 'viewer' ? 'Statements' : 'Admin'}</span>
             <h1 className="section-h2">Member Statement</h1>
           </div>
 
-          {/* ── Member info card ── */}
           <div style={{
             background: '#fff',
             border: '1px solid rgba(45,90,61,.12)',
@@ -176,7 +177,6 @@ export default async function MemberStatementPage({
             </div>
           </div>
 
-          {/* ── Actions ── */}
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <StatementPDFButton
               member={member}
@@ -184,7 +184,6 @@ export default async function MemberStatementPage({
             />
           </div>
 
-          {/* ── Ledger table ── */}
           <section>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
               Transaction History
@@ -222,7 +221,6 @@ export default async function MemberStatementPage({
                       const balOwing  = e.balance > 0.005;
                       const balCredit = e.balance < -0.005;
 
-                      // Guest fee extra detail
                       const guestNames = e.guest_names ?? (e.metadata?.guest_names as string | undefined);
                       const dateOfPlay = e.metadata?.date_of_play as string | undefined;
                       const numGuests  = e.num_guests ?? (e.metadata?.num_guests as number | undefined);
@@ -350,7 +348,6 @@ export default async function MemberStatementPage({
               </div>
             )}
           </section>
-
         </div>
       </main>
       <Footer />

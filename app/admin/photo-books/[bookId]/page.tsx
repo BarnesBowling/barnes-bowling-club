@@ -4,6 +4,7 @@ import { Footer } from '@/components/Footer';
 import { requireAdminSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { BookEditor } from './BookEditor';
+import { PhotoSaveBar } from './PhotoSaveBar';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,9 @@ export default async function BookEditorPage({ params }: PageProps) {
   try { await requireAdminSession(); } catch { redirect('/login?redirect=/admin/photo-books'); }
 
   const { bookId } = await params;
+
+  // The 2025 book is deliberately preserved exactly as it is.
+  if (bookId === 'book-2025') redirect('/admin/photo-books');
 
   const [{ data: book }, { data: pages }] = await Promise.all([
     supabaseAdmin.from('photo_books').select('*').eq('id', bookId).maybeSingle(),
@@ -38,7 +42,9 @@ export default async function BookEditorPage({ params }: PageProps) {
           </div>
         </div>
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
+          {/* Original integrated editor: thumbnails, captions, positioning and styling controls. */}
           <BookEditor book={book} pages={pages ?? []} />
+          <PhotoSaveBar />
         </div>
       </main>
       <Footer />

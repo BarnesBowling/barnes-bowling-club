@@ -9,7 +9,12 @@ function fmtGBP(n: number): string {
 }
 
 export default async function StatementsPage() {
-  try { await requireViewerSession(); } catch { redirect('/login?redirect=/admin/statements'); }
+  let session: { email: string; role: 'admin' | 'viewer' };
+  try {
+    session = await requireViewerSession();
+  } catch {
+    redirect('/login?redirect=/admin/statements');
+  }
 
   const [{ data: members }, { data: ledger }] = await Promise.all([
     supabaseAdmin
@@ -21,121 +26,90 @@ export default async function StatementsPage() {
       .select('member_id, amount, type'),
   ]);
 
-  // Compute per-member balance (positive = owes, negative = in credit)
-  const balanceMap = new Map<string, number>();
-  for (const row of ledger ?? []) {
-    const signed = row.type === 'credit' ? -Number(row.amount) : Number(row.amount);
-    balanceMap.set(row.member_id, (balanceMap.get(row.member_id) ?? 0) + signed);
+  const balances = new Map<string, number>();
+  for (const entry of ledger ?? []) {
+    const current = balances.get(entry.member_id) ?? 0;
+    const amount = Number(entry.amount);
+    balances.set(entry.member_id, current + (entry.type === 'credit' ? -amount : amount));
   }
-
-  const rows = (members ?? []).map(m => ({
-    ...m,
-    balance: balanceMap.get(m.id) ?? 0,
-  }));
-
-  const thStyle: React.CSSProperties = {
-    padding: '9px 14px',
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: '10px',
-    fontWeight: 600,
-    letterSpacing: '.1em',
-    textTransform: 'uppercase',
-    color: 'rgba(255,255,255,.85)',
-    textAlign: 'left',
-    background: 'var(--green-deep)',
-    whiteSpace: 'nowrap',
-  };
-
-  const tdStyle: React.CSSProperties = {
-    padding: '11px 14px',
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: '13px',
-    color: 'var(--text-dark)',
-    borderBottom: '1px solid rgba(45,90,61,.07)',
-    verticalAlign: 'middle',
-  };
 
   return (
     <>
       <Navbar />
       <main style={{ padding: '3rem 0', background: 'var(--cream)', minHeight: '80vh' }}>
-        <div className="section-inner" style={{ padding: '0 2rem', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-
-          <div>
-            <span className="section-tag">Admin</span>
+        <div className="section-inner" style={{ padding: '0 2rem' }}>
+          <div style={{ marginBottom: '2rem' }}>
+            {session.role === 'admin' && (
+              <a
+                href="/admin"
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: '12px',
+                  color: 'var(--green-deep)',
+                  textDecoration: 'none',
+                  letterSpacing: '.04em',
+                }}
+              >
+                ← Admin panel
+              </a>
+            )}
+            <span className="section-tag" style={{ display: 'block', marginTop: session.role === 'admin' ? '1rem' : 0 }}>
+              Statements
+            </span>
             <h1 className="section-h2">Member Statements</h1>
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
-              View member account statements. Click a name to open their full statement.
+              Read-only access to member balances and statements.
             </p>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', minWidth: '480px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', minWidth: '620px' }}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Name</th>
-                  <th style={thStyle}>Membership No.</th>
-                  <th style={thStyle}>Status</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Balance</th>
-                  <th style={{ ...thStyle, width: '1%' }}></th>
+                  {['Membership No.', 'Member', 'Status', 'Balance', ''].map((label, i) => (
+                    <th
+                      key={label || `blank-${i}`}
+                      style={{
+                        padding: '10px 12px',
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        letterSpacing: '.1em',
+                        textTransform: 'uppercase',
+                        color: 'rgba(255,255,255,.85)',
+                        textAlign: i === 3 ? 'right' : 'left',
+                        background: 'var(--green-deep)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {rows.map((m, i) => {
-                  const owing  = m.balance > 0.005;
-                  const credit = m.balance < -0.005;
+                {(members ?? []).map((member, index) => {
+                  const balance = balances.get(member.id) ?? 0;
+                  const owing = balance > 0.005;
+                  const credit = balance < -0.005;
                   return (
-                    <tr key={m.id} style={{ background: i % 2 === 0 ? '#fff' : 'rgba(45,90,61,.018)' }}>
-                      <td style={{ ...tdStyle, fontWeight: 500 }}>{m.full_name}</td>
-                      <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>
-                        {m.membership_number ?? '—'}
+                    <tr key={member.id} style={{ background: index % 2 === 0 ? '#fff' : 'rgba(45,90,61,.02)' }}>
+                      <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)' }}>
+                        {member.membership_number ?? '—'}
                       </td>
-                      <td style={tdStyle}>
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '2px 8px',
-                          fontSize: '10px',
-                          fontWeight: 600,
-                          letterSpacing: '.07em',
-                          textTransform: 'uppercase',
-                          fontFamily: "'DM Sans', sans-serif",
-                          ...(m.status === 'active'
-                            ? { background: 'rgba(45,90,61,.1)', color: '#2d5a3d' }
-                            : m.status === 'probationary'
-                            ? { background: 'rgba(201,168,76,.15)', color: '#7a6040' }
-                            : { background: 'rgba(0,0,0,.06)', color: '#666' }),
-                        }}>
-                          {m.status}
-                        </span>
+                      <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-dark)', fontWeight: 600 }}>
+                        {member.full_name}
                       </td>
-                      <td style={{
-                        ...tdStyle,
-                        textAlign: 'right',
-                        fontWeight: 700,
-                        whiteSpace: 'nowrap',
-                        color: owing ? '#c0392b' : credit ? '#2e7d32' : 'var(--text-muted)',
-                      }}>
-                        {owing
-                          ? fmtGBP(m.balance)
-                          : credit
-                          ? `−${fmtGBP(m.balance)}`
-                          : '—'}
+                      <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                        {member.status}
                       </td>
-                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', textAlign: 'right', fontWeight: 700, color: owing ? '#c0392b' : credit ? '#2e7d32' : 'var(--text-dark)', whiteSpace: 'nowrap' }}>
+                        {balance >= 0 ? fmtGBP(balance) : `−${fmtGBP(balance)}`}
+                      </td>
+                      <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)', textAlign: 'right' }}>
                         <a
-                          href={`/admin/members/${m.id}/statement`}
-                          style={{
-                            fontFamily: "'DM Sans', sans-serif",
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            letterSpacing: '.06em',
-                            textTransform: 'uppercase',
-                            color: 'var(--green-mid)',
-                            textDecoration: 'none',
-                            padding: '4px 10px',
-                            border: '1.5px solid var(--green-mid)',
-                            display: 'inline-block',
-                          }}
+                          href={`/admin/members/${member.id}/statement`}
+                          style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, color: 'var(--green-deep)', textDecoration: 'none' }}
                         >
                           View →
                         </a>
@@ -146,7 +120,6 @@ export default async function StatementsPage() {
               </tbody>
             </table>
           </div>
-
         </div>
       </main>
       <Footer />

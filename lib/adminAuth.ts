@@ -31,9 +31,11 @@ export async function requireAdminSession(): Promise<{ email: string }> {
   return { email: session.email };
 }
 
-// Allows 'admin' and 'viewer' roles. Returns the role so callers can
-// conditionally render read-only vs full-admin UI.
-export async function requireViewerSession(): Promise<{ email: string; role: string }> {
+/**
+ * Allows read-only statement access to either an admin or viewer profile.
+ * All other admin pages continue to use requireAdminSession().
+ */
+export async function requireViewerSession(): Promise<{ email: string; role: 'admin' | 'viewer' }> {
   const cookieStore = await cookies();
   const sc = cookieStore.get(SESSION_COOKIE);
   const session = sc ? await verifyMemberSession(sc.value) : null;
@@ -45,6 +47,9 @@ export async function requireViewerSession(): Promise<{ email: string; role: str
     .eq('email', session.email)
     .maybeSingle();
 
-  if (!profile || !['admin', 'viewer'].includes(profile.role)) throw new Error('forbidden');
-  return { email: session.email, role: profile.role };
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'viewer')) {
+    throw new Error('forbidden');
+  }
+
+  return { email: session.email, role: profile.role as 'admin' | 'viewer' };
 }

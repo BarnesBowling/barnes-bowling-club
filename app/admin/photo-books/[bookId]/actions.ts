@@ -12,6 +12,18 @@ async function ensurePhotoBooksBucket(): Promise<void> {
   }
 }
 
+async function nextSortOrder(bookId: string): Promise<number> {
+  const { data: last } = await supabaseAdmin
+    .from('photo_book_pages')
+    .select('sort_order')
+    .eq('book_id', bookId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return (last?.sort_order ?? -1) + 1;
+}
+
 export async function uploadPhoto(
   formData: FormData
 ): Promise<{ url?: string; error?: string }> {
@@ -43,28 +55,69 @@ export async function addPage(
 ): Promise<{ error?: string }> {
   await requireAdminSession();
 
-  const { data: last } = await supabaseAdmin
-    .from('photo_book_pages')
-    .select('sort_order')
-    .eq('book_id', bookId)
-    .order('sort_order', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const nextOrder = (last?.sort_order ?? -1) + 1;
   const photos = caption
     ? [{ src: url, caption }]
     : [{ src: url }];
 
   const { error } = await supabaseAdmin.from('photo_book_pages').insert({
     book_id: bookId,
-    sort_order: nextOrder,
+    sort_order: await nextSortOrder(bookId),
     layout: 'single',
     photos,
   });
 
   if (error) return { error: error.message };
   revalidatePath(`/admin/photo-books/${bookId}`);
+  revalidatePath('/members/archive/years-in-photos');
+  return {};
+}
+
+export async function addBlankPage(bookId: string): Promise<{ error?: string }> {
+  await requireAdminSession();
+
+  const { error } = await supabaseAdmin.from('photo_book_pages').insert({
+    book_id: bookId,
+    sort_order: await nextSortOrder(bookId),
+    layout: 'single',
+    photos: [],
+  });
+
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/photo-books/${bookId}`);
+  revalidatePath('/members/archive/years-in-photos');
+  return {};
+}
+
+export async function addPhotoToPage(
+  pageId: string,
+  url: string,
+  caption?: string
+): Promise<{ error?: string }> {
+  await requireAdminSession();
+
+  const { data: page, error: fetchError } = await supabaseAdmin
+    .from('photo_book_pages')
+    .select('photos, book_id')
+    .eq('id', pageId)
+    .single();
+
+  if (fetchError || !page) return { error: fetchError?.message ?? 'Page not found' };
+
+  const photos = Array.isArray(page.photos)
+    ? [...page.photos as Record<string, unknown>[]]
+    : [];
+
+  if (photos.length >= 4) return { error: 'A page can contain up to 4 photos.' };
+
+  photos.push(caption ? { src: url, caption } : { src: url });
+
+  const { error } = await supabaseAdmin
+    .from('photo_book_pages')
+    .update({ photos })
+    .eq('id', pageId);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/photo-books/${page.book_id}`);
   revalidatePath('/members/archive/years-in-photos');
   return {};
 }
@@ -208,8 +261,6 @@ export async function movePage(
 
   if (!page) return { error: 'Page not found' };
 
-  // Up: nearest page with lower sort_order (descending, take first)
-  // Down: nearest page with higher sort_order (ascending, take first)
   const neighbourQuery = direction === 'up'
     ? supabaseAdmin.from('photo_book_pages').select('id, sort_order').eq('book_id', page.book_id).lt('sort_order', page.sort_order).order('sort_order', { ascending: false }).limit(1).maybeSingle()
     : supabaseAdmin.from('photo_book_pages').select('id, sort_order').eq('book_id', page.book_id).gt('sort_order', page.sort_order).order('sort_order', { ascending: true }).limit(1).maybeSingle();
@@ -224,6 +275,62 @@ export async function movePage(
   ]);
 
   revalidatePath(`/admin/photo-books/${page.book_id}`);
+  revalidatePath('/members/archive/years-in-photos');
+  return {};
+}
+
+export async function reorderPages(
+  bookId: string,
+  pageIds: string[]
+): Promise<{ error?: string }> {
+  await requireAdminSession();
+
+  const { data: existing, error: fetchError } = await supabaseAdmin
+    .from('photo_book_pages')
+    .select('id')
+    .eq('book_id', bookId);
+
+  if (fetchError) return { error: fetchError.message };
+
+  const existingIds = (existing ?? []).map(page => page.id);
+  const uniquePageIds = new Set(pageIds);
+  if (
+    pageIds.length !== existingIds.length ||
+    uniquePageIds.size !== pageIds.length ||
+    existingIds.some(id => !uniquePageIds.has(id))
+  ) {
+    return { error: 'The page list changed. Please refresh and try again.' };
+  }
+
+  // Move rows onto temporary unique values first so the UNIQUE(book_id, sort_order)
+  // constraint cannot be tripped while pages are being reordered.
+  const temporaryResults = await Promise.all(
+    pageIds.map((id, index) =>
+      supabaseAdmin
+        .from('photo_book_pages')
+        .update({ sort_order: 100000 + index })
+        .eq('id', id)
+        .eq('book_id', bookId)
+    )
+  );
+
+  const temporaryError = temporaryResults.find(result => result.error)?.error;
+  if (temporaryError) return { error: temporaryError.message };
+
+  const results = await Promise.all(
+    pageIds.map((id, index) =>
+      supabaseAdmin
+        .from('photo_book_pages')
+        .update({ sort_order: index })
+        .eq('id', id)
+        .eq('book_id', bookId)
+    )
+  );
+
+  const updateError = results.find(result => result.error)?.error;
+  if (updateError) return { error: updateError.message };
+
+  revalidatePath(`/admin/photo-books/${bookId}`);
   revalidatePath('/members/archive/years-in-photos');
   return {};
 }

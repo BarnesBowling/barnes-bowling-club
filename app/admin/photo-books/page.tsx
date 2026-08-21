@@ -56,7 +56,7 @@ export default async function PhotoBooksAdminPage() {
               Photo <em style={{ color: 'var(--gold-light)' }}>Books</em>
             </h1>
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '15px', color: 'rgba(245,240,232,.65)', marginTop: '0.75rem' }}>
-              Manage years-in-photos flipbooks — upload, reorder and caption photos.
+              Manage years-in-photos flipbooks — upload, reorder and caption photos. The 2025 book is preserved unchanged.
             </p>
           </div>
         </div>
@@ -78,51 +78,67 @@ export default async function PhotoBooksAdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(books ?? []).map((book, i) => (
-                    <tr
-                      key={book.id}
-                      style={{
-                        borderBottom: i < (books?.length ?? 1) - 1 ? '1px solid rgba(45,90,61,.08)' : 'none',
-                      }}
-                    >
-                      <td style={{ padding: '0.9rem 1.25rem', fontWeight: 500, color: 'var(--green-deep)' }}>
-                        {book.title}
-                      </td>
-                      <td style={{ padding: '0.9rem 1.25rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{
-                            width: '20px',
-                            height: '20px',
-                            background: book.spine_colour,
-                            border: '1px solid rgba(0,0,0,.15)',
-                            borderRadius: '2px',
-                            flexShrink: 0,
-                          }} />
-                          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                            {book.spine_colour}
-                          </span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.9rem 1.25rem', color: 'var(--text-muted)' }}>
-                        {countMap.get(book.id) ?? 0}
-                      </td>
-                      <td style={{ padding: '0.9rem 1.25rem', textAlign: 'right' }}>
-                        <a
-                          href={`/admin/photo-books/${book.id}`}
-                          style={{
-                            fontFamily: "'DM Sans', sans-serif",
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            color: 'var(--green-mid)',
-                            textDecoration: 'none',
-                            letterSpacing: '.05em',
-                          }}
-                        >
-                          Edit
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
+                  {(books ?? []).map((book, i) => {
+                    const isPreserved2025 = book.id === 'book-2025';
+                    return (
+                      <tr
+                        key={book.id}
+                        style={{
+                          borderBottom: i < (books?.length ?? 1) - 1 ? '1px solid rgba(45,90,61,.08)' : 'none',
+                        }}
+                      >
+                        <td style={{ padding: '0.9rem 1.25rem', fontWeight: 500, color: 'var(--green-deep)' }}>
+                          {book.title}
+                        </td>
+                        <td style={{ padding: '0.9rem 1.25rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{
+                              width: '20px',
+                              height: '20px',
+                              background: book.spine_colour,
+                              border: '1px solid rgba(0,0,0,.15)',
+                              borderRadius: '2px',
+                              flexShrink: 0,
+                            }} />
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                              {book.spine_colour}
+                            </span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '0.9rem 1.25rem', color: 'var(--text-muted)' }}>
+                          {countMap.get(book.id) ?? 0}
+                        </td>
+                        <td style={{ padding: '0.9rem 1.25rem', textAlign: 'right' }}>
+                          {isPreserved2025 ? (
+                            <span style={{
+                              fontFamily: "'DM Sans', sans-serif",
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              color: 'var(--text-muted)',
+                              letterSpacing: '.05em',
+                              textTransform: 'uppercase',
+                            }}>
+                              Preserved
+                            </span>
+                          ) : (
+                            <a
+                              href={`/admin/photo-books/${book.id}`}
+                              style={{
+                                fontFamily: "'DM Sans', sans-serif",
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                color: 'var(--green-mid)',
+                                textDecoration: 'none',
+                                letterSpacing: '.05em',
+                              }}
+                            >
+                              Edit
+                            </a>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {(books ?? []).length === 0 && (
                     <tr>
                       <td colSpan={4} style={{ padding: '2rem 1.25rem', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>

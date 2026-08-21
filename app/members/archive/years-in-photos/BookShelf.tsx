@@ -90,10 +90,9 @@ export function BookShelf({ books, pagesByBook }: Props) {
 
   function openBook(book: DbBook) {
     const dbPages = pagesByBook[book.id] ?? [];
-    const hasSingleLayout = dbPages.length > 0 && dbPages.every(p => p.layout === 'single');
-    const hasRichLayouts = dbPages.some(p => p.layout !== 'single');
 
     if (book.single_page) {
+      // Corner-tab album style (International Days). FlipBook uses pf.loadFromImages.
       setSelected({
         id: book.id,
         title: book.title,
@@ -102,32 +101,17 @@ export function BookShelf({ books, pagesByBook }: Props) {
         pages: dbPages.map(p => p.photos[0]?.src ?? '').filter(Boolean),
         richPages: undefined,
       });
-    } else if (hasRichLayouts || (!hasSingleLayout && dbPages.length > 0)) {
-      setSelected({
-        id: book.id,
-        title: book.title,
-        spineColour: book.spine_colour,
-        singlePage: false,
-        pages: [],
-        richPages: dbPages.map(toRichPage),
-      });
-    } else if (hasSingleLayout) {
-      setSelected({
-        id: book.id,
-        title: book.title,
-        spineColour: book.spine_colour,
-        singlePage: false,
-        pages: dbPages.map(p => p.photos[0]?.src ?? '').filter(Boolean),
-        richPages: undefined,
-      });
     } else {
+      // All other books — always route through FlipBook's rich-page renderer so that
+      // white pages + shaded spine styling (defined in FlipBook.tsx) is always applied.
+      // Never use pf.loadFromImages here: that bypasses the styled renderer entirely.
       setSelected({
         id: book.id,
         title: book.title,
         spineColour: book.spine_colour,
         singlePage: false,
         pages: [],
-        richPages: undefined,
+        richPages: dbPages.length > 0 ? dbPages.map(toRichPage) : undefined,
       });
     }
   }

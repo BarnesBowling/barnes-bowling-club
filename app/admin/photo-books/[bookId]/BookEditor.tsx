@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  uploadPhoto, addPage, addPhotoToPage, deletePage, deletePhoto,
+  uploadPhoto, addPage, deletePage, deletePhoto,
   reorderPage, updatePhotoStyle, updateBook,
 } from './actions';
 
@@ -104,7 +104,6 @@ export function BookEditor({ book, pages: initialPages }: Props) {
   const [deletingPage, setDeletingPage] = useState<Record<string, boolean>>({});
   const [deletingPhoto, setDeletingPhoto] = useState<Record<string, boolean>>({});
   const [savingStyle, setSavingStyle] = useState<Record<string, boolean>>({});
-  const [stackUploading, setStackUploading] = useState<Record<string, boolean>>({});
 
   const pages = initialPages;
 
@@ -141,32 +140,6 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     const { error: pageErr } = await addPage(book.id, url);
     setUploading(false);
     if (fileRef.current) fileRef.current.value = '';
-    if (pageErr) {
-      setUploadError(pageErr);
-    } else {
-      router.refresh();
-    }
-  }
-
-  async function handleStackPhoto(pageId: string, e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setStackUploading(prev => ({ ...prev, [pageId]: true }));
-
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('bookId', book.id);
-
-    const { url, error: upErr } = await uploadPhoto(fd);
-    if (upErr || !url) {
-      setUploadError(upErr ?? 'Upload failed');
-      setStackUploading(prev => ({ ...prev, [pageId]: false }));
-      return;
-    }
-
-    const { error: pageErr } = await addPhotoToPage(pageId, url);
-    setStackUploading(prev => ({ ...prev, [pageId]: false }));
-    e.target.value = '';
     if (pageErr) {
       setUploadError(pageErr);
     } else {
@@ -455,29 +428,6 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                 );
               })}
 
-              {/* Stack 2nd photo (only shown when page has exactly 1 photo) */}
-              {page.photos.length === 1 && (
-                <div style={{
-                  borderTop: '1px solid rgba(45,90,61,.07)',
-                  paddingTop: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  flexWrap: 'wrap',
-                }}>
-                  <span style={{ ...labelStyle, margin: 0, whiteSpace: 'nowrap' }}>Stack 2nd photo</span>
-                  {stackUploading[page.id] ? (
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>Uploading…</span>
-                  ) : (
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={e => handleStackPhoto(page.id, e)}
-                      style={{ fontSize: '12px', fontFamily: "'DM Sans', sans-serif", color: 'var(--text-muted)', cursor: 'pointer' }}
-                    />
-                  )}
-                </div>
-              )}
             </div>
           ))}
         </div>

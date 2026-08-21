@@ -108,8 +108,6 @@ export function ShelfAlbumBook({ pages, title, spineColour }: Props) {
       pages={[]}
       richPages={editablePages}
       singlepage={false}
-      title={title}
-      spineColour={spineColour}
     />
   );
 }

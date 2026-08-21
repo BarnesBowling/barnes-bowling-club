@@ -3,6 +3,8 @@ export interface RichPagePhoto {
   caption?: string;
   captionFont?: string;
   captionSize?: string;
+  captionColour?: string;
+  captionPosition?: 'top' | 'bottom';
   objectPosition?: string;
 }
 

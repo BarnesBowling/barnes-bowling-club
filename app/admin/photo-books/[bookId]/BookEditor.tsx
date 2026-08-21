@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { uploadPhoto, addPage, deletePage, deletePhoto, reorderPage, updateCaption, updatePhotoStyle, updateBook } from './actions';
+import {
+  uploadPhoto, addPage, addPhotoToPage, deletePage, deletePhoto,
+  reorderPage, updatePhotoStyle, updateBook,
+} from './actions';
 
 export interface DbPhotoBook {
   id: string;
@@ -20,7 +23,15 @@ export interface DbPhotoBookPage {
   page_title: string | null;
   page_subtitle: string | null;
   shared_caption: string | null;
-  photos: { src: string; caption?: string; captionFont?: string; captionSize?: string; objectPosition?: string }[];
+  photos: {
+    src: string;
+    caption?: string;
+    captionFont?: string;
+    captionSize?: string;
+    captionColour?: string;
+    captionPosition?: 'top' | 'bottom';
+    objectPosition?: string;
+  }[];
 }
 
 interface Props {
@@ -59,7 +70,6 @@ const btnStyle: React.CSSProperties = {
   color: '#fff',
 };
 
-
 const deleteBtnStyle: React.CSSProperties = {
   padding: '4px 10px',
   border: '1px solid rgba(180,0,0,.25)',
@@ -69,6 +79,13 @@ const deleteBtnStyle: React.CSSProperties = {
   cursor: 'pointer',
   background: 'white',
   color: '#a00',
+};
+
+const selectStyle: React.CSSProperties = {
+  padding: '3px 5px',
+  border: '1px solid rgba(45,90,61,.2)',
+  fontFamily: 'inherit',
+  fontSize: '11px',
 };
 
 export function BookEditor({ book, pages: initialPages }: Props) {
@@ -83,11 +100,11 @@ export function BookEditor({ book, pages: initialPages }: Props) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const [savingCaption, setSavingCaption] = useState<Record<string, boolean>>({});
   const [reorderingPage, setReorderingPage] = useState<Record<string, boolean>>({});
   const [deletingPage, setDeletingPage] = useState<Record<string, boolean>>({});
   const [deletingPhoto, setDeletingPhoto] = useState<Record<string, boolean>>({});
   const [savingStyle, setSavingStyle] = useState<Record<string, boolean>>({});
+  const [stackUploading, setStackUploading] = useState<Record<string, boolean>>({});
 
   const pages = initialPages;
 
@@ -131,6 +148,32 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     }
   }
 
+  async function handleStackPhoto(pageId: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setStackUploading(prev => ({ ...prev, [pageId]: true }));
+
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('bookId', book.id);
+
+    const { url, error: upErr } = await uploadPhoto(fd);
+    if (upErr || !url) {
+      setUploadError(upErr ?? 'Upload failed');
+      setStackUploading(prev => ({ ...prev, [pageId]: false }));
+      return;
+    }
+
+    const { error: pageErr } = await addPhotoToPage(pageId, url);
+    setStackUploading(prev => ({ ...prev, [pageId]: false }));
+    e.target.value = '';
+    if (pageErr) {
+      setUploadError(pageErr);
+    } else {
+      router.refresh();
+    }
+  }
+
   async function handleReorder(pageId: string, newPosition: number) {
     setReorderingPage(prev => ({ ...prev, [pageId]: true }));
     await reorderPage(pageId, newPosition);
@@ -146,10 +189,21 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     router.refresh();
   }
 
-  async function handleStyleChange(pageId: string, photoIndex: number, style: { captionFont?: string; captionSize?: string; objectPosition?: string }) {
-    setSavingStyle(prev => ({ ...prev, [pageId]: true }));
+  async function handleStyleChange(
+    pageId: string,
+    photoIndex: number,
+    style: {
+      caption?: string;
+      captionFont?: string;
+      captionSize?: string;
+      captionColour?: string;
+      captionPosition?: 'top' | 'bottom';
+      objectPosition?: string;
+    }
+  ) {
+    setSavingStyle(prev => ({ ...prev, [`${pageId}:${photoIndex}`]: true }));
     await updatePhotoStyle(pageId, photoIndex, style);
-    setSavingStyle(prev => ({ ...prev, [pageId]: false }));
+    setSavingStyle(prev => ({ ...prev, [`${pageId}:${photoIndex}`]: false }));
     router.refresh();
   }
 
@@ -159,13 +213,6 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     setDeletingPhoto(prev => ({ ...prev, [key]: true }));
     await deletePhoto(pageId, photoIndex);
     setDeletingPhoto(prev => ({ ...prev, [key]: false }));
-    router.refresh();
-  }
-
-  async function handleCaptionBlur(pageId: string, caption: string) {
-    setSavingCaption(prev => ({ ...prev, [pageId]: true }));
-    await updateCaption(pageId, caption);
-    setSavingCaption(prev => ({ ...prev, [pageId]: false }));
     router.refresh();
   }
 
@@ -188,11 +235,7 @@ export function BookEditor({ book, pages: initialPages }: Props) {
         }}>
           <div>
             <label style={labelStyle}>Title</label>
-            <input
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              style={inputStyle}
-            />
+            <input value={title} onChange={e => setTitle(e.target.value)} style={inputStyle} />
           </div>
           <div>
             <label style={labelStyle}>Spine colour</label>
@@ -203,22 +246,12 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                 onChange={e => setSpineColour(e.target.value)}
                 style={{ width: '48px', height: '36px', padding: '2px', border: '1px solid rgba(45,90,61,.2)', cursor: 'pointer' }}
               />
-              <div style={{
-                width: '36px',
-                height: '36px',
-                background: spineColour,
-                border: '1px solid rgba(0,0,0,.15)',
-                borderRadius: '2px',
-              }} />
+              <div style={{ width: '36px', height: '36px', background: spineColour, border: '1px solid rgba(0,0,0,.15)', borderRadius: '2px' }} />
               <span style={{ fontFamily: 'monospace', fontSize: '13px', color: 'var(--text-muted)' }}>{spineColour}</span>
             </div>
           </div>
           {metaError && <p style={{ color: '#a00', fontSize: '13px', margin: 0 }}>{metaError}</p>}
-          <button
-            onClick={handleSaveMeta}
-            disabled={metaSaving}
-            style={{ ...btnStyle, opacity: metaSaving ? 0.6 : 1, alignSelf: 'flex-start' }}
-          >
+          <button onClick={handleSaveMeta} disabled={metaSaving} style={{ ...btnStyle, opacity: metaSaving ? 0.6 : 1, alignSelf: 'flex-start' }}>
             {metaSaving ? 'Saving…' : 'Save details'}
           </button>
         </div>
@@ -227,47 +260,26 @@ export function BookEditor({ book, pages: initialPages }: Props) {
       {/* ── Upload new photo ── */}
       <section>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
-          Upload new photo
+          Add page
         </h2>
-        <div style={{
-          background: 'white',
-          border: '1px solid rgba(45,90,61,.12)',
-          padding: '1.75rem',
-          maxWidth: '480px',
-        }}>
-          <label style={labelStyle}>Choose image (added to end of book)</label>
+        <div style={{ background: 'white', border: '1px solid rgba(45,90,61,.12)', padding: '1.75rem', maxWidth: '480px' }}>
+          <label style={labelStyle}>Choose image (added as new page at end)</label>
           <input
             ref={fileRef}
             type="file"
             accept="image/*"
             disabled={uploading}
             onChange={handleFileChange}
-            style={{
-              display: 'block',
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: '13px',
-              color: 'var(--text-muted)',
-              cursor: uploading ? 'not-allowed' : 'pointer',
-            }}
+            style={{ display: 'block', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', cursor: uploading ? 'not-allowed' : 'pointer' }}
           />
           {uploading && (
             <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{
-                width: '16px', height: '16px',
-                border: '2px solid rgba(45,90,61,.2)',
-                borderTopColor: 'var(--green-deep)',
-                borderRadius: '50%',
-                animation: 'spin 0.7s linear infinite',
-              }} />
-              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>
-                Uploading…
-              </span>
+              <div style={{ width: '16px', height: '16px', border: '2px solid rgba(45,90,61,.2)', borderTopColor: 'var(--green-deep)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>Uploading…</span>
               <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             </div>
           )}
-          {uploadError && (
-            <p style={{ color: '#a00', fontSize: '13px', margin: '0.5rem 0 0' }}>{uploadError}</p>
-          )}
+          {uploadError && <p style={{ color: '#a00', fontSize: '13px', margin: '0.5rem 0 0' }}>{uploadError}</p>}
         </div>
       </section>
 
@@ -279,111 +291,33 @@ export function BookEditor({ book, pages: initialPages }: Props) {
 
         {pages.length === 0 && (
           <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', fontStyle: 'italic', color: 'var(--text-muted)' }}>
-            No pages yet — upload a photo above to add the first page.
+            No pages yet — add a photo above to create the first page.
           </p>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {pages.map((page, i) => {
-            const src = page.photos[0]?.src ?? '';
-            const caption = page.photos[0]?.caption ?? '';
-
-            return (
-              <div
-                key={page.id}
-                style={{
-                  background: 'white',
-                  border: '1px solid rgba(45,90,61,.12)',
-                  padding: '1rem 1.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  flexWrap: 'wrap',
-                }}
-              >
-                {/* Thumbnail */}
-                <div style={{ flexShrink: 0, width: '80px', height: '80px', overflow: 'hidden', background: '#f0ece4', borderRadius: '2px' }}>
-                  {src && (
-                    <img
-                      src={src}
-                      alt=""
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    />
-                  )}
-                </div>
-
-                {/* Info + caption */}
-                <div style={{ flex: 1, minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>
-                      #{i + 1}
-                    </span>
-                    <span style={{
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      letterSpacing: '.08em',
-                      textTransform: 'uppercase',
-                      color: 'rgba(255,255,255,0.9)',
-                      background: 'var(--green-deep)',
-                      padding: '1px 7px',
-                      borderRadius: '2px',
-                    }}>
-                      {page.layout}
-                    </span>
-                  </div>
-                  <CaptionInput
-                    pageId={page.id}
-                    initialCaption={caption}
-                    saving={savingCaption[page.id] ?? false}
-                    onSave={handleCaptionBlur}
-                  />
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                    <div>
-                      <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Font</label>
-                      <select
-                        value={page.photos[0]?.captionFont ?? "'Libre Baskerville', serif"}
-                        onChange={e => handleStyleChange(page.id, 0, { captionFont: e.target.value })}
-                        style={{ padding: '3px 5px', border: '1px solid rgba(45,90,61,.2)', fontFamily: 'inherit', fontSize: '11px' }}
-                      >
-                        <option value="'Libre Baskerville', serif">Libre Baskerville</option>
-                        <option value="'Playfair Display', serif">Playfair Display</option>
-                        <option value="'DM Sans', sans-serif">DM Sans</option>
-                        <option value="'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif">Optima</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Font Size</label>
-                      <select
-                        value={page.photos[0]?.captionSize ?? '11px'}
-                        onChange={e => handleStyleChange(page.id, 0, { captionSize: e.target.value })}
-                        style={{ padding: '3px 5px', border: '1px solid rgba(45,90,61,.2)', fontFamily: 'inherit', fontSize: '11px' }}
-                      >
-                        <option value="10px">10px</option>
-                        <option value="11px">11px</option>
-                        <option value="12px">12px</option>
-                        <option value="14px">14px</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Position of Photos</label>
-                      <select
-                        value={page.photos[0]?.objectPosition ?? 'center top'}
-                        onChange={e => handleStyleChange(page.id, 0, { objectPosition: e.target.value })}
-                        style={{ padding: '3px 5px', border: '1px solid rgba(45,90,61,.2)', fontFamily: 'inherit', fontSize: '11px' }}
-                      >
-                        <option value="center top">Top</option>
-                        <option value="center center">Center</option>
-                        <option value="center bottom">Bottom</option>
-                      </select>
-                    </div>
-                    {(savingStyle[page.id] ?? false) && (
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', paddingBottom: '3px' }}>saving…</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: '6px', flexShrink: 0, alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {pages.map((page, i) => (
+            <div
+              key={page.id}
+              style={{
+                background: 'white',
+                border: '1px solid rgba(45,90,61,.12)',
+                padding: '1rem 1.25rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}
+            >
+              {/* Page header row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>#{i + 1}</span>
+                <span style={{
+                  fontSize: '10px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.9)', background: 'var(--green-deep)', padding: '1px 7px', borderRadius: '2px',
+                }}>
+                  {page.layout}
+                </span>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
                   <PositionInput
                     pageId={page.id}
                     currentPosition={i + 1}
@@ -391,15 +325,6 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                     reordering={reorderingPage[page.id] ?? false}
                     onReorder={handleReorder}
                   />
-                  {src && (
-                    <button
-                      onClick={() => handleDeletePhoto(page.id, 0)}
-                      disabled={deletingPhoto[`${page.id}:0`] ?? false}
-                      style={{ ...deleteBtnStyle, opacity: (deletingPhoto[`${page.id}:0`] ?? false) ? 0.6 : 1 }}
-                    >
-                      Del Photo
-                    </button>
-                  )}
                   <button
                     onClick={() => handleDelete(page.id)}
                     disabled={deletingPage[page.id] ?? false}
@@ -409,8 +334,152 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                   </button>
                 </div>
               </div>
-            );
-          })}
+
+              {/* Per-photo rows */}
+              {page.photos.map((photo, pi) => {
+                const styleKey = `${page.id}:${pi}`;
+                const isSavingStyle = savingStyle[styleKey] ?? false;
+                const isDeletingPhoto = deletingPhoto[styleKey] ?? false;
+
+                return (
+                  <div
+                    key={pi}
+                    style={{
+                      display: 'flex',
+                      gap: '10px',
+                      alignItems: 'flex-start',
+                      flexWrap: 'wrap',
+                      borderTop: pi > 0 ? '1px solid rgba(45,90,61,.07)' : undefined,
+                      paddingTop: pi > 0 ? '10px' : undefined,
+                    }}
+                  >
+                    {/* Thumbnail */}
+                    <div style={{ flexShrink: 0, width: '72px', height: '72px', overflow: 'hidden', background: '#f0ece4', borderRadius: '2px' }}>
+                      {photo.src && (
+                        <img src={photo.src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      )}
+                    </div>
+
+                    {/* Controls */}
+                    <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {page.photos.length > 1 && (
+                        <span style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>
+                          Photo {pi + 1}
+                        </span>
+                      )}
+                      <CaptionInput
+                        pageId={page.id}
+                        photoIndex={pi}
+                        initialCaption={photo.caption ?? ''}
+                        saving={savingStyle[styleKey] ?? false}
+                        onSave={handleStyleChange}
+                      />
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Font</label>
+                          <select
+                            value={photo.captionFont ?? "'Libre Baskerville', serif"}
+                            onChange={e => handleStyleChange(page.id, pi, { captionFont: e.target.value })}
+                            style={selectStyle}
+                          >
+                            <option value="'Libre Baskerville', serif">Libre Baskerville</option>
+                            <option value="'Playfair Display', serif">Playfair Display</option>
+                            <option value="'DM Sans', sans-serif">DM Sans</option>
+                            <option value="'Optima', 'Helvetica Neue', Helvetica, Arial, sans-serif">Optima</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Font Size</label>
+                          <select
+                            value={photo.captionSize ?? '11px'}
+                            onChange={e => handleStyleChange(page.id, pi, { captionSize: e.target.value })}
+                            style={selectStyle}
+                          >
+                            <option value="10px">10px</option>
+                            <option value="11px">11px</option>
+                            <option value="12px">12px</option>
+                            <option value="14px">14px</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Font Colour</label>
+                          <input
+                            type="color"
+                            value={photo.captionColour ?? '#888888'}
+                            onChange={e => handleStyleChange(page.id, pi, { captionColour: e.target.value })}
+                            style={{ width: '36px', height: '26px', padding: '1px', border: '1px solid rgba(45,90,61,.2)', cursor: 'pointer' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Caption Position</label>
+                          <select
+                            value={photo.captionPosition ?? 'bottom'}
+                            onChange={e => handleStyleChange(page.id, pi, { captionPosition: e.target.value as 'top' | 'bottom' })}
+                            style={selectStyle}
+                          >
+                            <option value="bottom">Bottom</option>
+                            <option value="top">Top</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: '9px', marginBottom: '3px' }}>Photo Focus</label>
+                          <select
+                            value={photo.objectPosition ?? 'center top'}
+                            onChange={e => handleStyleChange(page.id, pi, { objectPosition: e.target.value })}
+                            style={selectStyle}
+                          >
+                            <option value="center top">Top</option>
+                            <option value="center center">Centre</option>
+                            <option value="center bottom">Bottom</option>
+                            <option value="left center">Left</option>
+                            <option value="right center">Right</option>
+                          </select>
+                        </div>
+                        {isSavingStyle && (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', paddingBottom: '3px' }}>saving…</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Delete photo button */}
+                    {photo.src && (
+                      <button
+                        onClick={() => handleDeletePhoto(page.id, pi)}
+                        disabled={isDeletingPhoto}
+                        style={{ ...deleteBtnStyle, opacity: isDeletingPhoto ? 0.6 : 1, flexShrink: 0, alignSelf: 'flex-start' }}
+                      >
+                        Del Photo
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Stack 2nd photo (only shown when page has exactly 1 photo) */}
+              {page.photos.length === 1 && (
+                <div style={{
+                  borderTop: '1px solid rgba(45,90,61,.07)',
+                  paddingTop: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  flexWrap: 'wrap',
+                }}>
+                  <span style={{ ...labelStyle, margin: 0, whiteSpace: 'nowrap' }}>Stack 2nd photo</span>
+                  {stackUploading[page.id] ? (
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>Uploading…</span>
+                  ) : (
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => handleStackPhoto(page.id, e)}
+                      style={{ fontSize: '12px', fontFamily: "'DM Sans', sans-serif", color: 'var(--text-muted)', cursor: 'pointer' }}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </section>
     </div>
@@ -459,12 +528,8 @@ function PositionInput({
         disabled={reordering}
         title={`Page position (1–${total})`}
         style={{
-          width: '44px',
-          padding: '3px 5px',
-          border: '1px solid rgba(45,90,61,.25)',
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize: '12px',
-          textAlign: 'center',
+          width: '44px', padding: '3px 5px', border: '1px solid rgba(45,90,61,.25)',
+          fontFamily: "'DM Sans', sans-serif", fontSize: '12px', textAlign: 'center',
           opacity: reordering ? 0.5 : 1,
         }}
       />
@@ -474,14 +539,16 @@ function PositionInput({
 
 function CaptionInput({
   pageId,
+  photoIndex,
   initialCaption,
   saving,
   onSave,
 }: {
   pageId: string;
+  photoIndex: number;
   initialCaption: string;
   saving: boolean;
-  onSave: (pageId: string, caption: string) => void;
+  onSave: (pageId: string, photoIndex: number, style: { caption: string }) => void;
 }) {
   const [value, setValue] = useState(initialCaption);
 
@@ -490,21 +557,15 @@ function CaptionInput({
       <input
         value={value}
         onChange={e => setValue(e.target.value)}
-        onBlur={() => onSave(pageId, value)}
+        onBlur={() => onSave(pageId, photoIndex, { caption: value })}
         placeholder="Caption (optional)"
         style={{
-          padding: '.4rem .6rem',
-          border: '1px solid rgba(45,90,61,.2)',
-          fontFamily: "'Libre Baskerville', serif",
-          fontStyle: 'italic',
-          fontSize: '13px',
-          flex: 1,
-          color: 'var(--text-mid)',
+          padding: '.4rem .6rem', border: '1px solid rgba(45,90,61,.2)',
+          fontFamily: "'Libre Baskerville', serif", fontStyle: 'italic', fontSize: '13px',
+          flex: 1, color: 'var(--text-mid)',
         }}
       />
-      {saving && (
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>saving…</span>
-      )}
+      {saving && <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>saving…</span>}
     </div>
   );
 }

@@ -107,13 +107,16 @@ export async function addPhotoToPage(
     ? [...page.photos as Record<string, unknown>[]]
     : [];
 
-  if (photos.length >= 4) return { error: 'A page can contain up to 4 photos.' };
+  if (photos.length >= 2) return { error: 'A page can contain up to 2 photos.' };
 
   photos.push(caption ? { src: url, caption } : { src: url });
 
+  const update: Record<string, unknown> = { photos };
+  if (photos.length === 2) update.layout = 'two-photos';
+
   const { error } = await supabaseAdmin
     .from('photo_book_pages')
-    .update({ photos })
+    .update(update)
     .eq('id', pageId);
 
   if (error) return { error: error.message };
@@ -139,7 +142,7 @@ export async function deletePage(pageId: string): Promise<{ error?: string }> {
 export async function updatePhotoStyle(
   pageId: string,
   photoIndex: number,
-  style: { captionFont?: string; captionSize?: string; objectPosition?: string }
+  style: { caption?: string; captionFont?: string; captionSize?: string; captionColour?: string; captionPosition?: 'top' | 'bottom'; objectPosition?: string }
 ): Promise<{ error?: string }> {
   await requireAdminSession();
 
@@ -196,7 +199,9 @@ export async function deletePhoto(
     const { error } = await supabaseAdmin.from('photo_book_pages').delete().eq('id', pageId);
     if (error) return { error: error.message };
   } else {
-    const { error } = await supabaseAdmin.from('photo_book_pages').update({ photos }).eq('id', pageId);
+    const update: Record<string, unknown> = { photos };
+    if (photos.length === 1) update.layout = 'single';
+    const { error } = await supabaseAdmin.from('photo_book_pages').update(update).eq('id', pageId);
     if (error) return { error: error.message };
   }
 

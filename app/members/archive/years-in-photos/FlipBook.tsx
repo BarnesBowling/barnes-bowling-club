@@ -67,14 +67,14 @@ function containImgEl(src: string): HTMLImageElement {
   return img;
 }
 
-function captionEl(text: string, fontFamily?: string, fontSize?: string): HTMLDivElement {
+function captionEl(text: string, fontFamily?: string, fontSize?: string, colour?: string): HTMLDivElement {
   const el = document.createElement('div');
   el.textContent = text;
   Object.assign(el.style, {
     fontFamily: fontFamily ?? "'Libre Baskerville', serif",
     fontSize: fontSize ?? '11px',
     fontStyle: 'italic',
-    color: '#888888', textAlign: 'center', lineHeight: '1.4',
+    color: colour ?? '#888888', textAlign: 'center', lineHeight: '1.4',
     flexShrink: '0', minHeight: '18px', paddingTop: '6px',
   });
   return el;
@@ -102,13 +102,42 @@ function buildAlbumPage(src: string, index: number): HTMLDivElement {
   return page;
 }
 
-// Full-bleed image — matches pf.loadFromImages() look used by 2025 book.
+// Single photo — full-bleed when no caption, flex with caption area when caption is set.
 function buildSinglePage(rp: RichPage, isLeft: boolean): HTMLDivElement {
-  const page = document.createElement('div');
-  page.className = 'album-page';
-  Object.assign(page.style, { backgroundColor: '#ffffff', width: '100%', height: '100%', position: 'relative', overflow: 'hidden' });
-  if (rp.photos[0]) page.appendChild(coverImgEl(rp.photos[0].src, rp.photos[0].objectPosition ?? 'center top'));
-  page.appendChild(spineShadeEl(isLeft));
+  const photo = rp.photos[0];
+  if (!photo?.caption) {
+    const page = document.createElement('div');
+    page.className = 'album-page';
+    Object.assign(page.style, { backgroundColor: '#ffffff', width: '100%', height: '100%', position: 'relative', overflow: 'hidden' });
+    if (photo) page.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center top'));
+    page.appendChild(spineShadeEl(isLeft));
+    return page;
+  }
+
+  const page = albumPageBase(isLeft);
+  const inner = document.createElement('div');
+  Object.assign(inner.style, {
+    display: 'flex', flexDirection: 'column',
+    height: '100%', boxSizing: 'border-box',
+  });
+
+  const imgWrap = document.createElement('div');
+  Object.assign(imgWrap.style, { flex: '1', position: 'relative', overflow: 'hidden', minHeight: '0' });
+  imgWrap.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center top'));
+
+  const cap = captionEl(photo.caption, photo.captionFont, photo.captionSize, photo.captionColour);
+  Object.assign(cap.style, { padding: '0 12px 8px' });
+
+  if (photo.captionPosition === 'top') {
+    Object.assign(cap.style, { padding: '8px 12px 0' });
+    inner.appendChild(cap);
+    inner.appendChild(imgWrap);
+  } else {
+    inner.appendChild(imgWrap);
+    inner.appendChild(cap);
+  }
+
+  page.appendChild(inner);
   return page;
 }
 
@@ -146,14 +175,14 @@ function buildTitleHeroPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
     Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden' });
     wrap.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center center'));
     inner.appendChild(wrap);
-    inner.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize));
+    inner.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize, photo.captionColour));
   }
 
   page.appendChild(inner);
   return page;
 }
 
-// Two photos stacked vertically, each with its own caption.
+// Two photos stacked vertically, each with its own caption (above or below).
 function buildTwoPhotosPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
   const page = albumPageBase(isLeft);
   const inner = document.createElement('div');
@@ -169,8 +198,15 @@ function buildTwoPhotosPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
     const wrap = document.createElement('div');
     Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden' });
     wrap.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center center'));
-    block.appendChild(wrap);
-    block.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize));
+
+    const cap = captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize, photo.captionColour);
+    if (photo.captionPosition === 'top') {
+      block.appendChild(cap);
+      block.appendChild(wrap);
+    } else {
+      block.appendChild(wrap);
+      block.appendChild(cap);
+    }
     inner.appendChild(block);
   });
 
@@ -293,7 +329,7 @@ function buildSfSinglePage(rp: RichPage, isLeft: boolean): HTMLDivElement {
     Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden', minHeight: '0' });
     wrap.appendChild(containImgEl(photo.src));
     inner.appendChild(wrap);
-    if (photo.caption !== undefined) inner.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize));
+    if (photo.caption !== undefined) inner.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize, photo.captionColour));
   }
   page.appendChild(inner);
   return page;
@@ -336,7 +372,7 @@ function buildSfPairPage(rp: RichPage, isLeft: boolean): HTMLDivElement {
     Object.assign(wrap.style, { flex: '1', position: 'relative', overflow: 'hidden', minHeight: '0' });
     wrap.appendChild(containImgEl(photo.src));
     block.appendChild(wrap);
-    if (photo.caption !== undefined) block.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize));
+    if (photo.caption !== undefined) block.appendChild(captionEl(photo.caption ?? '', photo.captionFont, photo.captionSize, photo.captionColour));
     inner.appendChild(block);
   });
 

@@ -40,7 +40,7 @@ export type DbPage = {
   page_title: string | null;
   page_subtitle: string | null;
   shared_caption: string | null;
-  photos: { src: string; caption?: string; captionFont?: string; captionSize?: string; objectPosition?: string }[];
+  photos: { src: string; caption?: string; captionFont?: string; captionSize?: string; captionColour?: string; captionPosition?: 'top' | 'bottom'; objectPosition?: string }[];
 };
 
 interface Props {

@@ -90,9 +90,24 @@ export function BookShelf({ books, pagesByBook }: Props) {
 
   function openBook(book: DbBook) {
     const dbPages = pagesByBook[book.id] ?? [];
+    const is2025Book = book.id === 'book-2025' || /^2025\b/i.test(book.title.trim());
+
+    if (is2025Book && dbPages.length > 0) {
+      // Preserve the established 2025 presentation exactly: PageFlip's native
+      // image renderer provides the original page format, centre gutter and depth.
+      setSelected({
+        id: book.id,
+        title: book.title,
+        spineColour: book.spine_colour,
+        singlePage: false,
+        pages: dbPages.map(p => p.photos[0]?.src ?? '').filter(Boolean),
+        richPages: undefined,
+      });
+      return;
+    }
 
     if (book.single_page) {
-      // Corner-tab album style (International Days). FlipBook uses pf.loadFromImages.
+      // Corner-tab album style (International Days).
       setSelected({
         id: book.id,
         title: book.title,
@@ -102,9 +117,8 @@ export function BookShelf({ books, pagesByBook }: Props) {
         richPages: undefined,
       });
     } else {
-      // All other books — always route through FlipBook's rich-page renderer so that
-      // white pages + shaded spine styling (defined in FlipBook.tsx) is always applied.
-      // Never use pf.loadFromImages here: that bypasses the styled renderer entirely.
+      // Editable books use FlipBook's rich-page renderer. Keep 2025 out of this path
+      // so later editor/style changes cannot overwrite its preserved presentation.
       setSelected({
         id: book.id,
         title: book.title,

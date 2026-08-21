@@ -102,42 +102,35 @@ function buildAlbumPage(src: string, index: number): HTMLDivElement {
   return page;
 }
 
-// Single photo — full-bleed when no caption, flex with caption area when caption is set.
+// Single photo — always full-bleed; caption overlaid at top or bottom when set.
 function buildSinglePage(rp: RichPage, isLeft: boolean): HTMLDivElement {
-  const photo = rp.photos[0];
-  if (!photo?.caption) {
-    const page = document.createElement('div');
-    page.className = 'album-page';
-    Object.assign(page.style, { backgroundColor: '#ffffff', width: '100%', height: '100%', position: 'relative', overflow: 'hidden' });
-    if (photo) page.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center top'));
-    page.appendChild(spineShadeEl(isLeft));
-    return page;
-  }
-
   const page = albumPageBase(isLeft);
-  const inner = document.createElement('div');
-  Object.assign(inner.style, {
-    display: 'flex', flexDirection: 'column',
-    height: '100%', boxSizing: 'border-box',
-  });
+  const photo = rp.photos[0];
+  if (!photo) return page;
 
-  const imgWrap = document.createElement('div');
-  Object.assign(imgWrap.style, { flex: '1', position: 'relative', overflow: 'hidden', minHeight: '0' });
-  imgWrap.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center top'));
+  page.appendChild(coverImgEl(photo.src, photo.objectPosition ?? 'center top'));
 
-  const cap = captionEl(photo.caption, photo.captionFont, photo.captionSize, photo.captionColour);
-  Object.assign(cap.style, { padding: '0 12px 8px' });
-
-  if (photo.captionPosition === 'top') {
-    Object.assign(cap.style, { padding: '8px 12px 0' });
-    inner.appendChild(cap);
-    inner.appendChild(imgWrap);
-  } else {
-    inner.appendChild(imgWrap);
-    inner.appendChild(cap);
+  if (photo.caption) {
+    const cap = document.createElement('div');
+    cap.textContent = photo.caption;
+    const atTop = photo.captionPosition === 'top';
+    Object.assign(cap.style, {
+      position: 'absolute',
+      [atTop ? 'top' : 'bottom']: '0',
+      left: '0', right: '0',
+      padding: '8px 12px',
+      background: 'rgba(255,255,255,0.88)',
+      fontFamily: photo.captionFont ?? "'Libre Baskerville', serif",
+      fontSize: photo.captionSize ?? '11px',
+      fontStyle: 'italic',
+      color: photo.captionColour ?? '#888888',
+      textAlign: 'center',
+      lineHeight: '1.4',
+      zIndex: '3',
+    });
+    page.appendChild(cap);
   }
 
-  page.appendChild(inner);
   return page;
 }
 

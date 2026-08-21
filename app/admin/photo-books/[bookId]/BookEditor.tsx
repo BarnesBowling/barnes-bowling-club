@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  uploadPhoto, addPage, deletePage, deletePhoto,
+  uploadPhoto, addPage, addPhotoToPage, deletePage, deletePhoto,
   reorderPage, updatePhotoStyle, updateBook,
 } from './actions';
+import { updatePageLayout } from './presentationActions';
 
 export interface DbPhotoBook {
   id: string;
@@ -37,6 +38,21 @@ export interface DbPhotoBookPage {
 interface Props {
   book: DbPhotoBook;
   pages: DbPhotoBookPage[];
+}
+
+type StandardLayout = 'sf-single' | 'sf-pair' | 'grid-2x2';
+
+const LAYOUT_CAPACITY: Record<StandardLayout, number> = {
+  'sf-single': 1,
+  'sf-pair': 2,
+  'grid-2x2': 4,
+};
+
+function standardLayout(layout: string): StandardLayout | '' {
+  if (layout === 'sf-single' || layout === 'single') return 'sf-single';
+  if (layout === 'sf-pair' || layout === 'two-photos') return 'sf-pair';
+  if (layout === 'grid-2x2') return 'grid-2x2';
+  return '';
 }
 
 const labelStyle: React.CSSProperties = {
@@ -104,6 +120,9 @@ export function BookEditor({ book, pages: initialPages }: Props) {
   const [deletingPage, setDeletingPage] = useState<Record<string, boolean>>({});
   const [deletingPhoto, setDeletingPhoto] = useState<Record<string, boolean>>({});
   const [savingStyle, setSavingStyle] = useState<Record<string, boolean>>({});
+  const [savingLayout, setSavingLayout] = useState<Record<string, boolean>>({});
+  const [layoutError, setLayoutError] = useState<Record<string, string | null>>({});
+  const [uploadingToPage, setUploadingToPage] = useState<Record<string, boolean>>({});
 
   const pages = initialPages;
 
@@ -159,6 +178,65 @@ export function BookEditor({ book, pages: initialPages }: Props) {
     setDeletingPage(prev => ({ ...prev, [pageId]: true }));
     await deletePage(pageId);
     setDeletingPage(prev => ({ ...prev, [pageId]: false }));
+    router.refresh();
+  }
+
+  async function handleLayoutChange(page: DbPhotoBookPage, layout: StandardLayout) {
+    const capacity = LAYOUT_CAPACITY[layout];
+    if (page.photos.length > capacity) {
+      setLayoutError(prev => ({
+        ...prev,
+        [page.id]: `This page already has ${page.photos.length} photos. Remove photos before changing to a ${capacity}-photo layout.`,
+      }));
+      return;
+    }
+
+    setLayoutError(prev => ({ ...prev, [page.id]: null }));
+    setSavingLayout(prev => ({ ...prev, [page.id]: true }));
+    const result = await updatePageLayout(page.id, layout);
+    setSavingLayout(prev => ({ ...prev, [page.id]: false }));
+
+    if (result.error) {
+      setLayoutError(prev => ({ ...prev, [page.id]: result.error ?? 'Could not change layout' }));
+      return;
+    }
+    router.refresh();
+  }
+
+  async function handleAddPhotoToPage(page: DbPhotoBookPage, file: File | null) {
+    if (!file) return;
+    const layout = standardLayout(page.layout);
+    if (!layout) {
+      setLayoutError(prev => ({ ...prev, [page.id]: 'Choose Single, 2 photos or 4 photos first.' }));
+      return;
+    }
+
+    const capacity = LAYOUT_CAPACITY[layout];
+    if (page.photos.length >= capacity) {
+      setLayoutError(prev => ({ ...prev, [page.id]: `This layout already contains its maximum of ${capacity} photo${capacity === 1 ? '' : 's'}.` }));
+      return;
+    }
+
+    setLayoutError(prev => ({ ...prev, [page.id]: null }));
+    setUploadingToPage(prev => ({ ...prev, [page.id]: true }));
+
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('bookId', book.id);
+    const uploaded = await uploadPhoto(fd);
+
+    if (uploaded.error || !uploaded.url) {
+      setUploadingToPage(prev => ({ ...prev, [page.id]: false }));
+      setLayoutError(prev => ({ ...prev, [page.id]: uploaded.error ?? 'Upload failed' }));
+      return;
+    }
+
+    const result = await addPhotoToPage(page.id, uploaded.url);
+    setUploadingToPage(prev => ({ ...prev, [page.id]: false }));
+    if (result.error) {
+      setLayoutError(prev => ({ ...prev, [page.id]: result.error ?? 'Could not add photo to page' }));
+      return;
+    }
     router.refresh();
   }
 
@@ -269,7 +347,13 @@ export function BookEditor({ book, pages: initialPages }: Props) {
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {pages.map((page, i) => (
+          {pages.map((page, i) => {
+            const isCover = page.sort_order < 0;
+            const currentLayout = standardLayout(page.layout);
+            const currentCapacity = currentLayout ? LAYOUT_CAPACITY[currentLayout] : null;
+            const canAddPhoto = !isCover && currentCapacity !== null && page.photos.length < currentCapacity;
+
+            return (
             <div
               key={page.id}
               style={{
@@ -283,30 +367,102 @@ export function BookEditor({ book, pages: initialPages }: Props) {
             >
               {/* Page header row */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>#{i + 1}</span>
-                <span style={{
-                  fontSize: '10px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.9)', background: 'var(--green-deep)', padding: '1px 7px', borderRadius: '2px',
-                }}>
-                  {page.layout}
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: "'DM Sans', sans-serif" }}>
+                  {isCover ? 'Cover' : `#${i + 1}`}
                 </span>
+
+                {isCover ? (
+                  <span style={{
+                    fontSize: '10px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase',
+                    color: 'rgba(255,255,255,0.9)', background: 'var(--green-deep)', padding: '3px 8px', borderRadius: '2px',
+                  }}>
+                    Fixed cover
+                  </span>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--green-deep)' }}>
+                      Page layout
+                    </span>
+                    <select
+                      value={currentLayout}
+                      disabled={savingLayout[page.id] ?? false}
+                      onChange={e => handleLayoutChange(page, e.target.value as StandardLayout)}
+                      style={{
+                        padding: '6px 9px',
+                        border: '2px solid var(--green-deep)',
+                        background: '#fff',
+                        color: 'var(--green-deep)',
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        minWidth: '150px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {!currentLayout && <option value="">Current: {page.layout}</option>}
+                      <option value="sf-single" disabled={page.photos.length > 1}>Single — 1 photo</option>
+                      <option value="sf-pair" disabled={page.photos.length > 2}>2 photos</option>
+                      <option value="grid-2x2" disabled={page.photos.length > 4}>4 photos</option>
+                    </select>
+                    {(savingLayout[page.id] ?? false) && (
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>saving…</span>
+                    )}
+                  </div>
+                )}
+
+                {canAddPhoto && (
+                  <label style={{
+                    padding: '6px 10px',
+                    background: 'var(--green-deep)',
+                    color: '#fff',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: (uploadingToPage[page.id] ?? false) ? 'wait' : 'pointer',
+                    opacity: (uploadingToPage[page.id] ?? false) ? .6 : 1,
+                  }}>
+                    {(uploadingToPage[page.id] ?? false) ? 'Uploading…' : '+ Add photo to this page'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={uploadingToPage[page.id] ?? false}
+                      onChange={e => {
+                        const input = e.currentTarget;
+                        const file = input.files?.[0] ?? null;
+                        void handleAddPhotoToPage(page, file).finally(() => { input.value = ''; });
+                      }}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                )}
+
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <PositionInput
-                    pageId={page.id}
-                    currentPosition={i + 1}
-                    total={pages.length}
-                    reordering={reorderingPage[page.id] ?? false}
-                    onReorder={handleReorder}
-                  />
-                  <button
-                    onClick={() => handleDelete(page.id)}
-                    disabled={deletingPage[page.id] ?? false}
-                    style={{ ...deleteBtnStyle, opacity: (deletingPage[page.id] ?? false) ? 0.6 : 1 }}
-                  >
-                    Delete Page
-                  </button>
+                  {!isCover && (
+                    <PositionInput
+                      pageId={page.id}
+                      currentPosition={i + 1}
+                      total={pages.length}
+                      reordering={reorderingPage[page.id] ?? false}
+                      onReorder={handleReorder}
+                    />
+                  )}
+                  {!isCover && (
+                    <button
+                      onClick={() => handleDelete(page.id)}
+                      disabled={deletingPage[page.id] ?? false}
+                      style={{ ...deleteBtnStyle, opacity: (deletingPage[page.id] ?? false) ? 0.6 : 1 }}
+                    >
+                      Delete Page
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {layoutError[page.id] && (
+                <p style={{ margin: 0, color: '#a00', fontFamily: "'DM Sans', sans-serif", fontSize: '12px' }}>
+                  {layoutError[page.id]}
+                </p>
+              )}
 
               {/* Per-photo rows */}
               {page.photos.map((photo, pi) => {
@@ -415,7 +571,7 @@ export function BookEditor({ book, pages: initialPages }: Props) {
                     </div>
 
                     {/* Delete photo button */}
-                    {photo.src && (
+                    {!isCover && photo.src && (
                       <button
                         onClick={() => handleDeletePhoto(page.id, pi)}
                         disabled={isDeletingPhoto}
@@ -429,7 +585,8 @@ export function BookEditor({ book, pages: initialPages }: Props) {
               })}
 
             </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </div>

@@ -4,7 +4,6 @@ import { Footer } from '@/components/Footer';
 import { requireAdminSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { BookEditor } from './BookEditor';
-import { PageLayoutManager } from './PageLayoutManager';
 import { PhotoSaveBar } from './PhotoSaveBar';
 
 export const dynamic = 'force-dynamic';
@@ -44,8 +43,7 @@ export default async function BookEditorPage({ params }: PageProps) {
           </div>
         </div>
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
-          <PageLayoutManager bookId={bookId} pages={loadedPages} />
-          {/* Original integrated editor: thumbnails, captions, positioning and styling controls. */}
+          {/* Integrated editor: page layout, thumbnails, captions, positioning and styling controls. */}
           <BookEditor book={book} pages={loadedPages} />
           <PhotoSaveBar />
         </div>

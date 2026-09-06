@@ -58,7 +58,7 @@ export const competitionSheets: CompetitionSheet[] = [
           { player1: 'Gerry Summers',       player2: 'Judith Heaton'    },
           { player1: 'Roger Ford',          player2: 'Venina Rees'      },
           { player1: 'Brian Evans',         player2: 'Hayley Steedman'  },
-          { player1: "Jim O'Neill",         player2: 'Ginette Grimes'   },
+          { player1: "Jim O'Neill",         player2: 'Ginnette Grimes'   },
           { player1: 'Brian Coles',         player2: 'Mark Hunter'      },
           { player1: 'Rupert Warburton',    player2: 'Phil Thompson'    },
           { player1: 'Fausto More',         player2: 'Jeremy Frearson'  },
@@ -88,7 +88,7 @@ export const competitionSheets: CompetitionSheet[] = [
         deadline: 'By July 7th',
         matches: [
           { player1: 'Andrew Cleven',       player2: 'Gareth Ballance'   },
-          { player1: 'Phil Thompson',       player2: 'Ginette Grimes'    },
+          { player1: 'Phil Thompson',       player2: 'Ginnette Grimes'    },
           { player1: 'Danny Peel',          player2: "Jim O'Neill"       },
           { player1: 'Marisa Talbot',       player2: 'Hayley Steedman'   },
           { player1: 'Tracy Greasley',      player2: 'Catherine Mitrenas'},
@@ -137,7 +137,7 @@ export const competitionSheets: CompetitionSheet[] = [
         matches: [
           { player1: 'Danny & Phil',         player2: '' },
           { player1: 'Ed & Jules',           player2: '' },
-          { player1: 'Ginette & Jeff',       player2: '' },
+          { player1: 'Ginnette & Jeff',       player2: '' },
           { player1: 'Rhona & Adrian',       player2: '' },
           { player1: 'Catherine & Jon',      player2: '' },
           { player1: 'Judith & David',       player2: '' },

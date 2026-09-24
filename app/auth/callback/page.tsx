@@ -17,19 +17,24 @@ function CallbackHandler() {
     async function handle() {
       const code      = searchParams.get('code');
       const tokenHash = searchParams.get('token_hash');
-      const type      = searchParams.get('type') as 'invite' | 'recovery' | 'email' | null;
+      const type      = searchParams.get('type') as 'invite' | 'recovery' | 'email' | 'magiclink' | null;
+
+      function dest(err: unknown) {
+        if (err) return '/login';
+        return type === 'invite' ? '/auth/first-login' : '/auth/set-password';
+      }
 
       // PKCE code flow
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
-        router.replace(error ? '/login' : '/auth/set-password');
+        router.replace(dest(error));
         return;
       }
 
       // Token-hash flow (token_hash + type as query params)
       if (tokenHash && type) {
         const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-        router.replace(error ? '/login' : '/auth/set-password');
+        router.replace(dest(error));
         return;
       }
 
@@ -40,9 +45,10 @@ function CallbackHandler() {
         const p            = new URLSearchParams(hash);
         const accessToken  = p.get('access_token');
         const refreshToken = p.get('refresh_token');
+        const hashType     = p.get('type');
         if (accessToken && refreshToken) {
           const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-          router.replace(error ? '/login' : '/auth/set-password');
+          router.replace(error ? '/login' : hashType === 'invite' ? '/auth/first-login' : '/auth/set-password');
           return;
         }
       }

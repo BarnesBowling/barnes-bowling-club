@@ -2,66 +2,51 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import { createSetupToken, SETUP_COOKIE, SETUP_MAX_AGE } from '@/lib/memberSession';
 
 type ActionResult = { error?: string } | null;
 
-export async function beginSetup(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  const memberNumber = String(formData.get('member_number') ?? '').trim().toUpperCase();
-  const email        = String(formData.get('email')         ?? '').trim().toLowerCase();
+export async function beginSetup(_prev: ActionResult, _formData: FormData): Promise<ActionResult> {
+  // Get the authenticated user from the Supabase session — never trust form input for email
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!memberNumber || !email) return { error: 'Both fields are required.' };
+  if (!user?.email) {
+    return {
+      error: 'Your invite link has expired. Please ask the club secretary for a new invite at info@barnesbowling.club.',
+    };
+  }
 
-  // Verify membership number + email
+  // Look up club member by session email, case-insensitively
   const { data: member } = await supabaseAdmin
     .from('club_members')
     .select('id, email, auth_user_id, password_set')
-    .eq('membership_number', memberNumber)
-    .eq('email', email)
+    .ilike('email', user.email)
     .maybeSingle();
 
   if (!member) {
-    return { error: 'Membership number and email do not match our records. Please check and try again.' };
+    return {
+      error: "We couldn't find your membership record for this email address. Please contact the club secretary at info@barnesbowling.club.",
+    };
   }
 
   if (member.password_set) {
     return {
-      error: "You've already set up your password. Please sign in with your password instead. If you've forgotten it, use the 'Forgot your password?' link on the login page.",
+      error: "You've already set up your password. Please sign in with your email and password instead.",
     };
   }
 
-  // Create a Supabase Auth user if not already linked
+  // Link the Supabase auth user to the club_members row if not already done
   if (!member.auth_user_id) {
-    let authUserId: string | null = null;
-
-    const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      email_confirm: true,
-    });
-
-    if (createErr) {
-      // User already exists in Supabase Auth — find their ID and link it
-      const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-      const existing = users.find(u => u.email === email);
-      if (!existing) {
-        console.error('[first-login/beginSetup] createUser failed and no existing user found:', JSON.stringify(createErr));
-        return { error: 'Unable to create your account. Please contact the club administrator.' };
-      }
-      authUserId = existing.id;
-    } else {
-      authUserId = newUser?.user?.id ?? null;
-    }
-
-    if (authUserId) {
-      await supabaseAdmin
-        .from('club_members')
-        .update({ auth_user_id: authUserId })
-        .eq('id', member.id);
-    }
+    await supabaseAdmin
+      .from('club_members')
+      .update({ auth_user_id: user.id })
+      .eq('id', member.id);
   }
 
-  // Issue a short-lived signed setup token
-  const token = await createSetupToken(email);
+  // Issue a short-lived signed setup token using the canonical stored email
+  const token = await createSetupToken(member.email);
   const cookieStore = await cookies();
   cookieStore.set(SETUP_COOKIE, token, {
     httpOnly: true,

@@ -569,6 +569,10 @@ export function AccountClient({ email, memberName, memberId, transactions }: Pro
               {email}
             </div>
             <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#1a2e1f', marginTop: '2px' }}>
+              <span style={{ fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: '#c9a84c' }}>Member No. </span>
+              {memberId}
+            </div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#1a2e1f', marginTop: '2px' }}>
               {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} recorded
             </div>
             <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'flex-end', color: 'rgba(27,59,38,.45)' }}>

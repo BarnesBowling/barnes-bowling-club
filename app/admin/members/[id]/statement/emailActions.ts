@@ -7,7 +7,11 @@ import { requireAdminSession } from '@/lib/adminAuth';
 import { generateStatementPDF } from './generateStatementPDF';
 import type { PDFEntry, PDFMember } from './generateStatementPDF';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend(): Resend {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) throw new Error('RESEND_API_KEY is not configured on this server.');
+  return new Resend(key);
+}
 
 function htmlEscape(str: string): string {
   return str
@@ -139,6 +143,7 @@ export async function emailStatement(
 
   const filename = `BBC-Statement-${(member.membership_number ?? member.full_name).replace(/\s+/g, '-')}.pdf`;
 
+  const resend = getResend();
   const { error: sendError } = await resend.emails.send({
     from: 'Barnes Bowling Club <noreply@barnesbowlingclub.com>',
     to: member.email,
@@ -239,6 +244,7 @@ export async function emailOutstandingStatements(
           const html = buildEmailHtml(member, balance);
           const filename = `BBC-Statement-${(member.membership_number ?? member.full_name).replace(/\s+/g, '-')}.pdf`;
 
+          const resend = getResend();
           const { error: sendError } = await resend.emails.send({
             from: 'Barnes Bowling Club <noreply@barnesbowlingclub.com>',
             to: email,

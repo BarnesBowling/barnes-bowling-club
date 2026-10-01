@@ -46,7 +46,7 @@ export default async function MemberStatementPage({
   const backHref = session.role === 'viewer' ? '/admin/statements' : '/admin';
   const backLabel = session.role === 'viewer' ? '← Back to Statements' : '← Admin panel';
 
-  const [{ data: member }, { data: rawEntries }] = await Promise.all([
+  const [{ data: member, error: memberError }, { data: rawEntries }] = await Promise.all([
     supabaseAdmin
       .from('club_members')
       .select('full_name, membership_number, status, email, statement_last_emailed_at')
@@ -60,6 +60,11 @@ export default async function MemberStatementPage({
       .order('created_at', { ascending: true }),
   ]);
 
+  if (memberError) {
+    // PGRST116 = no rows returned (member genuinely doesn't exist)
+    if (memberError.code === 'PGRST116') notFound();
+    throw new Error(`Failed to load member statement: ${memberError.message}`);
+  }
   if (!member) notFound();
 
   const entries: StatementEntry[] = (rawEntries ?? []).map(e => ({

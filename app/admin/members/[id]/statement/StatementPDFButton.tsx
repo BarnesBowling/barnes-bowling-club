@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { PAYMENT_INFO } from './paymentInfo';
+import { guestFeeDetail } from './statementUtils';
 
 const BBC_GREEN: [number, number, number] = [45, 90, 61];
 const DARK:      [number, number, number] = [40, 40, 40];
@@ -185,21 +186,12 @@ export function StatementPDFButton({ member, entries }: Props) {
         const signed = e.type === 'credit' ? -e.amount : e.amount;
         balance += signed;
 
-        // Build description lines
-        let descText = e.description;
-        const guestNames = e.guest_names ?? (e.metadata?.guest_names as string | undefined);
-        const dateOfPlay = e.metadata?.date_of_play as string | undefined;
-        const numGuests  = e.num_guests ?? (e.metadata?.num_guests as number | undefined);
-
-        const extraLines: string[] = [];
-        if (e.category === 'guest_fee') {
-          if (guestNames) extraLines.push(`Guests: ${guestNames}`);
-          if (dateOfPlay) extraLines.push(`Date of play: ${fmtDate(dateOfPlay)}`);
-          if (numGuests && !guestNames) extraLines.push(`${numGuests} guest${numGuests !== 1 ? 's' : ''}`);
-        }
+        // Build description — guest detail inlined via shared utility
+        const detail = guestFeeDetail(e);
+        const descText = detail ? `${e.description} – ${detail}` : e.description;
 
         const wrappedDesc = doc.splitTextToSize(descText, DESC_W) as string[];
-        const rowH = LINE_H * (wrappedDesc.length + extraLines.length) + 2;
+        const rowH = LINE_H * wrappedDesc.length + 2;
 
         checkBreak(rowH + 2);
 
@@ -218,16 +210,6 @@ export function StatementPDFButton({ member, entries }: Props) {
         wrappedDesc.forEach((line, li) => {
           doc.text(line, COL.desc, y + li * LINE_H);
         });
-        let extraY = y + wrappedDesc.length * LINE_H;
-        if (extraLines.length > 0) {
-          doc.setFontSize(8);
-          setColor([100, 130, 110]);
-          extraLines.forEach(line => {
-            doc.text(line, COL.desc + 2, extraY);
-            extraY += 4.5;
-          });
-          doc.setFontSize(9);
-        }
 
         if (e.type === 'debit') {
           doc.setTextColor(180, 50, 50);

@@ -7,6 +7,7 @@ import { StatementPDFButton } from './StatementPDFButton';
 import type { StatementEntry } from './StatementPDFButton';
 import { EmailStatementButton } from './EmailStatementButton';
 import { PAYMENT_INFO } from './paymentInfo';
+import { guestFeeDetail } from './statementUtils';
 
 const CATEGORY_LABELS: Record<string, string> = {
   membership_fee: 'Membership Fee',
@@ -233,9 +234,7 @@ export default async function MemberStatementPage({
                       const balOwing  = e.balance > 0.005;
                       const balCredit = e.balance < -0.005;
 
-                      const guestNames = e.guest_names ?? (e.metadata?.guest_names as string | undefined);
-                      const dateOfPlay = e.metadata?.date_of_play as string | undefined;
-                      const numGuests  = e.num_guests ?? (e.metadata?.num_guests as number | undefined);
+                      const detail = guestFeeDetail(e);
 
                       return (
                         <tr key={e.id} style={{ background: rowBg }}>
@@ -243,26 +242,9 @@ export default async function MemberStatementPage({
                             {fmtDate(e.date)}
                           </td>
                           <td style={tdStyle}>
-                            <div style={{ fontWeight: 500 }}>{e.description}</div>
-                            {e.category === 'guest_fee' && (
-                              <div style={{ marginTop: '3px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                {guestNames && (
-                                  <span style={{ fontSize: '11px', color: 'var(--green-deep)' }}>
-                                    Guests: {guestNames}
-                                  </span>
-                                )}
-                                {!guestNames && numGuests && (
-                                  <span style={{ fontSize: '11px', color: 'var(--green-deep)' }}>
-                                    {numGuests} guest{numGuests !== 1 ? 's' : ''}
-                                  </span>
-                                )}
-                                {dateOfPlay && (
-                                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                    Date of play: {fmtDate(dateOfPlay)}
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                            <div style={{ fontWeight: 500 }}>
+                              {e.description}{detail ? ` – ${detail}` : ''}
+                            </div>
                           </td>
                           <td style={tdStyle}>
                             <span style={{

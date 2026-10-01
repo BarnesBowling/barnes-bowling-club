@@ -106,7 +106,8 @@ export function ApplicationForm() {
     setStatus('submitting');
     setErrMsg('');
 
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     try {
       const res = await fetch('/api/membership-application', {
         method: 'POST',
@@ -131,10 +132,10 @@ export function ApplicationForm() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Submission failed');
-      setStatus('success');
-      e.currentTarget.reset();
+      form?.reset();
       setRejoining('');
       clearSignature();
+      setStatus('success');
     } catch (err) {
       setErrMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       setStatus('error');

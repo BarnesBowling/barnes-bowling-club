@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import type { ClubMember } from '@/app/admin/club-members/AdminClubMembersClient';
 import { updateClubMember } from '@/app/admin/club-members/actions';
 import type { MemberPayload } from '@/app/admin/club-members/actions';
+import { emailStatement } from './statement/emailActions';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -179,6 +180,8 @@ export function MemberIndexCard({
   const [saveErr, setSaveErr]                 = useState<string | null>(null);
   const [photoUploading, setPhotoUploading]   = useState(false);
   const [photoErr, setPhotoErr]               = useState<string | null>(null);
+  const [emailBusy, setEmailBusy]             = useState(false);
+  const [emailResult, setEmailResult]         = useState<{ ok: boolean; msg: string } | null>(null);
   const fileInputRef                          = useRef<HTMLInputElement>(null);
 
   // ── Save ──────────────────────────────────────────────────────────────────
@@ -653,6 +656,46 @@ export function MemberIndexCard({
                   >
                     View statement →
                   </a>
+                  <button
+                    onClick={async () => {
+                      setEmailBusy(true);
+                      setEmailResult(null);
+                      try {
+                        const res = await emailStatement(memberId);
+                        setEmailResult(res.ok
+                          ? { ok: true, msg: 'Statement sent ✓' }
+                          : { ok: false, msg: res.error ?? 'Failed to send.' }
+                        );
+                        if (res.ok) setTimeout(() => setEmailResult(null), 4000);
+                      } catch (e) {
+                        setEmailResult({ ok: false, msg: e instanceof Error ? e.message : 'Unexpected error.' });
+                      } finally {
+                        setEmailBusy(false);
+                      }
+                    }}
+                    disabled={emailBusy || !member.email}
+                    title={!member.email ? 'No email address on file' : 'Email statement to member'}
+                    style={{
+                      ...BTN_SECONDARY,
+                      borderColor: '#c9a84c',
+                      color: '#c9a84c',
+                      opacity: (emailBusy || !member.email) ? 0.55 : 1,
+                      cursor: !member.email ? 'not-allowed' : emailBusy ? 'wait' : 'pointer',
+                    }}
+                  >
+                    {emailBusy ? 'Sending…' : 'Email statement'}
+                  </button>
+                  {emailResult && (
+                    <span style={{
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: '12px',
+                      color: emailResult.ok ? '#2d6e42' : '#b03232',
+                      fontWeight: 500,
+                      alignSelf: 'center',
+                    }}>
+                      {emailResult.msg}
+                    </span>
+                  )}
                 </>
               )}
             </div>

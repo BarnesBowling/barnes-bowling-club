@@ -5,6 +5,7 @@ import { requireViewerSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { StatementPDFButton } from './StatementPDFButton';
 import type { StatementEntry } from './StatementPDFButton';
+import { EmailStatementButton } from './EmailStatementButton';
 import { PAYMENT_INFO } from './paymentInfo';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -48,7 +49,7 @@ export default async function MemberStatementPage({
   const [{ data: member }, { data: rawEntries }] = await Promise.all([
     supabaseAdmin
       .from('club_members')
-      .select('full_name, membership_number, status')
+      .select('full_name, membership_number, status, email, statement_last_emailed_at')
       .eq('id', id)
       .single(),
     supabaseAdmin
@@ -178,10 +179,15 @@ export default async function MemberStatementPage({
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <StatementPDFButton
               member={member}
               entries={entries}
+            />
+            <EmailStatementButton
+              memberId={id}
+              hasEmail={!!member.email}
+              initialLastEmailed={(member as { statement_last_emailed_at?: string | null }).statement_last_emailed_at ?? null}
             />
           </div>
 

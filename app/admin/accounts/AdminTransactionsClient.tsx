@@ -2,6 +2,8 @@
 
 import { useState, useTransition, useMemo, useEffect } from 'react';
 import { updateTransaction, deleteTransactionById, updateMemberBasics, addAdjustmentTransaction } from './actions';
+import { emailOutstandingStatements } from '@/app/admin/members/[id]/statement/emailActions';
+import type { BulkEmailResult } from '@/app/admin/members/[id]/statement/emailActions';
 
 const CATEGORY_LABELS: Record<string, string> = {
   membership_fee: 'Membership Fee',
@@ -32,6 +34,7 @@ type MemberBasics = {
   membership_number: string | null;
   email: string | null;
   status: string;
+  statement_last_emailed_at?: string | null;
 };
 
 interface Props {
@@ -146,6 +149,13 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
   // ── Status message ────────────────────────────────────────────────────────
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // ── Bulk email state ──────────────────────────────────────────────────────
+  const [bulkEmailOpen, setBulkEmailOpen]       = useState(false);
+  const [bulkSelected, setBulkSelected]         = useState<Set<string>>(new Set());
+  const [bulkSending, setBulkSending]           = useState(false);
+  const [bulkResults, setBulkResults]           = useState<BulkEmailResult[] | null>(null);
+  const [lastEmailedMap, setLastEmailedMap]     = useState<Record<string, string>>({});
 
   function showMsg(ok: boolean, text: string) {
     setMsg({ ok, text });
@@ -273,6 +283,34 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
     });
   }
 
+  // ── Bulk email handlers ───────────────────────────────────────────────────
+
+  function openBulkEmail() {
+    setBulkSelected(new Set(membersWithBalance.map(m => m.id)));
+    setBulkResults(null);
+    setBulkEmailOpen(true);
+  }
+
+  async function handleBulkSend() {
+    setBulkSending(true);
+    setBulkResults(null);
+    try {
+      const results = await emailOutstandingStatements(Array.from(bulkSelected));
+      setBulkResults(results);
+      const now = new Date().toISOString();
+      setLastEmailedMap(prev => {
+        const next = { ...prev };
+        results.forEach(r => { if (r.status === 'sent') next[r.memberId] = now; });
+        return next;
+      });
+    } catch (e) {
+      showMsg(false, e instanceof Error ? e.message : 'Bulk email failed.');
+      setBulkEmailOpen(false);
+    } finally {
+      setBulkSending(false);
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -301,13 +339,27 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
       {/* ── Outstanding balances ──────────────────────────────────────────── */}
       {membersWithBalance.length > 0 && (
         <section>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
-            Outstanding balances
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', margin: 0 }}>
+              Outstanding balances
+            </h2>
+            <button
+              onClick={openBulkEmail}
+              style={{
+                display: 'inline-flex', alignItems: 'center', padding: '0 16px', height: '36px',
+                background: '#c9a84c', color: '#fff', border: 'none',
+                fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 700,
+                letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0,
+              }}
+            >
+              Email all outstanding statements
+            </button>
+          </div>
           <div className="admin-balances-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {membersWithBalance.map(m => {
               const isEditing   = editMemberId === m.id;
               const isAdjusting = adjustMemberId === m.id;
+              const lastEmailed = lastEmailedMap[m.id] ?? m.statement_last_emailed_at ?? null;
               return (
                 <div key={m.id} style={{
                   background: '#fff',
@@ -330,6 +382,11 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                       <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, marginTop: '4px', color: m.balance > 0 ? '#c0392b' : '#2e7d32' }}>
                         {m.balance > 0 ? fmtGBP(m.balance) : `−${fmtGBP(m.balance)}`}
                       </div>
+                      {lastEmailed && (
+                        <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', color: 'rgba(45,90,61,.4)', marginTop: '3px' }}>
+                          Emailed: {new Date(lastEmailed).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </div>
+                      )}
                     </div>
                     <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                       <button
@@ -600,6 +657,143 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
           </div>
         )}
       </section>
+
+      {/* ── Bulk email modal ──────────────────────────────────────────────── */}
+      {bulkEmailOpen && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 1000,
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+            padding: '3rem 1.5rem', overflowY: 'auto',
+          }}
+          onClick={() => { if (!bulkSending) setBulkEmailOpen(false); }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#fff', width: '100%', maxWidth: '560px', boxShadow: '0 4px 24px rgba(0,0,0,.18)' }}
+          >
+            {/* Header */}
+            <div style={{ background: '#1b3b26', padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '18px', color: '#fff', fontWeight: 700 }}>
+                Email outstanding statements
+              </div>
+              {!bulkSending && !bulkResults && (
+                <button
+                  onClick={() => setBulkEmailOpen(false)}
+                  style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.7)', fontSize: '18px', cursor: 'pointer', lineHeight: 1, padding: '2px 4px' }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <div style={{ padding: '1.5rem' }}>
+              {bulkResults ? (
+                /* Results view */
+                <>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-deep)', fontWeight: 600, marginBottom: '1rem' }}>
+                    {bulkResults.filter(r => r.status === 'sent').length} sent ·{' '}
+                    {bulkResults.filter(r => r.status === 'failed').length} failed ·{' '}
+                    {bulkResults.filter(r => r.status === 'skipped').length} skipped
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '300px', overflowY: 'auto', marginBottom: '1.25rem' }}>
+                    {bulkResults.map(r => (
+                      <div key={r.memberId} style={{
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                        padding: '7px 10px',
+                        background: r.status === 'sent' ? 'rgba(45,90,61,.05)' : r.status === 'failed' ? 'rgba(192,0,0,.04)' : 'rgba(0,0,0,.03)',
+                        borderLeft: `3px solid ${r.status === 'sent' ? '#2d6e42' : r.status === 'failed' ? '#c0392b' : '#aaa'}`,
+                      }}>
+                        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 600, color: 'var(--green-deep)', flex: 1 }}>{r.name}</span>
+                        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: r.status === 'sent' ? '#2d6e42' : r.status === 'failed' ? '#c0392b' : '#888', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                          {r.status}
+                        </span>
+                        {r.error && (
+                          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#c0392b' }}>{r.error}</span>
+                        )}
+                        {r.status === 'skipped' && !r.email && (
+                          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#888', fontStyle: 'italic' }}>no email</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setBulkEmailOpen(false)}
+                    style={{ ...btnSave, height: '38px' }}
+                  >
+                    Done
+                  </button>
+                </>
+              ) : (
+                /* Confirmation view */
+                <>
+                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 1rem', lineHeight: 1.6 }}>
+                    Tick the members to email. Each will receive their full statement as a PDF attachment.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '340px', overflowY: 'auto', marginBottom: '1.25rem' }}>
+                    {membersWithBalance.map(m => {
+                      const checked = bulkSelected.has(m.id);
+                      const noEmail = !m.email;
+                      return (
+                        <label
+                          key={m.id}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '10px',
+                            padding: '8px 10px',
+                            background: noEmail ? 'rgba(0,0,0,.025)' : '#fafafa',
+                            border: '1px solid rgba(45,90,61,.1)',
+                            cursor: noEmail ? 'default' : 'pointer',
+                            opacity: noEmail ? .6 : 1,
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={noEmail}
+                            onChange={e => {
+                              const next = new Set(bulkSelected);
+                              e.target.checked ? next.add(m.id) : next.delete(m.id);
+                              setBulkSelected(next);
+                            }}
+                            style={{ width: '15px', height: '15px', flexShrink: 0, cursor: noEmail ? 'default' : 'pointer' }}
+                          />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 600, color: 'var(--green-deep)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {m.full_name}
+                            </div>
+                            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)' }}>
+                              {noEmail
+                                ? <span style={{ color: '#c0392b', fontStyle: 'italic' }}>No email address — will be skipped</span>
+                                : m.email}
+                            </div>
+                          </div>
+                          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, color: m.balance > 0 ? '#c0392b' : '#2e7d32', whiteSpace: 'nowrap' }}>
+                            {m.balance > 0 ? fmtGBP(m.balance) : `−${fmtGBP(m.balance)}`}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button
+                      onClick={handleBulkSend}
+                      disabled={bulkSending || bulkSelected.size === 0}
+                      style={{ ...btnSave, height: '38px', opacity: (bulkSending || bulkSelected.size === 0) ? .6 : 1, cursor: (bulkSending || bulkSelected.size === 0) ? 'default' : 'pointer' }}
+                    >
+                      {bulkSending ? 'Sending…' : `Send ${bulkSelected.size} email${bulkSelected.size !== 1 ? 's' : ''}`}
+                    </button>
+                    {!bulkSending && (
+                      <button onClick={() => setBulkEmailOpen(false)} style={{ ...btnCancel, height: '38px' }}>
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

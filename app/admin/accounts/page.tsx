@@ -14,7 +14,7 @@ export default async function AdminAccountsPage() {
   const [{ data: members }, { data: transactions }] = await Promise.all([
     supabaseAdmin
       .from('club_members')
-      .select('id, full_name, membership_number, email, status')
+      .select('id, full_name, membership_number, email, status, statement_last_emailed_at')
       .order('full_name'),
     supabaseAdmin
       .from('member_ledger')

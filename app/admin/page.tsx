@@ -238,6 +238,8 @@ export default async function Admin() {
     .filter(([, v]) => Math.abs(v.balance) > 0.005)
     .map(([member_id, v]) => ({ member_id, ...v }));
 
+  const pendingCount = (membershipApps ?? []).filter(a => !a.status || a.status === 'pending').length;
+
   const inputStyle = { padding: '.7rem', border: '1px solid rgba(45,90,61,.2)', fontFamily: 'inherit', fontSize: '14px', width: '100%' };
   const labelStyle = { fontSize: '10px', fontWeight: 600 as const, letterSpacing: '.12em', textTransform: 'uppercase' as const, color: 'var(--gold)', display: 'block' as const, marginBottom: '6px' };
 
@@ -258,6 +260,7 @@ export default async function Admin() {
               {
                 group: 'Member',
                 items: [
+                  { href: '/admin/applications', title: 'Applications',     description: 'Review, approve or reject membership applications' },
                   { href: '/admin/club-members', title: 'Club Roster',       description: 'Add members, update handicaps and membership numbers — single source of truth' },
                   { href: '/admin/members',      title: 'Member Management', description: 'Invite members, resend invitations, remove login accounts' },
                   { href: '/admin/accounts',     title: 'Member Accounts',   description: 'Post charges and payments to member account statements' },
@@ -294,7 +297,7 @@ export default async function Admin() {
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   {items.map(item => (
-                    <AdminLinkCard key={item.href} href={item.href} title={item.title} description={item.description} />
+                    <AdminLinkCard key={item.href} href={item.href} title={item.title} description={item.description} badgeCount={item.title === 'Applications' ? pendingCount : undefined} />
                   ))}
                 </div>
               </div>

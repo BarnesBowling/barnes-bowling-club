@@ -4,6 +4,7 @@ const file = 'app/admin/AdminLinkCard.tsx';
 const source = fs.readFileSync(file, 'utf8');
 
 const required = [
+  "'Applications': 11",
   "'Club Roster': 11",
   "'Member Management': 12",
   "'Member Accounts': 13",

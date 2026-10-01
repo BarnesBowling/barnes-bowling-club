@@ -148,7 +148,7 @@ export async function emailStatement(
     from: 'Barnes Bowling Club <noreply@barnesbowlingclub.com>',
     to: member.email,
     replyTo: 'info@barnesbowling.club',
-    subject: 'Your Barnes Bowling Club statement',
+    subject: 'Your Barnes Bowling Club Statement',
     html,
     attachments: [
       {
@@ -249,7 +249,7 @@ export async function emailOutstandingStatements(
             from: 'Barnes Bowling Club <noreply@barnesbowlingclub.com>',
             to: email,
             replyTo: 'info@barnesbowling.club',
-            subject: 'Your Barnes Bowling Club statement',
+            subject: 'Your Barnes Bowling Club Statement',
             html,
             attachments: [
               {

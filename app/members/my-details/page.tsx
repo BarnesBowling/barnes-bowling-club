@@ -17,10 +17,19 @@ export default async function MyDetailsPage() {
   const [{ data: profile }, { data: balanceRow }, { data: clubMemberRow }] = await Promise.all([
     supabaseAdmin.from('member_profiles').select('*').eq('member_email', email).maybeSingle(),
     supabaseAdmin.from('member_balances').select('membership_fee, guest_fee, manser_fee, wrong_bias_fee, event_fee').eq('member_email', email).maybeSingle(),
-    supabaseAdmin.from('club_members').select('id, membership_number, photo_id_filename').eq('email', email).maybeSingle(),
+    supabaseAdmin.from('club_members').select('id, membership_number, photo_id_filename, phone, emergency_contact_name, emergency_contact_phone').eq('email', email).maybeSingle(),
   ]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const photoIdFilename = (clubMemberRow as any)?.photo_id_filename as string | null ?? null;
+  const cm = clubMemberRow as any;
+  const photoIdFilename = cm?.photo_id_filename as string | null ?? null;
+
+  // club_members is authoritative for phone and EC; merge over member_profiles values
+  const effectiveProfile = profile ? {
+    ...profile,
+    mobile:                  (cm?.phone                  as string | null) ?? profile.mobile                  ?? '',
+    emergency_contact_name:  (cm?.emergency_contact_name  as string | null) ?? profile.emergency_contact_name  ?? '',
+    emergency_contact_phone: (cm?.emergency_contact_phone as string | null) ?? profile.emergency_contact_phone ?? '',
+  } : null;
 
   // Fetch ledger balance from member_ledger
   const clubMemberId = (clubMemberRow as { id?: string } | null)?.id ?? null;
@@ -65,7 +74,7 @@ export default async function MyDetailsPage() {
             email={email}
             memberId={memberNumber}
             memberName={memberName}
-            profile={profile}
+            profile={effectiveProfile}
             balance={balance}
             photoIdFilename={photoIdFilename}
             ledgerBalance={ledgerBalance}

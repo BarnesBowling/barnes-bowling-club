@@ -388,7 +388,9 @@ function MobileSection({ profile }: { profile: Profile | null }) {
     if (result?.error) {
       setStatus({ ok: false, text: result.error });
     } else {
-      setSaved(value.trim());
+      const normalized = (result as { normalized?: string | null } | null)?.normalized ?? value.trim();
+      setSaved(normalized ?? '');
+      setValue(normalized ?? '');
       setStatus({ ok: true, text: 'Mobile number updated.' });
       setTimeout(() => { setEditing(false); setStatus(null); }, 800);
     }

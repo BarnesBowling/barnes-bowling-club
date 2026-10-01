@@ -4,6 +4,14 @@ import { requireAdminSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 
+function normalizeUKMobile(raw: string): string | null {
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('0044')) digits = '0' + digits.slice(4);
+  else if (digits.startsWith('44')) digits = '0' + digits.slice(2);
+  if (digits.length !== 11 || !digits.startsWith('07')) return null;
+  return `${digits.slice(0, 5)} ${digits.slice(5)}`;
+}
+
 type MemberPayload = {
   full_name: string;
   email: string;
@@ -90,6 +98,29 @@ export async function checkMemberHasLedger(id: string): Promise<boolean> {
     .select('id', { count: 'exact', head: true })
     .eq('member_id', id);
   return (count ?? 0) > 0;
+}
+
+export async function updateMemberPhone(id: string, raw: string): Promise<{ error?: string }> {
+  await requireAdminSession();
+  const trimmed = raw.trim();
+  let phone: string | null = null;
+  if (trimmed) {
+    phone = normalizeUKMobile(trimmed);
+    if (!phone) return { error: 'Please enter a valid UK mobile number (e.g. 07957 224527).' };
+  }
+  const { data: member } = await supabaseAdmin.from('club_members').select('email').eq('id', id).single();
+  const { error } = await supabaseAdmin
+    .from('club_members')
+    .update({ phone: phone ?? null, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) return { error: error.message };
+  if (member?.email) {
+    await supabaseAdmin.from('member_profiles')
+      .update({ mobile: phone ?? '', updated_at: new Date().toISOString() })
+      .eq('member_email', member.email);
+  }
+  revalidatePath('/admin/club-members');
+  return {};
 }
 
 export async function toggleMemberKey(id: string, value: boolean): Promise<void> {

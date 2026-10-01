@@ -3,7 +3,15 @@ import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifyMemberSession, createMemberSession, SESSION_COOKIE, SESSION_MAX_AGE } from '@/lib/memberSession';
 
-type ActionResult = { error?: string; success?: boolean } | null;
+type ActionResult = { error?: string; success?: boolean; normalized?: string | null } | null;
+
+function normalizeUKMobile(raw: string): string | null {
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('0044')) digits = '0' + digits.slice(4);
+  else if (digits.startsWith('44')) digits = '0' + digits.slice(2);
+  if (digits.length !== 11 || !digits.startsWith('07')) return null;
+  return `${digits.slice(0, 5)} ${digits.slice(5)}`;
+}
 
 async function getSessionEmail(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -39,23 +47,30 @@ export async function saveMobile(_prev: ActionResult, formData: FormData): Promi
   const email = await getSessionEmail();
   if (!email) return { error: 'Not authenticated.' };
 
-  const mobile = String(formData.get('mobile') ?? '').trim();
+  const raw = String(formData.get('mobile') ?? '').trim();
 
+  let phone: string | null = null;
+  if (raw) {
+    phone = normalizeUKMobile(raw);
+    if (!phone) return { error: 'Please enter a valid UK mobile number (e.g. 07957 224527).' };
+  }
+
+  // club_members.phone is the primary store
+  const { error: memberErr } = await supabaseAdmin
+    .from('club_members')
+    .update({ phone: phone ?? null, updated_at: new Date().toISOString() })
+    .eq('email', email);
+  if (memberErr) console.error('[my-details] club_members phone update failed:', memberErr.message);
+
+  // member_profiles.mobile kept in sync
   const { error } = await supabaseAdmin.from('member_profiles').upsert({
     member_email: email,
-    mobile,
+    mobile: phone ?? '',
     updated_at: new Date().toISOString(),
   }, { onConflict: 'member_email' });
-
   if (error) return { error: error.message };
 
-  const { error: syncErr } = await supabaseAdmin
-    .from('club_members')
-    .update({ phone: mobile || null })
-    .eq('email', email);
-  if (syncErr) console.error('[my-details] club_members mobile sync failed:', syncErr.message);
-
-  return { success: true };
+  return { success: true, normalized: phone };
 }
 
 export async function saveAddress(_prev: ActionResult, formData: FormData): Promise<ActionResult> {

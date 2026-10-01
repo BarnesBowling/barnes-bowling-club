@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect, useRef } from 'react';
-import { addClubMember, updateClubMember, deleteClubMember, inviteClubMember, checkMemberHasLedger, toggleMemberKey, setMemberCard } from './actions';
+import { addClubMember, updateClubMember, deleteClubMember, inviteClubMember, checkMemberHasLedger, toggleMemberKey, setMemberCard, updateMemberPhone } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ type MemberPayload = {
   notes: string;
 };
 
-type RosterFilter = 'no-photo' | 'has-key' | 'card-not-issued' | null;
+type RosterFilter = 'no-photo' | 'has-key' | 'card-not-issued' | 'no-mobile' | null;
 
 type Props = {
   initialMembers: ClubMember[];
@@ -82,6 +82,14 @@ function generateMembershipNumber(name: string, existingMembers: ClubMember[]): 
     if (digits) maxNum = Math.max(maxNum, parseInt(digits, 10));
   }
   return `BBC${firstInitial}${surnameInitial}${maxNum + 1}`;
+}
+
+function normalizeUKMobile(raw: string): string | null {
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('0044')) digits = '0' + digits.slice(4);
+  else if (digits.startsWith('44')) digits = '0' + digits.slice(2);
+  if (digits.length !== 11 || !digits.startsWith('07')) return null;
+  return `${digits.slice(0, 5)} ${digits.slice(5)}`;
 }
 
 function resizeImage(file: File, maxWidth: number): Promise<Blob> {
@@ -215,6 +223,84 @@ const tdStyle: React.CSSProperties = {
   borderBottom: '1px solid rgba(45,90,61,.07)',
   verticalAlign: 'middle',
 };
+
+// ── MobileCell ────────────────────────────────────────────────────────────────
+
+function MobileCell({ memberId, initialPhone, onUpdate }: {
+  memberId: string;
+  initialPhone: string | null;
+  onUpdate: (id: string, phone: string | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [inputVal, setInputVal] = useState(initialPhone ?? '');
+  const [displayVal, setDisplayVal] = useState(initialPhone ?? '');
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const didCommitRef = useRef(false);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  async function commit() {
+    if (saving) return;
+    const trimmed = inputVal.trim();
+    if (trimmed === displayVal || (!trimmed && !displayVal)) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    setErr(null);
+    try {
+      const result = await updateMemberPhone(memberId, trimmed);
+      if (result.error) { setErr(result.error); return; }
+      const normalized = trimmed ? (normalizeUKMobile(trimmed) ?? trimmed) : '';
+      setDisplayVal(normalized);
+      setInputVal(normalized);
+      onUpdate(memberId, normalized || null);
+      setEditing(false);
+    } catch { setErr('Save failed'); }
+    finally { setSaving(false); }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') { e.preventDefault(); didCommitRef.current = true; commit(); }
+    if (e.key === 'Escape') { didCommitRef.current = true; setInputVal(displayVal); setEditing(false); setErr(null); }
+  }
+
+  function handleBlur() {
+    if (didCommitRef.current) { didCommitRef.current = false; return; }
+    commit();
+  }
+
+  if (!editing) {
+    return (
+      <div onClick={() => setEditing(true)} title="Click to edit mobile number" style={{ cursor: 'text', minWidth: '110px' }}>
+        {displayVal
+          ? <a href={`tel:${displayVal}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--green-deep)', textDecoration: 'none', whiteSpace: 'nowrap' }}>{displayVal}</a>
+          : <span style={{ color: 'rgba(45,90,61,.25)', fontStyle: 'italic', fontSize: '12px' }}>—</span>}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minWidth: '150px' }}>
+      <input
+        ref={inputRef}
+        type="tel"
+        value={inputVal}
+        onChange={e => { setInputVal(e.target.value); setErr(null); }}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        disabled={saving}
+        placeholder="07xxx xxxxxx"
+        style={{ ...inputStyle, height: '28px', fontSize: '12px', width: '150px' }}
+      />
+      {err && <div style={{ fontSize: '10px', color: '#c62828', marginTop: '2px', maxWidth: '150px', lineHeight: 1.3 }}>{err}</div>}
+    </div>
+  );
+}
 
 // ── RosterPhotoCell ───────────────────────────────────────────────────────────
 
@@ -506,6 +592,7 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
   const noPhotoCount   = members.filter(m => !hasValidPhoto(m)).length;
   const hasKeyCount    = members.filter(m => m.has_key === true).length;
   const cardIssuedCount = members.filter(m => m.card_issued === true).length;
+  const noMobileCount  = members.filter(m => !m.phone?.trim()).length;
 
   function toggleFilter(f: RosterFilter) {
     setRosterFilter(prev => prev === f ? null : f);
@@ -520,9 +607,10 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
         )
       : members;
 
-    if (rosterFilter === 'no-photo')        list = list.filter(m => !hasValidPhoto(m));
-    else if (rosterFilter === 'has-key')    list = list.filter(m => m.has_key === true);
+    if (rosterFilter === 'no-photo')             list = list.filter(m => !hasValidPhoto(m));
+    else if (rosterFilter === 'has-key')         list = list.filter(m => m.has_key === true);
     else if (rosterFilter === 'card-not-issued') list = list.filter(m => !m.card_issued);
+    else if (rosterFilter === 'no-mobile')       list = list.filter(m => !m.phone?.trim());
 
     return list;
   })();
@@ -833,7 +921,7 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
           <SectionHeader title="Member Roster" />
           <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'var(--text-muted)' }}>
-            {activeCount} active · {members.length} total · No photo: {noPhotoCount} · Keys: {hasKeyCount} · Cards issued: {cardIssuedCount}
+            {activeCount} active · {members.length} total · No mobile: {noMobileCount} · No photo: {noPhotoCount} · Keys: {hasKeyCount} · Cards issued: {cardIssuedCount}
           </span>
         </div>
 
@@ -853,6 +941,12 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
             style={{ ...inputStyle, height: '40px', maxWidth: '320px', flex: '1 1 200px' }}
           />
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => toggleFilter('no-mobile')}
+              style={rosterFilter === 'no-mobile' ? filterChipActive : filterChipBase}
+            >
+              No mobile <span style={{ opacity: .7 }}>({noMobileCount})</span>
+            </button>
             <button
               onClick={() => toggleFilter('no-photo')}
               style={rosterFilter === 'no-photo' ? filterChipActive : filterChipBase}
@@ -900,7 +994,7 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
                     Full Name{sortKey === 'name' ? (sortAsc ? ' ↑' : ' ↓') : ' ↕'}
                   </th>
                   <th style={thStyle}>Email</th>
-                  <th style={thStyle}>Phone</th>
+                  <th style={thStyle}>Mobile</th>
                   <th style={thStyle}>Status</th>
                   <th style={thStyle}>Joined</th>
                   <th style={thStyle}>Address</th>
@@ -1036,10 +1130,12 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
                           ? <a href={`mailto:${m.email}`} style={{ color: 'var(--green-deep)', textDecoration: 'underline' }}>{m.email}</a>
                           : '—'}
                       </td>
-                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                        {m.phone
-                          ? <a href={`tel:${m.phone}`} style={{ color: 'var(--green-deep)', textDecoration: 'none' }}>{m.phone}</a>
-                          : <span style={{ color: 'rgba(45,90,61,.3)' }}>—</span>}
+                      <td style={{ ...tdStyle, padding: '8px 10px' }}>
+                        <MobileCell
+                          memberId={m.id}
+                          initialPhone={m.phone ?? null}
+                          onUpdate={(id, phone) => setMembers(prev => prev.map(x => x.id !== id ? x : { ...x, phone: phone ?? null }))}
+                        />
                       </td>
                       <td style={tdStyle}>
                         <StatusBadge status={m.status} invited={invitedIds.has(m.id)} hasAuth={!!m.auth_user_id} />

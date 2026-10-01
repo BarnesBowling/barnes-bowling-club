@@ -101,6 +101,26 @@ export function ApplicationForm() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
+  function resizeImage(file: File, maxWidth: number): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const ratio = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('no canvas context')); return; }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob failed')), 'image/jpeg', 0.85);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
+      img.src = url;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus('submitting');
@@ -108,27 +128,24 @@ export function ApplicationForm() {
 
     const form = e.currentTarget;
     const fd = new FormData(form);
+
+    // Resize passport photo to ~600px wide JPEG before upload
+    const photoEntry = fd.get('passport_photo');
+    if (photoEntry instanceof File && photoEntry.size > 0) {
+      try {
+        const resized = await resizeImage(photoEntry, 600);
+        fd.set('passport_photo', new File([resized], 'photo.jpg', { type: 'image/jpeg' }));
+      } catch {
+        fd.delete('passport_photo');
+      }
+    }
+
+    fd.set('signature', canvasRef.current?.toDataURL() ?? '');
+
     try {
       const res = await fetch('/api/membership-application', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          fullName:           fd.get('full_name')            ?? '',
-          dob:                fd.get('dob')                  ?? '',
-          email:              fd.get('email')                ?? '',
-          phone:              fd.get('phone')                ?? '',
-          address:            fd.get('address')              ?? '',
-          rejoining:          fd.get('rejoining')            ?? '',
-          lastMembershipDate: fd.get('last_membership_date') ?? '',
-          committeeMembers:   fd.get('committee_members')    ?? '',
-          visitDate:          fd.get('visit_date')           ?? '',
-          proposerName:       fd.get('proposer_name')        ?? '',
-          seconderName:       fd.get('seconder_name')        ?? '',
-          agreeToFees:        fd.get('agree_to_fees')        === 'on',
-          agreeToAnnualFee:   fd.get('agree_to_annual_fee')  === 'on',
-          agreeToGDPR:        fd.get('agree_to_gdpr')        === 'on',
-          signature:          canvasRef.current?.toDataURL() ?? '',
-        }),
+        body: fd,
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Submission failed');

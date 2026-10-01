@@ -22,11 +22,29 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY!);
-  let body: unknown;
-  try { body = await req.json(); }
+
+  let fd: FormData;
+  try { fd = await req.formData(); }
   catch { return Response.json({ error: 'Invalid request body' }, { status: 400 }); }
 
-  const parsed = schema.safeParse(body);
+  const parsed = schema.safeParse({
+    fullName:           String(fd.get('full_name')            ?? ''),
+    dob:                String(fd.get('dob')                  ?? '') || undefined,
+    email:              String(fd.get('email')                ?? ''),
+    phone:              String(fd.get('phone')                ?? '') || undefined,
+    address:            String(fd.get('address')              ?? '') || undefined,
+    rejoining:          String(fd.get('rejoining')            ?? '') || undefined,
+    lastMembershipDate: String(fd.get('last_membership_date') ?? '') || undefined,
+    committeeMembers:   String(fd.get('committee_members')    ?? ''),
+    visitDate:          String(fd.get('visit_date')           ?? '') || undefined,
+    proposerName:       String(fd.get('proposer_name')        ?? ''),
+    seconderName:       String(fd.get('seconder_name')        ?? ''),
+    agreeToFees:        fd.get('agree_to_fees')        === 'on',
+    agreeToAnnualFee:   fd.get('agree_to_annual_fee')  === 'on',
+    agreeToGDPR:        fd.get('agree_to_gdpr')        === 'on',
+    signature:          String(fd.get('signature')            ?? '') || undefined,
+  });
+
   if (!parsed.success) {
     return Response.json({ error: parsed.error.issues[0]?.message ?? 'Invalid form data' }, { status: 400 });
   }
@@ -37,9 +55,12 @@ export async function POST(req: Request) {
     agreeToFees, agreeToAnnualFee, agreeToGDPR, signature,
   } = parsed.data;
 
+  const photoEntry = fd.get('passport_photo');
+  const photo = photoEntry instanceof File && photoEntry.size > 0 ? photoEntry : null;
+
   const submittedAt = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' });
 
-  const { error: dbError } = await supabaseAdmin
+  const { data: inserted, error: dbError } = await supabaseAdmin
     .from('membership_applications')
     .insert({
       full_name:            fullName,
@@ -58,11 +79,33 @@ export async function POST(req: Request) {
       agree_to_gdpr:        agreeToGDPR,
       signature:            signature || null,
       status:               'pending',
-    });
+    })
+    .select('id')
+    .single();
 
-  if (dbError) {
+  if (dbError || !inserted) {
     console.error('Supabase insert error:', dbError);
     return Response.json({ error: 'Failed to save application. Please try again or email us directly.' }, { status: 500 });
+  }
+
+  // Upload passport photo — failure is non-fatal
+  if (photo) {
+    try {
+      const buffer = await photo.arrayBuffer();
+      const path = `${inserted.id}/photo.jpg`;
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('application-photos')
+        .upload(path, buffer, { contentType: 'image/jpeg', upsert: true });
+      if (!uploadError) {
+        await supabaseAdmin.from('membership_applications')
+          .update({ passport_photo: path })
+          .eq('id', inserted.id);
+      } else {
+        console.error('Photo upload error:', uploadError);
+      }
+    } catch (err) {
+      console.error('Photo upload exception:', err);
+    }
   }
 
   const { error: emailError } = await resend.emails.send({

@@ -33,7 +33,7 @@ const MUTED:     [number, number, number] = [120, 120, 120];
 const GOLD:      [number, number, number] = [180, 145, 65];
 const LIGHT_BG:  [number, number, number] = [247, 250, 248];
 
-export function ApplicationPDFButton({ app }: { app: ApplicationData }) {
+export function ApplicationPDFButton({ app, passportPhotoUrl }: { app: ApplicationData; passportPhotoUrl?: string | null }) {
   const [busy, setBusy] = useState(false);
 
   async function handleDownload() {
@@ -185,6 +185,28 @@ export function ApplicationPDFButton({ app }: { app: ApplicationData }) {
         y += rh;
       });
       y += 3;
+
+      // ── Passport photo ──────────────────────────────────────────────────
+      if (passportPhotoUrl) {
+        try {
+          const imgResp = await fetch(passportPhotoUrl);
+          const blob = await imgResp.blob();
+          const dataUrl = await new Promise<string>((res, rej) => {
+            const reader = new FileReader();
+            reader.onload = () => res(reader.result as string);
+            reader.onerror = rej;
+            reader.readAsDataURL(blob);
+          });
+          checkBreak(50);
+          sectionHeader('Passport Photo');
+          // 35mm × 45mm at scale that fits neatly on page
+          doc.addImage(dataUrl, 'JPEG', ML, y, 35, 45);
+          y += 49;
+        } catch {
+          // photo fetch failed — skip silently
+        }
+        y += 3;
+      }
 
       // ── Signature ───────────────────────────────────────────────────────
       if (app.signature) {

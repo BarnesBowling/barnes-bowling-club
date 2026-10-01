@@ -96,6 +96,14 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
 
   if (!app) notFound();
 
+  let passportPhotoUrl: string | null = null;
+  if (app.passport_photo) {
+    const { data: signed } = await supabaseAdmin.storage
+      .from('application-photos')
+      .createSignedUrl(app.passport_photo, 3600);
+    passportPhotoUrl = signed?.signedUrl ?? null;
+  }
+
   const statusColor = app.status === 'approved'
     ? { bg: 'rgba(45,200,80,.18)', color: '#b0ffc8' }
     : app.status === 'rejected'
@@ -190,6 +198,18 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
                 </div>
               </section>
 
+              {passportPhotoUrl && (
+                <section>
+                  <SectionHeading>Passport Photo</SectionHeading>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={passportPhotoUrl}
+                    alt="Passport photo"
+                    style={{ width: '133px', height: '170px', objectFit: 'cover', display: 'block', border: '1px solid rgba(45,90,61,.18)' }}
+                  />
+                </section>
+              )}
+
               {app.signature && (
                 <section>
                   <SectionHeading>Signature</SectionHeading>
@@ -249,7 +269,7 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
               </div>
 
               <div style={{ marginTop: '1rem' }}>
-                <ApplicationPDFButton app={{
+                <ApplicationPDFButton passportPhotoUrl={passportPhotoUrl} app={{
                   id:                   app.id,
                   full_name:            app.full_name,
                   dob:                  app.dob ?? null,

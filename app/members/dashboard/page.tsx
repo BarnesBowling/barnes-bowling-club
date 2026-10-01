@@ -60,6 +60,8 @@ export default async function Dashboard() {
                 .dashboard-header-flex { flex-direction: column !important; align-items: flex-start !important; gap: 1.5rem !important; }
                 .dashboard-mini-cal { width: 100% !important; overflow-x: auto; }
               }
+              .back-to-site-btn { background: #c9a84c !important; }
+              .back-to-site-btn:hover { background: #b8943c !important; }
             `}</style>
             <div className="dashboard-header-flex" style={{ display: 'flex', alignItems: 'flex-end', gap: '3rem', flexWrap: 'wrap' }}>
 
@@ -134,16 +136,17 @@ export default async function Dashboard() {
                   </a>
                   <a
                     href="/home"
+                    className="back-to-site-btn"
                     style={{
                       width: '62px',
                       height: '62px',
                       borderRadius: '50%',
-                      background: 'white',
+                      background: '#c9a84c',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: '#1b3b26',
+                      color: '#fff',
                       fontFamily: "'DM Sans', sans-serif",
                       fontSize: '7.5px',
                       fontWeight: 700,
@@ -152,6 +155,7 @@ export default async function Dashboard() {
                       textDecoration: 'none',
                       lineHeight: 1.35,
                       textAlign: 'center',
+                      transition: 'background .15s',
                     }}
                   >
                     Back to<br />Main<br />Site

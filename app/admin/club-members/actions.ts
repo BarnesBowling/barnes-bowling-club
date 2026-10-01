@@ -92,6 +92,26 @@ export async function checkMemberHasLedger(id: string): Promise<boolean> {
   return (count ?? 0) > 0;
 }
 
+export async function toggleMemberKey(id: string, value: boolean): Promise<void> {
+  await requireAdminSession();
+  const { error } = await supabaseAdmin
+    .from('club_members')
+    .update({ has_key: value, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/club-members');
+}
+
+export async function setMemberCard(id: string, issued: boolean, date: string | null): Promise<void> {
+  await requireAdminSession();
+  const { error } = await supabaseAdmin
+    .from('club_members')
+    .update({ card_issued: issued, card_issued_date: date, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/club-members');
+}
+
 export async function inviteClubMember(id: string, email: string): Promise<void> {
   await requireAdminSession();
 

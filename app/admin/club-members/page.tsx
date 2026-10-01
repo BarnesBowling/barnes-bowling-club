@@ -13,6 +13,26 @@ export default async function AdminClubMembersPage() {
     .select('*')
     .order('full_name');
 
+  // Batch-generate signed URLs for members with valid photos (treat "test.jpeg" as no photo)
+  const photoPaths = (members ?? [])
+    .filter(m => m.photo_id_filename && m.photo_id_filename !== 'test.jpeg')
+    .map(m => m.photo_id_filename as string);
+
+  const initialPhotoUrls: Record<string, string> = {};
+  if (photoPaths.length > 0) {
+    const { data: signed } = await supabaseAdmin.storage
+      .from('member-photos')
+      .createSignedUrls(photoPaths, 3600);
+    if (signed) {
+      const pathIndex = new Map(signed.map(s => [s.path, s.signedUrl]));
+      for (const m of (members ?? [])) {
+        if (!m.photo_id_filename || m.photo_id_filename === 'test.jpeg') continue;
+        const url = pathIndex.get(m.photo_id_filename);
+        if (url) initialPhotoUrls[m.id] = url;
+      }
+    }
+  }
+
   return (
     <>
       <Navbar />
@@ -29,7 +49,7 @@ export default async function AdminClubMembersPage() {
           </div>
         </div>
         <div className="section-inner" style={{ padding: '3rem 2rem 5rem' }}>
-          <AdminClubMembersClient initialMembers={members ?? []} />
+          <AdminClubMembersClient initialMembers={members ?? []} initialPhotoUrls={initialPhotoUrls} />
         </div>
       </main>
       <Footer />

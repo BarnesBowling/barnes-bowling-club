@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
-import { addClubMember, updateClubMember, deleteClubMember, inviteClubMember, savePhotoId, clearMemberPhoto, checkMemberHasLedger } from './actions';
+import { useState, useTransition, useEffect, useRef } from 'react';
+import { addClubMember, updateClubMember, deleteClubMember, inviteClubMember, checkMemberHasLedger, toggleMemberKey, setMemberCard } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -17,6 +17,9 @@ export type ClubMember = {
   created_at: string;
   auth_user_id: string | null;
   photo_id_filename?: string | null;
+  has_key?: boolean | null;
+  card_issued?: boolean | null;
+  card_issued_date?: string | null;
   phone?: string | null;
   emergency_contact_name?: string | null;
   emergency_contact_phone?: string | null;
@@ -36,9 +39,18 @@ type MemberPayload = {
   notes: string;
 };
 
-type Props = { initialMembers: ClubMember[] };
+type RosterFilter = 'no-photo' | 'has-key' | 'card-not-issued' | null;
+
+type Props = {
+  initialMembers: ClubMember[];
+  initialPhotoUrls: Record<string, string>;
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function hasValidPhoto(m: ClubMember): boolean {
+  return !!(m.photo_id_filename && m.photo_id_filename !== 'test.jpeg');
+}
 
 function surnameKey(name: string): string {
   const parts = name.trim().split(' ');
@@ -58,7 +70,6 @@ function fmtDate(iso: string | null): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-// BBC + first initial of first name + first initial of surname + next consecutive number
 function generateMembershipNumber(name: string, existingMembers: ClubMember[]): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length < 2) return '';
@@ -71,6 +82,29 @@ function generateMembershipNumber(name: string, existingMembers: ClubMember[]): 
     if (digits) maxNum = Math.max(maxNum, parseInt(digits, 10));
   }
   return `BBC${firstInitial}${surnameInitial}${maxNum + 1}`;
+}
+
+function resizeImage(file: File, maxWidth: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const ratio = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { reject(new Error('no canvas context')); return; }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        blob => blob ? resolve(blob) : reject(new Error('toBlob failed')),
+        'image/jpeg', 0.85,
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
+    img.src = url;
+  });
 }
 
 const EMPTY: MemberPayload = {
@@ -182,130 +216,219 @@ const tdStyle: React.CSSProperties = {
   verticalAlign: 'middle',
 };
 
-// ── PhotoCell ─────────────────────────────────────────────────────────────────
+// ── RosterPhotoCell ───────────────────────────────────────────────────────────
 
-function PhotoCell({ memberId, initialFilename, onUpdate }: {
+function RosterPhotoCell({ memberId, photoUrl, onUploaded }: {
   memberId: string;
-  initialFilename?: string | null;
-  onUpdate: (id: string, filename: string | null) => void;
+  photoUrl: string | null;
+  onUploaded: (id: string, url: string, path: string) => void;
 }) {
-  const [inputValue, setInputValue] = useState(initialFilename ?? '');
-  const [savedFilename, setSavedFilename] = useState(initialFilename ?? '');
-  const [saving, startSaveTransition] = useTransition();
-  const [savedOk, setSavedOk] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState(photoUrl);
 
-  useEffect(() => {
-    setSavedFilename(initialFilename ?? '');
-    setInputValue(initialFilename ?? '');
-  }, [initialFilename]);
-
-  function handleSave() {
-    setSaveError(null);
-    startSaveTransition(async () => {
-      try {
-        await savePhotoId(memberId, inputValue.trim() || null);
-        const saved = inputValue.trim() || null;
-        setSavedFilename(saved ?? '');
-        onUpdate(memberId, saved);
-        setSavedOk(true);
-        setTimeout(() => setSavedOk(false), 2500);
-      } catch (err) {
-        setSaveError(err instanceof Error ? err.message : 'Save failed');
-      }
-    });
+  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    try {
+      const resized = await resizeImage(file, 600);
+      const fd = new FormData();
+      fd.set('id', memberId);
+      fd.set('photo', new File([resized], 'photo.jpg', { type: 'image/jpeg' }));
+      const res = await fetch('/api/admin/member-photo', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error('Upload failed');
+      const json = await res.json() as { signedUrl?: string; path?: string };
+      const url = json.signedUrl ?? '';
+      const path = json.path ?? '';
+      setCurrentUrl(url || null);
+      onUploaded(memberId, url, path);
+    } catch { /* silent — keep existing photo */ }
+    finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
   }
-
-  function handleDelete() {
-    if (!confirm('Remove this photo ID? This cannot be undone.')) return;
-    setSaveError(null);
-    startSaveTransition(async () => {
-      try {
-        await clearMemberPhoto(memberId);
-        setSavedFilename('');
-        setInputValue('');
-        onUpdate(memberId, null);
-      } catch (err) {
-        setSaveError(err instanceof Error ? err.message : 'Delete failed');
-      }
-    });
-  }
-
-  const thumbSrc = savedFilename.trim() ? `/member-photos/${savedFilename.trim()}` : null;
 
   return (
-    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', minWidth: '190px' }}>
-      <div style={{
-        width: 50,
-        aspectRatio: '35/45',
-        background: '#e8e8e8',
-        flexShrink: 0,
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '1px solid rgba(0,0,0,.1)',
-      }}>
-        {thumbSrc ? (
-          <img src={thumbSrc} alt="ID photo" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
+    <div title={currentUrl ? 'Replace photo' : 'Upload photo'}>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleChange}
+        disabled={busy}
+      />
+      <button
+        onClick={() => inputRef.current?.click()}
+        disabled={busy}
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: currentUrl ? '2px solid rgba(45,90,61,.25)' : '2px dashed rgba(45,90,61,.2)',
+          background: '#f0f0ef',
+          cursor: busy ? 'wait' : 'pointer',
+          padding: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          transition: 'border-color .15s',
+        }}
+      >
+        {busy ? (
+          <span style={{ fontSize: '10px', color: '#999' }}>…</span>
+        ) : currentUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={currentUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
         ) : (
-          <svg viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
         )}
-      </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <input
-          value={inputValue}
-          onChange={e => setInputValue(e.target.value)}
-          placeholder="e.g. jane-smith.jpg"
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-          style={{ ...inputStyle, height: '30px', fontSize: '12px' }}
-        />
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              ...btnPrimary,
-              height: '26px',
-              fontSize: '10px',
-              padding: '0 10px',
-              minWidth: 0,
-              opacity: saving ? .65 : 1,
-              background: savedOk ? '#2e7d32' : 'var(--green-mid)',
-            }}
+      </button>
+    </div>
+  );
+}
+
+// ── KeyCell ───────────────────────────────────────────────────────────────────
+
+function KeyCell({ memberId, initialValue, onToggle }: {
+  memberId: string;
+  initialValue: boolean;
+  onToggle: (id: string, value: boolean) => void;
+}) {
+  const [value, setValue] = useState(initialValue);
+  const [saving, startTransition] = useTransition();
+
+  function handleClick() {
+    const next = !value;
+    startTransition(async () => {
+      try {
+        await toggleMemberKey(memberId, next);
+        setValue(next);
+        onToggle(memberId, next);
+      } catch { /* silent */ }
+    });
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={saving}
+      title={value ? 'Has key — click to remove' : 'No key — click to assign'}
+      style={{
+        background: 'none',
+        border: 'none',
+        cursor: saving ? 'wait' : 'pointer',
+        padding: '2px 6px',
+        opacity: saving ? .55 : 1,
+        fontSize: '16px',
+        lineHeight: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <span style={{ color: value ? '#2e7d32' : '#c62828', fontWeight: 700 }}>
+        {value ? '✓' : '✗'}
+      </span>
+    </button>
+  );
+}
+
+// ── CardCell ──────────────────────────────────────────────────────────────────
+
+function CardCell({ memberId, initialIssued, initialDate, onUpdate }: {
+  memberId: string;
+  initialIssued: boolean;
+  initialDate: string | null;
+  onUpdate: (id: string, issued: boolean, date: string | null) => void;
+}) {
+  const [issued, setIssued] = useState(initialIssued);
+  const [date, setDate] = useState(initialDate ?? '');
+  const [editingDate, setEditingDate] = useState(false);
+  const [saving, startTransition] = useTransition();
+
+  function handleTickClick() {
+    if (issued) {
+      startTransition(async () => {
+        try {
+          await setMemberCard(memberId, false, null);
+          setIssued(false);
+          setDate('');
+          onUpdate(memberId, false, null);
+        } catch { /* silent */ }
+      });
+    } else {
+      const today = new Date().toISOString().slice(0, 10);
+      startTransition(async () => {
+        try {
+          await setMemberCard(memberId, true, today);
+          setIssued(true);
+          setDate(today);
+          onUpdate(memberId, true, today);
+        } catch { /* silent */ }
+      });
+    }
+  }
+
+  function handleDateBlur() {
+    setEditingDate(false);
+    startTransition(async () => {
+      try {
+        await setMemberCard(memberId, issued, date || null);
+        onUpdate(memberId, issued, date || null);
+      } catch { /* silent */ }
+    });
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px', minWidth: '70px' }}>
+      <button
+        onClick={handleTickClick}
+        disabled={saving}
+        title={issued ? 'Card issued — click to clear' : 'Card not issued — click to mark issued'}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: saving ? 'wait' : 'pointer',
+          padding: '2px 6px',
+          opacity: saving ? .55 : 1,
+          fontSize: '16px',
+          lineHeight: 1,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <span style={{ color: issued ? '#2e7d32' : '#c62828', fontWeight: 700 }}>
+          {issued ? '✓' : '✗'}
+        </span>
+      </button>
+      {issued && (
+        editingDate ? (
+          <input
+            type="date"
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            onBlur={handleDateBlur}
+            autoFocus
+            style={{ ...inputStyle, height: '26px', fontSize: '11px', width: '130px' }}
+          />
+        ) : (
+          <span
+            onClick={() => setEditingDate(true)}
+            title="Click to edit date"
+            style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)', cursor: 'pointer', paddingLeft: '6px', whiteSpace: 'nowrap' }}
           >
-            {saving ? '…' : savedOk ? '✓ Saved' : 'Save'}
-          </button>
-          {savedFilename.trim() && (
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={saving}
-              style={{
-                ...btnDanger,
-                height: '26px',
-                fontSize: '10px',
-                padding: '0 10px',
-                minWidth: 0,
-                opacity: saving ? .65 : 1,
-              }}
-            >
-              Delete
-            </button>
-          )}
-        </div>
-        {saveError && (
-          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#b91c1c' }}>
-            {saveError}
+            {date ? fmtDate(date) : <em style={{ opacity: .6 }}>No date</em>}
           </span>
-        )}
-      </div>
+        )
+      )}
     </div>
   );
 }
@@ -352,9 +475,11 @@ function SectionHeader({ title }: { title: string }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function AdminClubMembersClient({ initialMembers }: Props) {
+export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Props) {
   const [members, setMembers] = useState<ClubMember[]>(sortByName(initialMembers));
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>(initialPhotoUrls);
   const [search, setSearch] = useState('');
+  const [rosterFilter, setRosterFilter] = useState<RosterFilter>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<MemberPayload>(EMPTY);
   const [addForm, setAddForm] = useState<MemberPayload>(EMPTY);
@@ -377,15 +502,30 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
     }
   }, [msg]);
 
-  const activeCount = members.filter(m => m.status === 'active').length;
+  const activeCount    = members.filter(m => m.status === 'active').length;
+  const noPhotoCount   = members.filter(m => !hasValidPhoto(m)).length;
+  const hasKeyCount    = members.filter(m => m.has_key === true).length;
+  const cardIssuedCount = members.filter(m => m.card_issued === true).length;
 
-  const baseFiltered = search.trim()
-    ? members.filter(m =>
-        m.full_name.toLowerCase().includes(search.toLowerCase()) ||
-        (m.email ?? '').toLowerCase().includes(search.toLowerCase()) ||
-        (m.membership_number ?? '').toLowerCase().includes(search.toLowerCase())
-      )
-    : members;
+  function toggleFilter(f: RosterFilter) {
+    setRosterFilter(prev => prev === f ? null : f);
+  }
+
+  const baseFiltered = (() => {
+    let list = search.trim()
+      ? members.filter(m =>
+          m.full_name.toLowerCase().includes(search.toLowerCase()) ||
+          (m.email ?? '').toLowerCase().includes(search.toLowerCase()) ||
+          (m.membership_number ?? '').toLowerCase().includes(search.toLowerCase())
+        )
+      : members;
+
+    if (rosterFilter === 'no-photo')        list = list.filter(m => !hasValidPhoto(m));
+    else if (rosterFilter === 'has-key')    list = list.filter(m => m.has_key === true);
+    else if (rosterFilter === 'card-not-issued') list = list.filter(m => !m.card_issued);
+
+    return list;
+  })();
 
   const filtered = [...baseFiltered].sort((a, b) => {
     let cmp = 0;
@@ -422,15 +562,11 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
   }
 
   function handleHeaderSort(key: 'name' | 'membership_number') {
-    if (sortKey === key) {
-      setSortAsc(a => !a);
-    } else {
-      setSortKey(key);
-      setSortAsc(true);
-    }
+    if (sortKey === key) setSortAsc(a => !a);
+    else { setSortKey(key); setSortAsc(true); }
   }
 
-  // ── Add ──────────────────────────────────────────────────────────────────
+  // ── Add ───────────────────────────────────────────────────────────────────
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -448,6 +584,9 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
           notes: addForm.notes.trim() || null,
           created_at: new Date().toISOString(),
           auth_user_id: null,
+          has_key: false,
+          card_issued: false,
+          card_issued_date: null,
         };
         setMembers(prev => sortByName([...prev, newMember]));
         setAddForm(EMPTY);
@@ -528,15 +667,33 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
     }
   }
 
-  // ── Photo update ──────────────────────────────────────────────────────────
-
-  function handlePhotoUpdate(id: string, filename: string | null) {
-    setMembers(prev => prev.map(m => m.id !== id ? m : { ...m, photo_id_filename: filename }));
-  }
-
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const COLS = 11; // Memb. No. | Full Name | Email | Phone | Status | Joined | Address | EC Name | EC Phone | Photo ID | Actions
+  const COLS = 13; // Memb. No. | Full Name | Email | Phone | Status | Joined | Address | EC Name | EC Phone | Photo | Key | Card | Actions
+
+  const filterChipBase: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '5px',
+    padding: '5px 12px',
+    border: '1.5px solid rgba(45,90,61,.2)',
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: '11px',
+    fontWeight: 600,
+    letterSpacing: '.07em',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+    background: '#fff',
+    color: 'var(--text-muted)',
+    transition: 'background .12s, color .12s, border-color .12s',
+  };
+
+  const filterChipActive: React.CSSProperties = {
+    ...filterChipBase,
+    background: 'var(--green-deep)',
+    color: '#fff',
+    borderColor: 'var(--green-deep)',
+  };
 
   return (
     <div>
@@ -676,12 +833,12 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
           <SectionHeader title="Member Roster" />
           <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'var(--text-muted)' }}>
-            {activeCount} active · {members.length} total
+            {activeCount} active · {members.length} total · No photo: {noPhotoCount} · Keys: {hasKeyCount} · Cards issued: {cardIssuedCount}
           </span>
         </div>
 
-        {/* Search */}
-        <div style={{ marginBottom: '1.25rem', maxWidth: '360px' }}>
+        {/* Search + filters */}
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '1.25rem' }}>
           <input
             type="text"
             name="club_member_lookup"
@@ -693,13 +850,33 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
             placeholder="Search by name, email, or membership number…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ ...inputStyle, height: '40px' }}
+            style={{ ...inputStyle, height: '40px', maxWidth: '320px', flex: '1 1 200px' }}
           />
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => toggleFilter('no-photo')}
+              style={rosterFilter === 'no-photo' ? filterChipActive : filterChipBase}
+            >
+              No photo <span style={{ opacity: .7 }}>({noPhotoCount})</span>
+            </button>
+            <button
+              onClick={() => toggleFilter('has-key')}
+              style={rosterFilter === 'has-key' ? filterChipActive : filterChipBase}
+            >
+              Has key <span style={{ opacity: .7 }}>({hasKeyCount})</span>
+            </button>
+            <button
+              onClick={() => toggleFilter('card-not-issued')}
+              style={rosterFilter === 'card-not-issued' ? filterChipActive : filterChipBase}
+            >
+              Card not issued <span style={{ opacity: .7 }}>({members.length - cardIssuedCount})</span>
+            </button>
+          </div>
         </div>
 
         {filtered.length === 0 ? (
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-            {search ? 'No members match your search.' : 'No members in the roster yet.'}
+            {search || rosterFilter ? 'No members match your search or filter.' : 'No members in the roster yet.'}
           </p>
         ) : (
           <div className="admin-members-table-wrap" style={{ overflowX: 'auto' }}>
@@ -729,12 +906,11 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                   <th style={thStyle}>Address</th>
                   <th style={thStyle}>Emergency Contact</th>
                   <th style={thStyle}>EC Phone</th>
-                  <th style={thStyle}>
-                    Photo ID
-                    <span style={{ display: 'block', fontWeight: 400, fontSize: '9px', letterSpacing: '.04em', textTransform: 'none', fontStyle: 'italic', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'normal', maxWidth: '180px', lineHeight: 1.4 }}>
-                      Upload to public/member-photos/ then enter filename
-                    </span>
+                  <th style={{ ...thStyle, textAlign: 'center' }}>Photo</th>
+                  <th style={{ ...thStyle, textAlign: 'center' }}>
+                    <span title="Key (£10 deposit)">🗝</span>
                   </th>
+                  <th style={{ ...thStyle, textAlign: 'left' }}>Card</th>
                   <th style={thStyle}></th>
                 </tr>
               </thead>
@@ -748,13 +924,9 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                       <tr key={m.id}>
                         <td colSpan={COLS} style={{ padding: 0, background: 'rgba(45,90,61,.03)', borderBottom: '2px solid rgba(45,90,61,.18)', borderTop: '1px solid rgba(45,90,61,.12)' }}>
                           <div style={{ padding: '1.25rem 1.5rem' }}>
-
-                            {/* Member label */}
                             <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, color: 'var(--green-deep)', marginBottom: '1rem' }}>
                               Editing: {m.full_name}
                             </div>
-
-                            {/* Edit grid */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
                               <div style={{ gridColumn: 'span 2' }}>
                                 <label style={labelStyle}>Full Name</label>
@@ -832,12 +1004,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                                   placeholder="Any relevant notes"
                                 />
                               </div>
-                              <div style={{ gridColumn: '1 / -1' }}>
-                                <label style={labelStyle}>Photo ID</label>
-                                <PhotoCell memberId={m.id} initialFilename={m.photo_id_filename} onUpdate={handlePhotoUpdate} />
-                              </div>
                             </div>
-
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                               <button
                                 onClick={() => handleSaveEdit(m.id)}
@@ -899,8 +1066,30 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                           ? <a href={`tel:${m.emergency_contact_phone}`} style={{ color: 'var(--green-deep)', textDecoration: 'none' }}>{m.emergency_contact_phone}</a>
                           : <span style={{ color: 'rgba(45,90,61,.3)' }}>—</span>}
                       </td>
-                      <td style={{ ...tdStyle, padding: '8px 10px', verticalAlign: 'top' }}>
-                        <PhotoCell memberId={m.id} initialFilename={m.photo_id_filename} onUpdate={handlePhotoUpdate} />
+                      <td style={{ ...tdStyle, textAlign: 'center', padding: '8px' }}>
+                        <RosterPhotoCell
+                          memberId={m.id}
+                          photoUrl={photoUrls[m.id] ?? null}
+                          onUploaded={(id, url, path) => {
+                            setPhotoUrls(prev => ({ ...prev, [id]: url }));
+                            setMembers(prev => prev.map(x => x.id !== id ? x : { ...x, photo_id_filename: path }));
+                          }}
+                        />
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'center', padding: '8px' }}>
+                        <KeyCell
+                          memberId={m.id}
+                          initialValue={m.has_key ?? false}
+                          onToggle={(id, val) => setMembers(prev => prev.map(x => x.id !== id ? x : { ...x, has_key: val }))}
+                        />
+                      </td>
+                      <td style={{ ...tdStyle, padding: '8px 10px' }}>
+                        <CardCell
+                          memberId={m.id}
+                          initialIssued={m.card_issued ?? false}
+                          initialDate={m.card_issued_date ?? null}
+                          onUpdate={(id, issued, date) => setMembers(prev => prev.map(x => x.id !== id ? x : { ...x, card_issued: issued, card_issued_date: date }))}
+                        />
                       </td>
                       <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', gap: '0.4rem' }}>
@@ -924,12 +1113,7 @@ export function AdminClubMembersClient({ initialMembers }: Props) {
                           )}
                           <a
                             href={`/admin/members/${m.id}/statement`}
-                            style={{
-                              ...btnSecondary,
-                              textDecoration: 'none',
-                              borderColor: 'var(--gold)',
-                              color: 'var(--gold)',
-                            }}
+                            style={{ ...btnSecondary, textDecoration: 'none', borderColor: 'var(--gold)', color: 'var(--gold)' }}
                           >
                             Statement
                           </a>

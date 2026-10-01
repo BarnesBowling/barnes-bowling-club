@@ -6,7 +6,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { verifyMemberSession, SESSION_COOKIE } from '@/lib/memberSession';
 import { MyDetailsDropdown } from './MyDetailsDropdown';
-import { CompDatesCard } from './CompDatesCard';
 import { ResultsDropdown } from './ResultsDropdown';
 import { ResultsNavDropdown } from './ResultsNavDropdown';
 import { MiniCalendar } from '../_components/MiniCalendar';
@@ -27,13 +26,17 @@ export default async function Dashboard() {
 
   const email = session.email;
 
-  const [{ data: events }, { data: notices }, { data: officers }, { data: memberProfile }, { data: memberRecord }] =
+  const todayStr    = new Date().toISOString().split('T')[0];
+  const in14DaysStr = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  const [{ data: events }, { data: notices }, { data: officers }, { data: memberProfile }, { data: memberRecord }, { data: fixtures }] =
     await Promise.all([
-      supabaseAdmin.from('events').select('*').gte('event_date', new Date().toISOString()).order('event_date').limit(8),
+      supabaseAdmin.from('events').select('*').gte('event_date', new Date().toISOString()).order('event_date', { ascending: false }).limit(8),
       supabaseAdmin.from('notices').select('*').order('published_at', { ascending: false }).limit(5),
       supabaseAdmin.from('officers').select('*').eq('group_name', 'Committee').order('sort_order'),
       supabaseAdmin.from('member_profiles').select('first_name').eq('member_email', email).maybeSingle(),
       supabaseAdmin.from('club_members').select('full_name').eq('email', email).maybeSingle(),
+      supabaseAdmin.from('fixture_bookings').select('id, competition, player1, player2, player3, player4, date, time_slot').gte('date', todayStr).lte('date', in14DaysStr).order('date').order('time_slot'),
     ]);
 
   // member_profiles.first_name is the preferred source; fall back to the
@@ -103,8 +106,8 @@ export default async function Dashboard() {
                   <div style={{ flex: 1 }} />
                 </div>
 
-                {/* Log Out — bottom of left column, bottom edge = calendar bottom edge */}
-                <div style={{ marginTop: '1.5rem' }}>
+                {/* Log Out + Back to Main Site — bottom of left column, bottom edge = calendar bottom edge */}
+                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '12px' }}>
                   <a
                     href="/members/logout"
                     style={{
@@ -128,6 +131,30 @@ export default async function Dashboard() {
                     }}
                   >
                     Log<br />out
+                  </a>
+                  <a
+                    href="/home"
+                    style={{
+                      width: '62px',
+                      height: '62px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#1b3b26',
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: '7.5px',
+                      fontWeight: 700,
+                      letterSpacing: '.05em',
+                      textTransform: 'uppercase',
+                      textDecoration: 'none',
+                      lineHeight: 1.35,
+                      textAlign: 'center',
+                    }}
+                  >
+                    Back to<br />Main<br />Site
                   </a>
                 </div>
               </div>
@@ -190,34 +217,99 @@ export default async function Dashboard() {
             ))}
           </div>
 
-          {/* Notices */}
-          {notices && notices.length > 0 && (
-            <section style={{ marginBottom: '3.5rem' }}>
-              <div style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: '22px',
-                fontWeight: 500,
-                color: 'var(--green-deep)',
-                marginBottom: '1.25rem',
-              }}>Club notices</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'rgba(45,90,61,.08)' }}>
-                {notices.map((n) => (
-                  <div key={n.id} style={{ background: 'var(--cream)', padding: '1.25rem 1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem', marginBottom: '6px', flexWrap: 'wrap' }}>
-                      <strong style={{ fontFamily: "'Playfair Display', serif", fontSize: '16px', color: 'var(--green-deep)' }}>{n.title}</strong>
-                      <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)', flexShrink: 0 }}>
-                        {n.author} · {new Date(n.published_at).toLocaleDateString('en-GB')}
-                      </span>
-                    </div>
-                    <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', lineHeight: 1.7, color: 'var(--text-mid)', margin: 0 }}>{n.body}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+          {/* Two-column: Club notices (left) + Matches in the Next 14 Days (right) */}
+          {(((notices && notices.length > 0) || (events && events.length > 0)) || (fixtures && fixtures.length > 0)) && (
+            <>
+              <style>{`
+                @media (max-width: 900px) {
+                  .dashboard-two-col > section {
+                    flex: 1 1 100% !important;
+                    max-width: 100% !important;
+                    margin-left: 0 !important;
+                    text-align: left !important;
+                  }
+                }
+              `}</style>
+              <div className="dashboard-two-col" style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap', marginBottom: '3.5rem', alignItems: 'flex-start' }}>
 
-          {/* Competition Dates / Results card */}
-          <CompDatesCard events={events ?? []} />
+                {/* Left: Club notices + upcoming events */}
+                {((notices && notices.length > 0) || (events && events.length > 0)) && (
+                  <section style={{ flex: '0 0 calc(50% - 1.25rem)', maxWidth: 'calc(50% - 1.25rem)' }}>
+                    <div style={{
+                      fontFamily: "'Playfair Display', serif",
+                      fontSize: '22px',
+                      fontWeight: 500,
+                      color: 'var(--green-deep)',
+                      marginBottom: '1.25rem',
+                    }}>Club notices</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'rgba(45,90,61,.08)' }}>
+                      {(notices ?? []).map((n) => (
+                        <div key={n.id} style={{ background: 'var(--cream)', padding: '1.25rem 1.5rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem', marginBottom: '6px', flexWrap: 'wrap' }}>
+                            <strong style={{ fontFamily: "'Playfair Display', serif", fontSize: '16px', color: 'var(--green-deep)' }}>{n.title}</strong>
+                            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)', flexShrink: 0 }}>
+                              {n.author} · {new Date(n.published_at).toLocaleDateString('en-GB')}
+                            </span>
+                          </div>
+                          <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', lineHeight: 1.7, color: 'var(--text-mid)', margin: 0 }}>{n.body}</p>
+                        </div>
+                      ))}
+                      {(events ?? []).map((e) => {
+                        const body = [e.description, e.location].filter(Boolean).join(' — ');
+                        return (
+                          <div key={e.id} style={{ background: 'var(--cream)', padding: '1.25rem 1.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem', marginBottom: body ? '6px' : 0, flexWrap: 'wrap' }}>
+                              <strong style={{ fontFamily: "'Playfair Display', serif", fontSize: '16px', color: 'var(--green-deep)' }}>{e.title}</strong>
+                              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#c9a84c', flexShrink: 0 }}>
+                                {new Date(e.event_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                              </span>
+                            </div>
+                            {body && <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', lineHeight: 1.7, color: 'var(--text-mid)', margin: 0 }}>{body}</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+
+                {/* Right: Matches in the Next 14 Days */}
+                {fixtures && fixtures.length > 0 && (
+                  <section style={{ flex: '0 0 calc(50% - 1.25rem)', maxWidth: 'calc(50% - 1.25rem)', marginLeft: 'auto', textAlign: 'right' }}>
+                    <div style={{
+                      fontFamily: "'Playfair Display', serif",
+                      fontSize: '22px',
+                      fontWeight: 500,
+                      color: 'var(--green-deep)',
+                      marginBottom: '1.25rem',
+                    }}>Matches in the Next 14 Days</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'rgba(45,90,61,.08)' }}>
+                      {fixtures.map((bm) => {
+                        const COMP: Record<string, string> = { shield: 'The Shield', cup: 'The Cup', pairs: 'Pairs', manser: 'Manser Cup' };
+                        const comp = COMP[bm.competition] ?? bm.competition;
+                        const players = bm.player3 && bm.player4
+                          ? `${bm.player1} & ${bm.player2} vs ${bm.player3} & ${bm.player4}`
+                          : `${bm.player1} vs ${bm.player2}`;
+                        const dateLabel = new Date(bm.date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+                        return (
+                          <div key={bm.id} style={{ background: 'var(--cream)', padding: '1.25rem 1.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem', marginBottom: '6px', flexWrap: 'wrap' }}>
+                              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'var(--text-muted)', flexShrink: 0 }}>{bm.time_slot}</span>
+                              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#c9a84c', flexShrink: 0 }}>{dateLabel}</span>
+                            </div>
+                            <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '14px', lineHeight: 1.7, color: 'var(--text-mid)', margin: 0 }}>
+                              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--green-deep)', marginRight: '0.5em' }}>{comp}</span>
+                              {players}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+
+              </div>
+            </>
+          )}
 
           {/* Results card */}
           <section style={{ marginBottom: '3.5rem' }}>

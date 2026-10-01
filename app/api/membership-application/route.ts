@@ -129,6 +129,7 @@ export async function POST(req: Request) {
 
   if (emailError) {
     console.error('Resend email error:', emailError);
+    return Response.json({ error: 'Application saved but notification email failed. Please contact info@barnesbowling.club to confirm receipt.' }, { status: 500 });
   }
 
   return Response.json({ ok: true });

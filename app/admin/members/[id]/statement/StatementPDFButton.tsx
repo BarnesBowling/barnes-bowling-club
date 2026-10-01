@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { PAYMENT_INFO } from './paymentInfo';
 
 const BBC_GREEN: [number, number, number] = [45, 90, 61];
 const DARK:      [number, number, number] = [40, 40, 40];
@@ -286,6 +287,82 @@ export function StatementPDFButton({ member, entries }: Props) {
       } else {
         doc.text('This account is fully settled.', ML, y);
       }
+
+      // ── How to Pay ────────────────────────────────────────────────────────────
+      checkBreak(80);
+      y += 10;
+
+      doc.setDrawColor(BBC_GREEN[0], BBC_GREEN[1], BBC_GREEN[2]);
+      doc.setLineWidth(0.5);
+      doc.line(ML, y, PAGE_W - MR, y);
+      y += 7;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      setColor(BBC_GREEN);
+      doc.text('How to Pay', ML, y);
+      y += 8;
+
+      // Bank transfer
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      setColor(DARK);
+      doc.text('Paying by bank transfer', ML, y);
+      y += 5.5;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text('If you would prefer to pay by bank transfer, please use:', ML, y);
+      y += 6;
+
+      const LABEL_X = ML + 4;
+      const VALUE_X = ML + 46;
+      const bankDetails: [string, string][] = [
+        ['Account name:', PAYMENT_INFO.accountName],
+        ['Sort code:',    PAYMENT_INFO.sortCode],
+        ['Account no.:',  PAYMENT_INFO.accountNumber],
+        ['Reference:',    member.membership_number ?? '—'],
+      ];
+      bankDetails.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        setColor(GOLD);
+        doc.text(label, LABEL_X, y);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        setColor(BBC_GREEN);
+        doc.text(value, VALUE_X, y);
+        y += 5;
+      });
+
+      y += 3;
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(8.5);
+      setColor(MUTED);
+      const emailNote = `Please remember to email the club at ${PAYMENT_INFO.email} to let us know your payment has been sent.`;
+      const wrappedEmail = doc.splitTextToSize(emailNote, W) as string[];
+      wrappedEmail.forEach(line => { doc.text(line, ML, y); y += 4.5; });
+
+      y += 6;
+
+      // Card payment
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      setColor(DARK);
+      doc.text('Paying by card', ML, y);
+      y += 5.5;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      setColor(DARK);
+      const cardNote = 'Alternatively, you can pay by credit or debit card through our secure online payment portal:';
+      const wrappedCard = doc.splitTextToSize(cardNote, W) as string[];
+      wrappedCard.forEach(line => { doc.text(line, ML, y); y += 5; });
+
+      doc.setFont('helvetica', 'bold');
+      setColor(BBC_GREEN);
+      doc.text(PAYMENT_INFO.paymentPageUrl, ML, y);
+      y += 5;
 
       // ── Page footers ──────────────────────────────────────────────────────────
       const total = doc.getNumberOfPages();

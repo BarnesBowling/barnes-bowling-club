@@ -5,6 +5,7 @@ import { requireViewerSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { StatementPDFButton } from './StatementPDFButton';
 import type { StatementEntry } from './StatementPDFButton';
+import { PAYMENT_INFO } from './paymentInfo';
 
 const CATEGORY_LABELS: Record<string, string> = {
   membership_fee: 'Membership Fee',
@@ -348,6 +349,77 @@ export default async function MemberStatementPage({
               </div>
             )}
           </section>
+
+          {/* ── How to Pay ─────────────────────────────────────────────── */}
+          <section style={{
+            background: '#fff',
+            border: '1px solid rgba(45,90,61,.12)',
+            padding: '1.75rem 2rem',
+          }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.5rem', marginTop: 0 }}>
+              How to Pay
+            </h2>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2rem' }}>
+
+              {/* Bank transfer */}
+              <div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, color: 'var(--green-deep)', marginBottom: '0.6rem' }}>
+                  Paying by bank transfer
+                </div>
+                <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', lineHeight: 1.7, color: 'var(--text-mid)', margin: '0 0 0.9rem' }}>
+                  If you would prefer to pay by bank transfer, please use:
+                </p>
+                <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', alignItems: 'baseline' }}>
+                  {[
+                    ['Account name', PAYMENT_INFO.accountName],
+                    ['Sort code', PAYMENT_INFO.sortCode],
+                    ['Account number', PAYMENT_INFO.accountNumber],
+                    ['Reference', member.membership_number ?? '—'],
+                  ].map(([label, value]) => (
+                    <>
+                      <dt key={`dt-${label}`} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--gold)', whiteSpace: 'nowrap' }}>{label}</dt>
+                      <dd key={`dd-${label}`} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 600, color: 'var(--green-deep)', margin: 0 }}>{value}</dd>
+                    </>
+                  ))}
+                </dl>
+                <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '12px', lineHeight: 1.7, color: 'var(--text-muted)', margin: '0.9rem 0 0', fontStyle: 'italic' }}>
+                  Please remember to email the club at{' '}
+                  <a href={`mailto:${PAYMENT_INFO.email}`} style={{ color: 'var(--green-mid)' }}>{PAYMENT_INFO.email}</a>{' '}
+                  to let us know your payment has been sent.
+                </p>
+              </div>
+
+              {/* Card */}
+              <div>
+                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, color: 'var(--green-deep)', marginBottom: '0.6rem' }}>
+                  Paying by card
+                </div>
+                <p style={{ fontFamily: "'Libre Baskerville', serif", fontSize: '13px', lineHeight: 1.7, color: 'var(--text-mid)', margin: '0 0 0.9rem' }}>
+                  Alternatively, you can pay by credit or debit card through our secure online payment portal.
+                </p>
+                <a
+                  href={PAYMENT_INFO.paymentPageUrl}
+                  style={{
+                    display: 'inline-block',
+                    padding: '10px 22px',
+                    background: 'var(--gold)',
+                    color: '#fff',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    letterSpacing: '.08em',
+                    textTransform: 'uppercase',
+                    textDecoration: 'none',
+                  }}
+                >
+                  Pay Online →
+                </a>
+              </div>
+
+            </div>
+          </section>
+
         </div>
       </main>
       <Footer />

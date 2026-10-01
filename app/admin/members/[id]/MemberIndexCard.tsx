@@ -275,7 +275,7 @@ export function MemberIndexCard({
             position: fixed; top: 0; left: 0;
             width: 100%; max-width: none !important;
             box-shadow: none !important;
-            background-color: #faf7f0 !important;
+            background-color: #ffffff !important;
           }
           .no-print { display: none !important; }
         }
@@ -284,7 +284,7 @@ export function MemberIndexCard({
       <div
         className="bbc-member-card"
         style={{
-          backgroundColor: '#faf7f0',
+          backgroundColor: '#ffffff',
           backgroundImage: 'repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(27,59,38,.065) 27px, rgba(27,59,38,.065) 28px)',
           boxShadow: '0 2px 16px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.07)',
           maxWidth: '720px',

@@ -1,6 +1,7 @@
 import './globals.css';
 import './mobile-nav-fix.css';
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { CookieConsent } from '@/components/CookieConsent';
 import { PwaRegister } from '@/components/PwaRegister';
 import { AppPreviewEnhancements } from '@/components/AppPreviewEnhancements';
@@ -40,6 +41,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AppPreviewEnhancements />
         <PwaRegister />
         <CookieConsent />
+        <Script
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "4efb4b0848a44532b2ca858ab10f63ee"}'
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

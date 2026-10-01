@@ -37,6 +37,16 @@ type MemberPayload = {
   status: string;
   joined_date: string;
   notes: string;
+  phone: string;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  postcode: string;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  has_key: boolean;
+  card_issued: boolean;
+  card_issued_date: string;
 };
 
 type RosterFilter = 'no-photo' | 'has-key' | 'card-not-issued' | 'no-mobile' | null;
@@ -59,10 +69,6 @@ function surnameKey(name: string): string {
 
 function sortByName(arr: ClubMember[]): ClubMember[] {
   return [...arr].sort((a, b) => surnameKey(a.full_name).localeCompare(surnameKey(b.full_name)));
-}
-
-function fmtHcp(n: number): string {
-  return n > 0 ? `+${n}` : String(n);
 }
 
 function fmtDate(iso: string | null): string {
@@ -118,6 +124,9 @@ function resizeImage(file: File, maxWidth: number): Promise<Blob> {
 const EMPTY: MemberPayload = {
   full_name: '', email: '', membership_number: '', handicap: 0,
   status: 'active', joined_date: '', notes: '',
+  phone: '', address_line1: '', address_line2: '', city: '', postcode: '',
+  emergency_contact_name: '', emergency_contact_phone: '',
+  has_key: false, card_issued: false, card_issued_date: '',
 };
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
@@ -312,11 +321,13 @@ function RosterPhotoCell({ memberId, photoUrl, onUploaded }: {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(photoUrl);
+  const [err, setErr] = useState<string | null>(null);
 
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setBusy(true);
+    setErr(null);
     try {
       const resized = await resizeImage(file, 600);
       const fd = new FormData();
@@ -329,15 +340,16 @@ function RosterPhotoCell({ memberId, photoUrl, onUploaded }: {
       const path = json.path ?? '';
       setCurrentUrl(url || null);
       onUploaded(memberId, url, path);
-    } catch { /* silent — keep existing photo */ }
-    finally {
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Upload failed');
+    } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = '';
     }
   }
 
   return (
-    <div title={currentUrl ? 'Replace photo' : 'Upload photo'}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }} title={currentUrl ? 'Replace photo' : 'Upload photo'}>
       <input
         ref={inputRef}
         type="file"
@@ -377,6 +389,7 @@ function RosterPhotoCell({ memberId, photoUrl, onUploaded }: {
           </svg>
         )}
       </button>
+      {err && <div style={{ fontSize: '9px', color: '#c62828', maxWidth: '48px', lineHeight: 1.2, textAlign: 'center' }}>{err}</div>}
     </div>
   );
 }
@@ -390,6 +403,7 @@ function KeyCell({ memberId, initialValue, onToggle }: {
 }) {
   const [value, setValue] = useState(initialValue);
   const [saving, startTransition] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
 
   function handleClick() {
     const next = !value;
@@ -398,32 +412,38 @@ function KeyCell({ memberId, initialValue, onToggle }: {
         await toggleMemberKey(memberId, next);
         setValue(next);
         onToggle(memberId, next);
-      } catch { /* silent */ }
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : 'Save failed');
+        setTimeout(() => setErr(null), 4000);
+      }
     });
   }
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={saving}
-      title={value ? 'Has key — click to remove' : 'No key — click to assign'}
-      style={{
-        background: 'none',
-        border: 'none',
-        cursor: saving ? 'wait' : 'pointer',
-        padding: '2px 6px',
-        opacity: saving ? .55 : 1,
-        fontSize: '16px',
-        lineHeight: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <span style={{ color: value ? '#2e7d32' : '#c62828', fontWeight: 700 }}>
-        {value ? '✓' : '✗'}
-      </span>
-    </button>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+      <button
+        onClick={handleClick}
+        disabled={saving}
+        title={value ? 'Has key — click to remove' : 'No key — click to assign'}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: saving ? 'wait' : 'pointer',
+          padding: '2px 6px',
+          opacity: saving ? .55 : 1,
+          fontSize: '16px',
+          lineHeight: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <span style={{ color: value ? '#2e7d32' : '#c62828', fontWeight: 700 }}>
+          {value ? '✓' : '✗'}
+        </span>
+      </button>
+      {err && <div style={{ fontSize: '9px', color: '#c62828', maxWidth: '60px', lineHeight: 1.2, textAlign: 'center' }}>{err}</div>}
+    </div>
   );
 }
 
@@ -439,6 +459,7 @@ function CardCell({ memberId, initialIssued, initialDate, onUpdate }: {
   const [date, setDate] = useState(initialDate ?? '');
   const [editingDate, setEditingDate] = useState(false);
   const [saving, startTransition] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
 
   function handleTickClick() {
     if (issued) {
@@ -448,7 +469,10 @@ function CardCell({ memberId, initialIssued, initialDate, onUpdate }: {
           setIssued(false);
           setDate('');
           onUpdate(memberId, false, null);
-        } catch { /* silent */ }
+        } catch (e) {
+          setErr(e instanceof Error ? e.message : 'Save failed');
+          setTimeout(() => setErr(null), 4000);
+        }
       });
     } else {
       const today = new Date().toISOString().slice(0, 10);
@@ -458,7 +482,10 @@ function CardCell({ memberId, initialIssued, initialDate, onUpdate }: {
           setIssued(true);
           setDate(today);
           onUpdate(memberId, true, today);
-        } catch { /* silent */ }
+        } catch (e) {
+          setErr(e instanceof Error ? e.message : 'Save failed');
+          setTimeout(() => setErr(null), 4000);
+        }
       });
     }
   }
@@ -469,7 +496,10 @@ function CardCell({ memberId, initialIssued, initialDate, onUpdate }: {
       try {
         await setMemberCard(memberId, issued, date || null);
         onUpdate(memberId, issued, date || null);
-      } catch { /* silent */ }
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : 'Save failed');
+        setTimeout(() => setErr(null), 4000);
+      }
     });
   }
 
@@ -515,6 +545,7 @@ function CardCell({ memberId, initialIssued, initialDate, onUpdate }: {
           </span>
         )
       )}
+      {err && <div style={{ fontSize: '9px', color: '#c62828', marginTop: '2px', maxWidth: '80px', lineHeight: 1.2 }}>{err}</div>}
     </div>
   );
 }
@@ -580,6 +611,8 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
   );
   const [sortKey, setSortKey] = useState<'name' | 'membership_number'>('membership_number');
   const [sortAsc, setSortAsc] = useState(false);
+  const addPhotoInputRef = useRef<HTMLInputElement>(null);
+  const [addPhotoPreview, setAddPhotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (msg?.ok) {
@@ -634,13 +667,23 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
   function startEdit(m: ClubMember) {
     setEditId(m.id);
     setEditForm({
-      full_name: m.full_name,
-      email: m.email ?? '',
-      membership_number: m.membership_number ?? '',
-      handicap: m.handicap,
-      status: m.status,
-      joined_date: m.joined_date ?? '',
-      notes: m.notes ?? '',
+      full_name:               m.full_name,
+      email:                   m.email                   ?? '',
+      membership_number:       m.membership_number       ?? '',
+      handicap:                m.handicap,
+      status:                  m.status,
+      joined_date:             m.joined_date             ?? '',
+      notes:                   m.notes                   ?? '',
+      phone:                   m.phone                   ?? '',
+      address_line1:           m.address_line1           ?? '',
+      address_line2:           m.address_line2           ?? '',
+      city:                    m.city                    ?? '',
+      postcode:                m.postcode                ?? '',
+      emergency_contact_name:  m.emergency_contact_name  ?? '',
+      emergency_contact_phone: m.emergency_contact_phone ?? '',
+      has_key:                 m.has_key                 ?? false,
+      card_issued:             m.card_issued             ?? false,
+      card_issued_date:        m.card_issued_date        ?? '',
     });
   }
 
@@ -658,27 +701,72 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+
+    // Validate phone client-side before entering transition
+    const phoneRaw = addForm.phone.trim();
+    if (phoneRaw) {
+      const normalized = normalizeUKMobile(phoneRaw);
+      if (!normalized) {
+        setMsg({ ok: false, text: 'Please enter a valid UK mobile number (e.g. 07957 224527).' });
+        return;
+      }
+    }
+
+    // Capture photo file synchronously before transition (DOM read must be sync)
+    const photoFile = addPhotoInputRef.current?.files?.[0] ?? null;
+
     startAddTransition(async () => {
       try {
         const newId = await addClubMember(addForm);
+
+        // Upload photo if one was selected
+        let photoIdFilename: string | null = null;
+        let signedUrl: string | null = null;
+        if (photoFile) {
+          try {
+            const resized = await resizeImage(photoFile, 600);
+            const fd = new FormData();
+            fd.set('id', newId);
+            fd.set('photo', new File([resized], 'photo.jpg', { type: 'image/jpeg' }));
+            const res = await fetch('/api/admin/member-photo', { method: 'POST', body: fd });
+            if (res.ok) {
+              const json = await res.json() as { signedUrl?: string; path?: string };
+              photoIdFilename = json.path ?? null;
+              signedUrl = json.signedUrl ?? null;
+            }
+          } catch { /* member added; photo upload failed silently — show in roster */ }
+        }
+
         const newMember: ClubMember = {
           id: newId,
-          full_name: addForm.full_name.trim(),
-          email: addForm.email.trim() || null,
-          membership_number: addForm.membership_number.trim() || null,
-          handicap: addForm.handicap,
-          status: addForm.status as ClubMember['status'],
-          joined_date: addForm.joined_date || null,
-          notes: addForm.notes.trim() || null,
-          created_at: new Date().toISOString(),
-          auth_user_id: null,
-          has_key: false,
-          card_issued: false,
-          card_issued_date: null,
+          full_name:               addForm.full_name.trim(),
+          email:                   addForm.email.trim()                   || null,
+          membership_number:       addForm.membership_number.trim()       || null,
+          handicap:                addForm.handicap,
+          status:                  addForm.status as ClubMember['status'],
+          joined_date:             addForm.joined_date                    || null,
+          notes:                   addForm.notes.trim()                   || null,
+          created_at:              new Date().toISOString(),
+          auth_user_id:            null,
+          phone:                   addForm.phone.trim()                   || null,
+          address_line1:           addForm.address_line1.trim()           || null,
+          address_line2:           addForm.address_line2.trim()           || null,
+          city:                    addForm.city.trim()                    || null,
+          postcode:                addForm.postcode.trim()                || null,
+          emergency_contact_name:  addForm.emergency_contact_name.trim()  || null,
+          emergency_contact_phone: addForm.emergency_contact_phone.trim() || null,
+          has_key:                 addForm.has_key,
+          card_issued:             addForm.card_issued,
+          card_issued_date:        addForm.card_issued ? (addForm.card_issued_date || null) : null,
+          photo_id_filename:       photoIdFilename,
         };
+
+        if (signedUrl) setPhotoUrls(prev => ({ ...prev, [newId]: signedUrl! }));
         setMembers(prev => sortByName([...prev, newMember]));
         setAddForm(EMPTY);
         setAddMemberNumManual(false);
+        setAddPhotoPreview(null);
+        if (addPhotoInputRef.current) addPhotoInputRef.current.value = '';
         setMsg({ ok: true, text: `${newMember.full_name} added to the roster.` });
       } catch (err: unknown) {
         setMsg({ ok: false, text: err instanceof Error ? err.message : 'Failed to add member.' });
@@ -695,13 +783,13 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
         setMembers(prev =>
           sortByName(prev.map(m => m.id !== id ? m : {
             ...m,
-            full_name: editForm.full_name.trim(),
-            email: editForm.email.trim() || null,
+            full_name:         editForm.full_name.trim(),
+            email:             editForm.email.trim()             || null,
             membership_number: editForm.membership_number.trim() || null,
-            handicap: editForm.handicap,
-            status: editForm.status as ClubMember['status'],
-            joined_date: editForm.joined_date || null,
-            notes: editForm.notes.trim() || null,
+            handicap:          editForm.handicap,
+            status:            editForm.status as ClubMember['status'],
+            joined_date:       editForm.joined_date              || null,
+            notes:             editForm.notes.trim()             || null,
           }))
         );
         setEditId(null);
@@ -757,7 +845,7 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const COLS = 13; // Memb. No. | Full Name | Email | Phone | Status | Joined | Address | EC Name | EC Phone | Photo | Key | Card | Actions
+  const COLS = 13;
 
   const filterChipBase: React.CSSProperties = {
     display: 'inline-flex',
@@ -783,6 +871,15 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
     borderColor: 'var(--green-deep)',
   };
 
+  const subLabelStyle: React.CSSProperties = {
+    ...labelStyle,
+    fontSize: '10px',
+    color: 'rgba(45,90,61,.6)',
+    marginTop: '0.75rem',
+    marginBottom: '0.5rem',
+    letterSpacing: '.08em',
+  };
+
   return (
     <div>
 
@@ -805,6 +902,8 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
       <section style={card}>
         <SectionHeader title="Add New Member" />
         <form onSubmit={handleAdd} autoComplete="off">
+
+          {/* Row 1: Name + email + membership number */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
             <div style={{ gridColumn: 'span 2' }}>
               <label style={labelStyle}>Full Name *</label>
@@ -863,18 +962,10 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
                 </span>
               )}
             </div>
-            <div>
-              <label style={labelStyle}>Handicap</label>
-              <input
-                type="number"
-                min="-20"
-                max="20"
-                value={addForm.handicap}
-                onChange={e => setAddForm(f => ({ ...f, handicap: Number(e.target.value) }))}
-                style={inputStyle}
-                autoComplete="off"
-              />
-            </div>
+          </div>
+
+          {/* Row 2: Status + handicap + joined + mobile */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
             <div>
               <label style={labelStyle}>Status</label>
               <select
@@ -888,6 +979,18 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
               </select>
             </div>
             <div>
+              <label style={labelStyle}>Handicap</label>
+              <input
+                type="number"
+                min="-20"
+                max="20"
+                value={addForm.handicap}
+                onChange={e => setAddForm(f => ({ ...f, handicap: Number(e.target.value) }))}
+                style={inputStyle}
+                autoComplete="off"
+              />
+            </div>
+            <div>
               <label style={labelStyle}>Joined Date</label>
               <input
                 type="date"
@@ -896,6 +999,166 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
                 style={inputStyle}
                 autoComplete="off"
               />
+            </div>
+            <div>
+              <label style={labelStyle}>Mobile</label>
+              <input
+                type="tel"
+                value={addForm.phone}
+                onChange={e => setAddForm(f => ({ ...f, phone: e.target.value }))}
+                style={inputStyle}
+                placeholder="07xxx xxxxxx"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+
+          {/* Row 3: Address */}
+          <div style={{ marginBottom: '0.5rem' }}>
+            <div style={subLabelStyle}>Address</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={labelStyle}>Address Line 1</label>
+                <input
+                  type="text"
+                  value={addForm.address_line1}
+                  onChange={e => setAddForm(f => ({ ...f, address_line1: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="123 Green Lane"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={labelStyle}>Address Line 2</label>
+                <input
+                  type="text"
+                  value={addForm.address_line2}
+                  onChange={e => setAddForm(f => ({ ...f, address_line2: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="Flat 4 (optional)"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>City</label>
+                <input
+                  type="text"
+                  value={addForm.city}
+                  onChange={e => setAddForm(f => ({ ...f, city: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="London"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Postcode</label>
+                <input
+                  type="text"
+                  value={addForm.postcode}
+                  onChange={e => setAddForm(f => ({ ...f, postcode: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="SW1A 1AA"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 4: Emergency contact */}
+          <div style={{ marginBottom: '0.5rem' }}>
+            <div style={subLabelStyle}>Emergency Contact</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+              <div>
+                <label style={labelStyle}>EC Name</label>
+                <input
+                  type="text"
+                  value={addForm.emergency_contact_name}
+                  onChange={e => setAddForm(f => ({ ...f, emergency_contact_name: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="John Smith"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>EC Phone</label>
+                <input
+                  type="tel"
+                  value={addForm.emergency_contact_phone}
+                  onChange={e => setAddForm(f => ({ ...f, emergency_contact_phone: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="07xxx xxxxxx"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 5: Photo + key + card + notes */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+            <div>
+              <label style={labelStyle}>Photo ID</label>
+              <input
+                ref={addPhotoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (!file) { setAddPhotoPreview(null); return; }
+                  const url = URL.createObjectURL(file);
+                  setAddPhotoPreview(url);
+                }}
+                style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-deep)', width: '100%' }}
+              />
+              {addPhotoPreview && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={addPhotoPreview}
+                  alt="Preview"
+                  style={{ marginTop: '8px', width: '48px', height: '48px', objectFit: 'cover', objectPosition: 'center top', borderRadius: '50%', border: '2px solid rgba(45,90,61,.2)' }}
+                />
+              )}
+            </div>
+            <div>
+              <label style={labelStyle}>Key &amp; Card</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '4px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-deep)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={addForm.has_key}
+                    onChange={e => setAddForm(f => ({ ...f, has_key: e.target.checked }))}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  Has key
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-deep)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={addForm.card_issued}
+                    onChange={e => setAddForm(f => ({ ...f, card_issued: e.target.checked, card_issued_date: e.target.checked ? (f.card_issued_date || new Date().toISOString().slice(0, 10)) : '' }))}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  Card issued
+                </label>
+                {addForm.card_issued && (
+                  <div>
+                    <label style={{ ...labelStyle, fontSize: '10px' }}>Card date</label>
+                    <input
+                      type="date"
+                      value={addForm.card_issued_date}
+                      onChange={e => setAddForm(f => ({ ...f, card_issued_date: e.target.value }))}
+                      style={{ ...inputStyle, height: '36px', fontSize: '13px', width: '160px' }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             <div style={{ gridColumn: 'span 2' }}>
               <label style={labelStyle}>Notes (optional)</label>
@@ -910,6 +1173,7 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
               />
             </div>
           </div>
+
           <button type="submit" style={{ ...btnPrimary, opacity: addPending ? .65 : 1 }} disabled={addPending}>
             {addPending ? 'Adding…' : 'Add Member'}
           </button>

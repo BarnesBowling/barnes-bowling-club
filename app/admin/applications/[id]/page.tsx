@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdminSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { ApplicationPDFButton } from './ApplicationPDFButton';
+import { AdminPhotoUpload } from './AdminPhotoUpload';
 
 export const dynamic = 'force-dynamic';
 
@@ -267,6 +268,8 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
                   <button className="btn" type="submit" style={{ marginTop: '.25rem' }}>Save</button>
                 </form>
               </div>
+
+              <AdminPhotoUpload applicationId={app.id} hasPhoto={!!app.passport_photo} />
 
               <div style={{ marginTop: '1rem' }}>
                 <ApplicationPDFButton passportPhotoUrl={passportPhotoUrl} app={{

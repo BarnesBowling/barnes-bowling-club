@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useMemo, useEffect } from 'react';
 import { updateTransaction, deleteTransactionById, updateMemberBasics, addAdjustmentTransaction } from './actions';
-import { emailOutstandingStatements } from '@/app/admin/members/[id]/statement/emailActions';
+import { emailOutstandingStatements, emailStatementsTestToAdmin } from '@/app/admin/members/[id]/statement/emailActions';
 import type { BulkEmailResult } from '@/app/admin/members/[id]/statement/emailActions';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -154,6 +154,7 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
   const [bulkEmailOpen, setBulkEmailOpen]       = useState(false);
   const [bulkSelected, setBulkSelected]         = useState<Set<string>>(new Set());
   const [bulkSending, setBulkSending]           = useState(false);
+  const [bulkTestMode, setBulkTestMode]         = useState(false);
   const [bulkResults, setBulkResults]           = useState<BulkEmailResult[] | null>(null);
   const [lastEmailedMap, setLastEmailedMap]     = useState<Record<string, string>>({});
 
@@ -292,6 +293,7 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
   }
 
   async function handleBulkSend() {
+    setBulkTestMode(false);
     setBulkSending(true);
     setBulkResults(null);
     try {
@@ -305,6 +307,21 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
       });
     } catch (e) {
       showMsg(false, e instanceof Error ? e.message : 'Bulk email failed.');
+      setBulkEmailOpen(false);
+    } finally {
+      setBulkSending(false);
+    }
+  }
+
+  async function handleTestSend() {
+    setBulkTestMode(true);
+    setBulkSending(true);
+    setBulkResults(null);
+    try {
+      const results = await emailStatementsTestToAdmin(Array.from(bulkSelected));
+      setBulkResults(results);
+    } catch (e) {
+      showMsg(false, e instanceof Error ? e.message : 'Test send failed.');
       setBulkEmailOpen(false);
     } finally {
       setBulkSending(false);
@@ -691,11 +708,17 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
               {bulkResults ? (
                 /* Results view */
                 <>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-deep)', fontWeight: 600, marginBottom: '1rem' }}>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--green-deep)', fontWeight: 600, marginBottom: '4px' }}>
                     {bulkResults.filter(r => r.status === 'sent').length} sent ·{' '}
                     {bulkResults.filter(r => r.status === 'failed').length} failed ·{' '}
                     {bulkResults.filter(r => r.status === 'skipped').length} skipped
                   </div>
+                  {bulkTestMode && (
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#c9a84c', fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase', marginBottom: '1rem' }}>
+                      Test only — sent to your inbox, not to members
+                    </div>
+                  )}
+                  {!bulkTestMode && <div style={{ marginBottom: '1rem' }} />}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '300px', overflowY: 'auto', marginBottom: '1.25rem' }}>
                     {bulkResults.map(r => (
                       <div key={r.memberId} style={{
@@ -774,13 +797,27 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                       );
                     })}
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <button
                       onClick={handleBulkSend}
                       disabled={bulkSending || bulkSelected.size === 0}
                       style={{ ...btnSave, height: '38px', opacity: (bulkSending || bulkSelected.size === 0) ? .6 : 1, cursor: (bulkSending || bulkSelected.size === 0) ? 'default' : 'pointer' }}
                     >
-                      {bulkSending ? 'Sending…' : `Send ${bulkSelected.size} email${bulkSelected.size !== 1 ? 's' : ''}`}
+                      {bulkSending && !bulkTestMode ? 'Sending…' : `Send ${bulkSelected.size} email${bulkSelected.size !== 1 ? 's' : ''}`}
+                    </button>
+                    <button
+                      onClick={handleTestSend}
+                      disabled={bulkSending || bulkSelected.size === 0}
+                      style={{
+                        ...btnCancel,
+                        height: '38px',
+                        border: '1px solid #c9a84c',
+                        color: '#c9a84c',
+                        opacity: (bulkSending || bulkSelected.size === 0) ? .6 : 1,
+                        cursor: (bulkSending || bulkSelected.size === 0) ? 'default' : 'pointer',
+                      }}
+                    >
+                      {bulkSending && bulkTestMode ? 'Sending…' : 'Send test to me'}
                     </button>
                     {!bulkSending && (
                       <button onClick={() => setBulkEmailOpen(false)} style={{ ...btnCancel, height: '38px' }}>

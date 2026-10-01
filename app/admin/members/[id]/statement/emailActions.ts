@@ -173,6 +173,96 @@ export async function emailStatement(
   return { ok: true };
 }
 
+// ── emailStatementsTestToAdmin ────────────────────────────────────────────────
+
+export async function emailStatementsTestToAdmin(
+  memberIds: string[],
+): Promise<BulkEmailResult[]> {
+  const session = await requireAdminSession();
+  const adminEmail = session.email;
+
+  const results: BulkEmailResult[] = [];
+  const BATCH_SIZE = 5;
+  const BATCH_DELAY_MS = 600;
+
+  for (let batchStart = 0; batchStart < memberIds.length; batchStart += BATCH_SIZE) {
+    const batch = memberIds.slice(batchStart, batchStart + BATCH_SIZE);
+
+    await Promise.all(
+      batch.map(async (memberId) => {
+        let name = memberId;
+        let email: string | null = null;
+
+        try {
+          const { data: memberRow, error: memberErr } = await supabaseAdmin
+            .from('club_members')
+            .select('full_name, email, membership_number, status')
+            .eq('id', memberId)
+            .single();
+
+          if (memberErr || !memberRow) {
+            results.push({ memberId, name, email, status: 'failed', error: 'Member not found.' });
+            return;
+          }
+
+          name = memberRow.full_name;
+          email = memberRow.email ?? null;
+
+          const member = memberRow as PDFMember & { email: string };
+
+          const { data: ledgerRows, error: ledgerErr } = await supabaseAdmin
+            .from('member_ledger')
+            .select('id, date, description, category, amount, type, guest_names, num_guests, cost_per_guest, metadata')
+            .eq('member_id', memberId)
+            .order('date', { ascending: true })
+            .order('created_at', { ascending: true });
+
+          if (ledgerErr) {
+            results.push({ memberId, name, email, status: 'failed', error: ledgerErr.message });
+            return;
+          }
+
+          const entries: PDFEntry[] = (ledgerRows ?? []) as PDFEntry[];
+
+          const balance = entries.reduce((acc, e) => {
+            return acc + (e.type === 'credit' ? -e.amount : e.amount);
+          }, 0);
+
+          const pdfBytes = await generateStatementPDF(member, entries);
+          const html = buildEmailHtml(member, balance);
+          const filename = `BBC-Statement-${(member.membership_number ?? member.full_name).replace(/\s+/g, '-')}.pdf`;
+
+          const resend = getResend();
+          const { error: sendError } = await resend.emails.send({
+            from: 'Barnes Bowling Club <noreply@barnesbowlingclub.com>',
+            to: adminEmail,
+            replyTo: 'info@barnesbowling.club',
+            subject: `Your Barnes Bowling Club Statement – ${member.full_name}`,
+            html,
+            attachments: [{ filename, content: Buffer.from(pdfBytes) }],
+          });
+
+          if (sendError) {
+            results.push({ memberId, name, email, status: 'failed', error: sendError.message });
+            return;
+          }
+
+          results.push({ memberId, name, email, status: 'sent' });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          results.push({ memberId, name, email, status: 'failed', error: message });
+        }
+      }),
+    );
+
+    if (batchStart + BATCH_SIZE < memberIds.length) {
+      await new Promise<void>((r) => setTimeout(r, BATCH_DELAY_MS));
+    }
+  }
+
+  return results;
+}
+
 // ── emailOutstandingStatements ────────────────────────────────────────────────
 
 export type BulkEmailResult = {

@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import { addClubMember, updateClubMember, deleteClubMember, inviteClubMember, checkMemberHasLedger, toggleMemberKey, setMemberCard, updateMemberPhone } from './actions';
+import { MemberIndexCard } from '@/app/admin/members/[id]/MemberIndexCard';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -613,6 +614,7 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
   const [sortAsc, setSortAsc] = useState(false);
   const addPhotoInputRef = useRef<HTMLInputElement>(null);
   const [addPhotoPreview, setAddPhotoPreview] = useState<string | null>(null);
+  const [cardMemberId, setCardMemberId] = useState<string | null>(null);
 
   useEffect(() => {
     if (msg?.ok) {
@@ -620,6 +622,14 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
       return () => clearTimeout(t);
     }
   }, [msg]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setCardMemberId(null);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const activeCount    = members.filter(m => m.status === 'active').length;
   const noPhotoCount   = members.filter(m => !hasValidPhoto(m)).length;
@@ -1387,7 +1397,25 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
                         {m.membership_number || '—'}
                       </td>
                       <td style={{ ...tdStyle, fontSize: '14px', fontWeight: 500, color: 'var(--text-dark)', whiteSpace: 'nowrap' }}>
-                        {m.full_name}
+                        <button
+                          onClick={() => setCardMemberId(m.id)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            fontFamily: "'DM Sans', sans-serif",
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            color: 'var(--text-dark)',
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                            textDecorationColor: 'rgba(45,90,61,.25)',
+                            textUnderlineOffset: '2px',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {m.full_name}
+                        </button>
                       </td>
                       <td style={tdStyle}>
                         {m.email
@@ -1497,6 +1525,46 @@ export function AdminClubMembersClient({ initialMembers, initialPhotoUrls }: Pro
           </div>
         )}
       </section>
+
+      {/* ── Member index card modal ─────────────────────────────────────── */}
+      {(() => {
+        const cardMember = cardMemberId ? members.find(m => m.id === cardMemberId) ?? null : null;
+        if (!cardMember) return null;
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,.48)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'center',
+              padding: '3rem 1.5rem 3rem',
+              overflowY: 'auto',
+            }}
+            onClick={() => setCardMemberId(null)}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{ width: '100%', maxWidth: '720px' }}
+            >
+              <MemberIndexCard
+                memberId={cardMemberId!}
+                initialMember={cardMember}
+                initialPhotoUrl={photoUrls[cardMemberId!] ?? null}
+                onClose={() => setCardMemberId(null)}
+                onMemberUpdated={updated => {
+                  setMembers(prev => sortByName(prev.map(m => m.id === updated.id ? updated : m)));
+                }}
+                onPhotoUploaded={(id, url) => {
+                  setPhotoUrls(prev => ({ ...prev, [id]: url }));
+                }}
+              />
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

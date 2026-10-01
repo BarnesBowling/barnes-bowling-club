@@ -12,7 +12,7 @@ function normalizeUKMobile(raw: string): string | null {
   return `${digits.slice(0, 5)} ${digits.slice(5)}`;
 }
 
-type MemberPayload = {
+export type MemberPayload = {
   full_name: string;
   email: string;
   membership_number: string;
@@ -20,20 +20,47 @@ type MemberPayload = {
   status: string;
   joined_date: string;
   notes: string;
+  phone: string;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  postcode: string;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  has_key: boolean;
+  card_issued: boolean;
+  card_issued_date: string;
 };
 
 export async function addClubMember(data: MemberPayload): Promise<string> {
   await requireAdminSession();
+
+  let phone: string | null = null;
+  if (data.phone?.trim()) {
+    phone = normalizeUKMobile(data.phone.trim());
+    if (!phone) throw new Error('Please enter a valid UK mobile number (e.g. 07957 224527).');
+  }
+
   const { data: inserted, error } = await supabaseAdmin
     .from('club_members')
     .insert({
-      full_name: data.full_name.trim(),
-      email: data.email.trim() || null,
-      membership_number: data.membership_number.trim() || null,
-      handicap: data.handicap,
-      status: data.status,
-      joined_date: data.joined_date || null,
-      notes: data.notes.trim() || null,
+      full_name:               data.full_name.trim(),
+      email:                   data.email.trim()                   || null,
+      membership_number:       data.membership_number.trim()       || null,
+      handicap:                data.handicap,
+      status:                  data.status,
+      joined_date:             data.joined_date                    || null,
+      notes:                   data.notes.trim()                   || null,
+      phone,
+      address_line1:           data.address_line1.trim()           || null,
+      address_line2:           data.address_line2.trim()           || null,
+      city:                    data.city.trim()                    || null,
+      postcode:                data.postcode.trim()                || null,
+      emergency_contact_name:  data.emergency_contact_name.trim()  || null,
+      emergency_contact_phone: data.emergency_contact_phone.trim() || null,
+      has_key:                 data.has_key  ?? false,
+      card_issued:             data.card_issued ?? false,
+      card_issued_date:        data.card_issued ? (data.card_issued_date || null) : null,
     })
     .select('id')
     .single();
@@ -45,20 +72,36 @@ export async function addClubMember(data: MemberPayload): Promise<string> {
 
 export async function updateClubMember(id: string, data: MemberPayload): Promise<void> {
   await requireAdminSession();
-  const { error } = await supabaseAdmin
+
+  let phone: string | null = null;
+  if (data.phone?.trim()) {
+    phone = normalizeUKMobile(data.phone.trim());
+    if (!phone) throw new Error('Please enter a valid UK mobile number (e.g. 07957 224527).');
+  }
+
+  const { data: updated, error } = await supabaseAdmin
     .from('club_members')
     .update({
-      full_name: data.full_name.trim(),
-      email: data.email.trim() || null,
-      membership_number: data.membership_number.trim() || null,
-      handicap: data.handicap,
-      status: data.status,
-      joined_date: data.joined_date || null,
-      notes: data.notes.trim() || null,
-      updated_at: new Date().toISOString(),
+      full_name:               data.full_name.trim(),
+      email:                   data.email.trim()                   || null,
+      membership_number:       data.membership_number.trim()       || null,
+      handicap:                data.handicap,
+      status:                  data.status,
+      joined_date:             data.joined_date                    || null,
+      notes:                   data.notes.trim()                   || null,
+      phone,
+      address_line1:           data.address_line1.trim()           || null,
+      address_line2:           data.address_line2.trim()           || null,
+      city:                    data.city.trim()                    || null,
+      postcode:                data.postcode.trim()                || null,
+      emergency_contact_name:  data.emergency_contact_name.trim()  || null,
+      emergency_contact_phone: data.emergency_contact_phone.trim() || null,
+      updated_at:              new Date().toISOString(),
     })
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
   if (error) throw new Error(error.message);
+  if (!updated || updated.length === 0) throw new Error('Member not found — no changes saved.');
   revalidatePath('/admin/club-members');
   revalidatePath('/members/handicaps');
 }
@@ -73,21 +116,25 @@ export async function deleteClubMember(id: string): Promise<void> {
 
 export async function savePhotoId(id: string, filename: string | null): Promise<void> {
   await requireAdminSession();
-  const { error } = await supabaseAdmin
+  const { data: updated, error } = await supabaseAdmin
     .from('club_members')
     .update({ photo_id_filename: filename, updated_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
   if (error) throw new Error(error.message);
+  if (!updated || updated.length === 0) throw new Error('Member not found.');
   revalidatePath('/admin/club-members');
 }
 
 export async function clearMemberPhoto(id: string): Promise<void> {
   await requireAdminSession();
-  const { error } = await supabaseAdmin
+  const { data: updated, error } = await supabaseAdmin
     .from('club_members')
     .update({ photo_id_filename: null, updated_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
   if (error) throw new Error(error.message);
+  if (!updated || updated.length === 0) throw new Error('Member not found.');
   revalidatePath('/admin/club-members');
 }
 
@@ -109,11 +156,13 @@ export async function updateMemberPhone(id: string, raw: string): Promise<{ erro
     if (!phone) return { error: 'Please enter a valid UK mobile number (e.g. 07957 224527).' };
   }
   const { data: member } = await supabaseAdmin.from('club_members').select('email').eq('id', id).single();
-  const { error } = await supabaseAdmin
+  const { data: updated, error } = await supabaseAdmin
     .from('club_members')
     .update({ phone: phone ?? null, updated_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
   if (error) return { error: error.message };
+  if (!updated || updated.length === 0) return { error: 'Member not found — no changes saved.' };
   if (member?.email) {
     await supabaseAdmin.from('member_profiles')
       .update({ mobile: phone ?? '', updated_at: new Date().toISOString() })
@@ -125,34 +174,36 @@ export async function updateMemberPhone(id: string, raw: string): Promise<{ erro
 
 export async function toggleMemberKey(id: string, value: boolean): Promise<void> {
   await requireAdminSession();
-  const { error } = await supabaseAdmin
+  const { data: updated, error } = await supabaseAdmin
     .from('club_members')
     .update({ has_key: value, updated_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
   if (error) throw new Error(error.message);
+  if (!updated || updated.length === 0) throw new Error('Member not found.');
   revalidatePath('/admin/club-members');
 }
 
 export async function setMemberCard(id: string, issued: boolean, date: string | null): Promise<void> {
   await requireAdminSession();
-  const { error } = await supabaseAdmin
+  const { data: updated, error } = await supabaseAdmin
     .from('club_members')
     .update({ card_issued: issued, card_issued_date: date, updated_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
   if (error) throw new Error(error.message);
+  if (!updated || updated.length === 0) throw new Error('Member not found.');
   revalidatePath('/admin/club-members');
 }
 
 export async function inviteClubMember(id: string, email: string): Promise<void> {
   await requireAdminSession();
 
-  // Create Supabase auth user and send magic link invite
   const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/set-password`,
   });
   if (inviteError) throw new Error(inviteError.message);
 
-  // Link the new auth user to this club_members record
   await supabaseAdmin
     .from('club_members')
     .update({ auth_user_id: inviteData.user.id, updated_at: new Date().toISOString() })

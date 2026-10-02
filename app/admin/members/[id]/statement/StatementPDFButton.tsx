@@ -235,6 +235,35 @@ export function StatementPDFButton({ member, entries }: Props) {
         doc.line(ML, y - 1, PAGE_W - MR, y - 1);
       });
 
+      // ── Summary boxes ────────────────────────────────────────────────────────
+      const totalCharged = entries.reduce((s, e) => s + (e.type === 'debit'  ? e.amount : 0), 0);
+      const totalPaid    = entries.reduce((s, e) => s + (e.type === 'credit' ? e.amount : 0), 0);
+
+      checkBreak(28);
+      y += 5;
+
+      const boxW = (W - 4) / 3;
+      const summaryItems: [string, number, [number,number,number]][] = [
+        ['Total Charged', totalCharged, [180, 50, 50]],
+        ['Total Paid',    totalPaid,    [40, 130, 70]],
+        [balance > 0.005 ? 'Outstanding' : balance < -0.005 ? 'In Credit' : 'Balance',
+         balance, balance > 0.005 ? [180, 50, 50] : balance < -0.005 ? [40, 130, 70] : DARK],
+      ];
+      summaryItems.forEach(([label, val, col], idx) => {
+        const bx = ML + idx * (boxW + 2);
+        doc.setFillColor(247, 250, 248);
+        doc.rect(bx, y - 4, boxW, 16, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        setColor(GOLD);
+        doc.text(label.toUpperCase(), bx + 4, y);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(col[0], col[1], col[2]);
+        doc.text(`£${Math.abs(val).toFixed(2)}`, bx + 4, y + 7);
+      });
+      y += 18;
+
       // ── Final balance ────────────────────────────────────────────────────────
       checkBreak(16);
       y += 4;

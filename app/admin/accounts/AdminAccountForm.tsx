@@ -172,7 +172,7 @@ export function AdminAccountForm({ members, today }: Props) {
         <label style={lbl}>Type</label>
         <select name="type" required style={inp} value={type} onChange={e => setType(e.target.value)}>
           <option value="debit">Debit (charge to member)</option>
-          <option value="credit">Credit (payment received)</option>
+          <option value="credit">Credit / adjustment</option>
         </select>
       </div>
       <div>

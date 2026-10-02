@@ -6,6 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import { StatementPDFButton } from './StatementPDFButton';
 import type { StatementEntry } from './StatementPDFButton';
 import { EmailStatementButton } from './EmailStatementButton';
+import { RecordPaymentButton } from './RecordPaymentButton';
 import { PAYMENT_INFO } from './paymentInfo';
 import { guestFeeDetail } from './statementUtils';
 
@@ -81,7 +82,9 @@ export default async function MemberStatementPage({
     return { ...e, balance: running };
   });
 
-  const finalBalance = running;
+  const finalBalance   = running;
+  const totalCharged   = entries.reduce((s, e) => s + (e.type === 'debit'   ? e.amount : 0), 0);
+  const totalPaid      = entries.reduce((s, e) => s + (e.type === 'credit'  ? e.amount : 0), 0);
 
   const thStyle: React.CSSProperties = {
     padding: '10px 12px',
@@ -185,6 +188,36 @@ export default async function MemberStatementPage({
             </div>
           </div>
 
+          {/* ── Summary boxes ───────────────────────────────────────────── */}
+          {entries.length > 0 && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '1px',
+              background: 'rgba(45,90,61,.12)',
+              border: '1px solid rgba(45,90,61,.12)',
+            }}>
+              {[
+                { label: 'Total Charged', value: totalCharged, color: '#c0392b' },
+                { label: 'Total Paid',    value: totalPaid,    color: '#2e7d32' },
+                {
+                  label: finalBalance > 0.005 ? 'Outstanding' : finalBalance < -0.005 ? 'In Credit' : 'Balance',
+                  value: finalBalance,
+                  color: finalBalance > 0.005 ? '#c0392b' : finalBalance < -0.005 ? '#2e7d32' : 'var(--text-dark)',
+                },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ background: '#fff', padding: '1rem 1.25rem' }}>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: '4px' }}>
+                    {label}
+                  </div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '20px', fontWeight: 700, color }}>
+                    £{Math.abs(value).toFixed(2)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <StatementPDFButton
               member={member}
@@ -195,6 +228,13 @@ export default async function MemberStatementPage({
               hasEmail={!!member.email}
               initialLastEmailed={(member as { statement_last_emailed_at?: string | null }).statement_last_emailed_at ?? null}
             />
+            {session.role === 'admin' && (
+              <RecordPaymentButton
+                memberId={id}
+                memberName={member.full_name}
+                outstandingBalance={finalBalance}
+              />
+            )}
           </div>
 
           <section>
@@ -250,12 +290,12 @@ export default async function MemberStatementPage({
                             <span style={{
                               display: 'inline-block',
                               padding: '2px 7px',
-                              background: 'rgba(45,90,61,.07)',
+                              background: e.category === 'payment' ? 'rgba(46,125,50,.12)' : 'rgba(45,90,61,.07)',
                               fontSize: '10px',
                               fontWeight: 600,
                               letterSpacing: '.06em',
                               textTransform: 'uppercase',
-                              color: 'var(--green-deep)',
+                              color: e.category === 'payment' ? '#2e7d32' : 'var(--green-deep)',
                               whiteSpace: 'nowrap',
                               fontFamily: "'DM Sans', sans-serif",
                             }}>

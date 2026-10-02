@@ -4,6 +4,8 @@ import { useState, useTransition, useMemo, useEffect } from 'react';
 import { updateTransaction, deleteTransactionById, updateMemberBasics, addAdjustmentTransaction } from './actions';
 import { emailOutstandingStatements, emailStatementsTestToAdmin } from '@/app/admin/members/[id]/statement/emailActions';
 import type { BulkEmailResult } from '@/app/admin/members/[id]/statement/emailActions';
+import { RecordPaymentModal } from '@/app/admin/members/[id]/statement/RecordPaymentModal';
+import type { PaymentRow } from '@/app/admin/members/[id]/statement/paymentActions';
 
 const CATEGORY_LABELS: Record<string, string> = {
   membership_fee: 'Membership Fee',
@@ -145,6 +147,9 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
   const [adjustForm, setAdjustForm] = useState<{
     amount: string; type: 'debit' | 'credit'; description: string;
   } | null>(null);
+
+  // ── Record payment state ──────────────────────────────────────────────────
+  const [paymentMemberId, setPaymentMemberId] = useState<string | null>(null);
 
   // ── Status message ────────────────────────────────────────────────────────
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -374,9 +379,10 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
           </div>
           <div className="admin-balances-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {membersWithBalance.map(m => {
-              const isEditing   = editMemberId === m.id;
-              const isAdjusting = adjustMemberId === m.id;
-              const lastEmailed = lastEmailedMap[m.id] ?? m.statement_last_emailed_at ?? null;
+              const isEditing    = editMemberId === m.id;
+              const isAdjusting  = adjustMemberId === m.id;
+              const isPayment    = paymentMemberId === m.id;
+              const lastEmailed  = lastEmailedMap[m.id] ?? m.statement_last_emailed_at ?? null;
               return (
                 <div key={m.id} style={{
                   background: '#fff',
@@ -405,7 +411,7 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                         </div>
                       )}
                     </div>
-                    <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', gap: '4px', flexShrink: 0, flexWrap: 'wrap' }}>
                       <button
                         onClick={() => isEditing ? cancelEditMember() : startEditMember(m)}
                         style={{ ...btnEdit, height: '26px', padding: '0 8px', fontSize: '10px' }}
@@ -416,7 +422,13 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                         onClick={() => isAdjusting ? cancelAdjust() : startAdjust(m)}
                         style={{ ...btnEdit, height: '26px', padding: '0 8px', fontSize: '10px', borderColor: 'rgba(45,90,61,.4)', color: 'var(--green-deep)' }}
                       >
-                        {isAdjusting ? 'Cancel' : 'Adjust'}
+                        {isAdjusting ? 'Cancel' : 'Add credit / adjustment'}
+                      </button>
+                      <button
+                        onClick={() => setPaymentMemberId(m.id)}
+                        style={{ ...btnEdit, height: '26px', padding: '0 8px', fontSize: '10px', background: 'var(--green-deep)', color: '#fff', borderColor: 'var(--green-deep)' }}
+                      >
+                        Record payment
                       </button>
                     </div>
                   </div>
@@ -674,6 +686,24 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
           </div>
         )}
       </section>
+
+      {/* ── Record payment modal ─────────────────────────────────────────── */}
+      {paymentMemberId && (() => {
+        const pm = membersWithBalance.find(m => m.id === paymentMemberId);
+        if (!pm) return null;
+        return (
+          <RecordPaymentModal
+            memberId={pm.id}
+            memberName={pm.full_name}
+            outstandingBalance={pm.balance}
+            onClose={() => setPaymentMemberId(null)}
+            onSaved={(row: PaymentRow) => {
+              setRows(prev => [row as Transaction, ...prev]);
+              setPaymentMemberId(null);
+            }}
+          />
+        );
+      })()}
 
       {/* ── Bulk email modal ──────────────────────────────────────────────── */}
       {bulkEmailOpen && (

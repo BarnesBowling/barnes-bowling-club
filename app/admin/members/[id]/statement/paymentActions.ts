@@ -22,9 +22,9 @@ export async function recordPayment(
 ): Promise<{ ok: boolean; error?: string; row?: PaymentRow }> {
   const session = await requireAdminSession();
 
-  if (!memberId)              return { ok: false, error: 'Member ID is required.' };
-  if (data.amount <= 0)       return { ok: false, error: 'Amount must be greater than 0.' };
-  if (!data.date)             return { ok: false, error: 'Date is required.' };
+  if (!memberId)                                            return { ok: false, error: 'Member ID is required.' };
+  if (!Number.isFinite(data.amount) || data.amount <= 0)  return { ok: false, error: 'Amount must be a positive number.' };
+  if (!data.date)                                          return { ok: false, error: 'Date is required.' };
 
   const { data: row, error } = await supabaseAdmin
     .from('member_ledger')

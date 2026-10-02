@@ -1,13 +1,15 @@
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { redirect } from 'next/navigation';
-import { requireAdminSession } from '@/lib/adminAuth';
+import { requireViewerSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { AdminAccountForm } from './AdminAccountForm';
 import { AdminTransactionsClient } from './AdminTransactionsClient';
+import { AccountsPDFButton } from './AccountsPDFButton';
 
 export default async function AdminAccountsPage() {
-  try { await requireAdminSession(); } catch { redirect('/login?redirect=/admin/accounts'); }
+  let session: { email: string; role: 'admin' | 'viewer' };
+  try { session = await requireViewerSession(); } catch { redirect('/login?redirect=/admin/accounts'); }
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -36,9 +38,10 @@ export default async function AdminAccountsPage() {
             </a>
             <span className="section-tag" style={{ display: 'block', marginTop: '1rem' }}>Admin</span>
             <h1 className="section-h2">Member Accounts</h1>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
-              Add charges and payments to member accounts.
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-muted)', margin: '0 0 1.25rem' }}>
+              {session.role === 'admin' ? 'Add charges and payments to member accounts.' : 'Read-only view of member accounts.'}
             </p>
+            <AccountsPDFButton role={session.role} />
           </div>
 
           <AdminTransactionsClient
@@ -46,12 +49,14 @@ export default async function AdminAccountsPage() {
             members={members ?? []}
           />
 
-          <section>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.5rem' }}>
-              Add charge or payment
-            </h2>
-            <AdminAccountForm members={members ?? []} today={today} />
-          </section>
+          {session.role === 'admin' && (
+            <section>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.5rem' }}>
+                Add charge or payment
+              </h2>
+              <AdminAccountForm members={members ?? []} today={today} />
+            </section>
+          )}
 
         </div>
       </main>

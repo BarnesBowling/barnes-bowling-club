@@ -40,9 +40,8 @@ function PaymentForm({ memberEmail, defaultAmount, defaultReference }: { memberE
   const stripe = useStripe();
   const elements = useElements();
 
-  const [memberName, setMemberName]           = useState('');
-  const [membershipNumber, setMembershipNumber] = useState('');
-  const [reference, setReference]             = useState(defaultReference ?? '');
+  const [memberName, setMemberName] = useState('');
+  const [reference, setReference]  = useState(defaultReference ?? '');
   const [amount, setAmount]                   = useState(defaultAmount ?? '');
   const [loading, setLoading]                 = useState(false);
   const [error, setError]                     = useState<string | null>(null);
@@ -84,7 +83,6 @@ function PaymentForm({ memberEmail, defaultAmount, defaultReference }: { memberE
           netAmount: netPence,
           description: reference || 'Barnes Bowling Club payment',
           name: memberName,
-          membershipNumber,
           memberEmail,
         }),
       });
@@ -161,20 +159,6 @@ function PaymentForm({ memberEmail, defaultAmount, defaultReference }: { memberE
           onChange={e => setMemberName(e.target.value)}
           placeholder="Your full name"
           required
-          style={inputStyle}
-        />
-      </div>
-
-      {/* Membership Number */}
-      <div>
-        <label style={labelStyle}>
-          Membership Number <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
-        </label>
-        <input
-          type="text"
-          value={membershipNumber}
-          onChange={e => setMembershipNumber(e.target.value)}
-          placeholder="e.g. 42"
           style={inputStyle}
         />
       </div>

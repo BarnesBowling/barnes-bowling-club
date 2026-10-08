@@ -267,9 +267,9 @@ export function StatementTransactionsClient({
             { label: 'Total Charged', value: totalCharged, color: '#c0392b' },
             { label: 'Total Paid',    value: totalPaid,    color: '#2e7d32' },
             {
-              label: finalBalance > 0.005 ? 'Outstanding' : finalBalance < -0.005 ? 'In Credit' : 'Balance',
+              label: finalBalance > 0.005 ? 'Owes the club' : finalBalance < -0.005 ? 'Club owes' : 'Balance',
               value: finalBalance,
-              color: finalBalance > 0.005 ? '#c0392b' : finalBalance < -0.005 ? '#2e7d32' : 'var(--text-dark)',
+              color: finalBalance > 0.005 ? '#c0392b' : finalBalance < -0.005 ? '#c9a84c' : 'var(--text-dark)',
             },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ background: '#fff', padding: '1rem 1.25rem' }}>
@@ -536,7 +536,7 @@ export function StatementTransactionsClient({
                     borderTop: '2px solid rgba(45,90,61,.2)',
                     borderBottom: 'none',
                     background: 'rgba(45,90,61,.04)',
-                    color: finalBalance > 0.005 ? '#c0392b' : finalBalance < -0.005 ? '#2e7d32' : 'var(--text-dark)',
+                    color: finalBalance > 0.005 ? '#c0392b' : finalBalance < -0.005 ? '#c9a84c' : 'var(--text-dark)',
                   }}>
                     {finalBalance >= 0 ? fmtGBP(finalBalance) : `−${fmtGBP(finalBalance)}`}
                   </td>
@@ -553,9 +553,9 @@ export function StatementTransactionsClient({
                     textAlign: 'right',
                   }}>
                     {finalBalance > 0.005
-                      ? `Owes £${finalBalance.toFixed(2)}`
+                      ? `Owes the club £${finalBalance.toFixed(2)}`
                       : finalBalance < -0.005
-                      ? `£${Math.abs(finalBalance).toFixed(2)} in credit`
+                      ? `The club owes this member £${Math.abs(finalBalance).toFixed(2)}`
                       : 'Settled'}
                   </td>
                 </tr>

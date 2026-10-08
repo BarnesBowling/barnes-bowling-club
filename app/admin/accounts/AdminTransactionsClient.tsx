@@ -402,7 +402,7 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
               return (
                 <div key={m.id} style={{
                   background: '#fff',
-                  border: `1px solid ${m.balance > 0 ? 'rgba(192,57,43,.2)' : 'rgba(46,125,50,.2)'}`,
+                  border: `1px solid ${m.balance > 0.005 ? 'rgba(192,57,43,.2)' : m.balance < -0.005 ? 'rgba(201,168,76,.25)' : 'rgba(46,125,50,.2)'}`,
                   padding: '.75rem 1rem', minWidth: '220px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
@@ -418,8 +418,8 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                           {m.membership_number}
                         </div>
                       )}
-                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, marginTop: '4px', color: m.balance > 0 ? '#c0392b' : '#2e7d32' }}>
-                        {m.balance > 0 ? fmtGBP(m.balance) : `−${fmtGBP(m.balance)}`}
+                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, marginTop: '4px', color: m.balance > 0.005 ? '#c0392b' : m.balance < -0.005 ? '#c9a84c' : 'var(--text-dark)' }}>
+                        {m.balance > 0.005 ? `Owes ${fmtGBP(m.balance)}` : m.balance < -0.005 ? `Club owes ${fmtGBP(m.balance)}` : 'Settled'}
                       </div>
                       {lastEmailed && (
                         <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', color: 'rgba(45,90,61,.4)', marginTop: '3px' }}>
@@ -878,8 +878,8 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                                 : m.email}
                             </div>
                           </div>
-                          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, color: m.balance > 0 ? '#c0392b' : '#2e7d32', whiteSpace: 'nowrap' }}>
-                            {m.balance > 0 ? fmtGBP(m.balance) : `−${fmtGBP(m.balance)}`}
+                          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, color: m.balance > 0.005 ? '#c0392b' : m.balance < -0.005 ? '#c9a84c' : 'var(--text-dark)', whiteSpace: 'nowrap' }}>
+                            {m.balance > 0.005 ? `Owes ${fmtGBP(m.balance)}` : m.balance < -0.005 ? `Club owes ${fmtGBP(m.balance)}` : 'Settled'}
                           </div>
                         </label>
                       );

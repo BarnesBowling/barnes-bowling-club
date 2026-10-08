@@ -14,6 +14,6 @@ export function calcBalance(entries: LedgerEntry[]): number {
 
 export function formatBalance(balance: number): string {
   if (Math.abs(balance) < 0.005) return 'Settled';
-  if (balance > 0) return `Owes £${balance.toFixed(2)}`;
-  return `£${Math.abs(balance).toFixed(2)} in credit`;
+  if (balance > 0) return `Owes the club £${balance.toFixed(2)}`;
+  return `Club owes £${Math.abs(balance).toFixed(2)}`;
 }

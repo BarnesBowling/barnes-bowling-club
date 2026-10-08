@@ -219,7 +219,7 @@ export function StatementPDFButton({ member, entries }: Props) {
           doc.text(`£${e.amount.toFixed(2)}`, COL.credit, y, { align: 'right' });
         }
 
-        const balColor: [number, number, number] = balance > 0.005 ? [180, 50, 50] : balance < -0.005 ? [40, 130, 70] : DARK;
+        const balColor: [number, number, number] = balance > 0.005 ? [180, 50, 50] : balance < -0.005 ? [180, 145, 65] : DARK;
         doc.setTextColor(balColor[0], balColor[1], balColor[2]);
         doc.setFont('helvetica', 'bold');
         doc.text(
@@ -246,8 +246,8 @@ export function StatementPDFButton({ member, entries }: Props) {
       const summaryItems: [string, number, [number,number,number]][] = [
         ['Total Charged', totalCharged, [180, 50, 50]],
         ['Total Paid',    totalPaid,    [40, 130, 70]],
-        [balance > 0.005 ? 'Outstanding' : balance < -0.005 ? 'In Credit' : 'Balance',
-         balance, balance > 0.005 ? [180, 50, 50] : balance < -0.005 ? [40, 130, 70] : DARK],
+        [balance > 0.005 ? 'Owes the club' : balance < -0.005 ? 'Club owes' : 'Balance',
+         balance, balance > 0.005 ? [180, 50, 50] : balance < -0.005 ? [180, 145, 65] : DARK],
       ];
       summaryItems.forEach(([label, val, col], idx) => {
         const bx = ML + idx * (boxW + 2);
@@ -278,13 +278,13 @@ export function StatementPDFButton({ member, entries }: Props) {
       setColor(BBC_GREEN);
       doc.text('Final Balance', ML, y);
 
-      const finalColor: [number, number, number] = balance > 0.005 ? [180, 50, 50] : balance < -0.005 ? [40, 130, 70] : DARK;
+      const finalColor: [number, number, number] = balance > 0.005 ? [180, 50, 50] : balance < -0.005 ? [180, 145, 65] : DARK;
       doc.setTextColor(finalColor[0], finalColor[1], finalColor[2]);
       const balLabel = balance > 0.005
-        ? `£${balance.toFixed(2)} owing`
+        ? `Owes the club £${balance.toFixed(2)}`
         : balance < -0.005
-        ? `£${Math.abs(balance).toFixed(2)} in credit`
-        : 'Balance settled (£0.00)';
+        ? `Club owes £${Math.abs(balance).toFixed(2)}`
+        : 'Settled';
       doc.text(balLabel, PAGE_W - MR, y, { align: 'right' });
       y += 5;
 
@@ -294,7 +294,7 @@ export function StatementPDFButton({ member, entries }: Props) {
       if (balance > 0.005) {
         doc.text('Amount outstanding — please arrange payment at your earliest convenience.', ML, y);
       } else if (balance < -0.005) {
-        doc.text('This member has a credit on their account.', ML, y);
+        doc.text(`The club owes this member £${Math.abs(balance).toFixed(2)}.`, ML, y);
       } else {
         doc.text('This account is fully settled.', ML, y);
       }

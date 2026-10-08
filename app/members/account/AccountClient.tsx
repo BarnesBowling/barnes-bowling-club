@@ -90,6 +90,7 @@ function StatementSheet({
   onClose: () => void;
 }) {
   const isOwed       = totalBalance > 0;
+  const isCredit     = totalBalance < 0;
   const statementDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
   // Close on Escape
@@ -195,9 +196,9 @@ function StatementSheet({
             {[
               { label: 'Total Charged', value: fmtGBP(totalCharged), col: '#c0392b' },
               { label: 'Total Paid',    value: fmtGBP(totalPaid),    col: '#2e7d32' },
-              { label: 'Balance',       value: fmtGBP(totalBalance), col: isOwed ? '#c0392b' : '#2e7d32' },
+              { label: isOwed ? 'Owes the club' : isCredit ? 'Club owes' : 'Balance', value: fmtGBP(totalBalance), col: isOwed ? '#c0392b' : isCredit ? '#c9a84c' : '#2e7d32' },
             ].map(({ label, value, col }, i) => (
-              <div key={label} style={{ padding: '1.5rem 2rem', borderRight: i < 2 ? '1px solid #e8e4dc' : 'none', background: i === 2 ? (isOwed ? 'rgba(192,57,43,.04)' : 'rgba(46,125,50,.04)') : '#fafaf8' }}>
+              <div key={label} style={{ padding: '1.5rem 2rem', borderRight: i < 2 ? '1px solid #e8e4dc' : 'none', background: i === 2 ? (isOwed ? 'rgba(192,57,43,.04)' : isCredit ? 'rgba(201,168,76,.06)' : 'rgba(46,125,50,.04)') : '#fafaf8' }}>
                 <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#555', marginBottom: '6px' }}>
                   {label}
                 </div>
@@ -205,8 +206,8 @@ function StatementSheet({
                   {value}
                 </div>
                 {i === 2 && (
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: isOwed ? '#c0392b' : '#2e7d32', marginTop: '5px', fontWeight: 600 }}>
-                    {isOwed ? 'Outstanding' : totalBalance < 0 ? 'Credit' : 'Clear'}
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: isOwed ? '#c0392b' : isCredit ? '#c9a84c' : '#2e7d32', marginTop: '5px', fontWeight: 600 }}>
+                    {isOwed ? 'Owes the club' : isCredit ? 'Club owes' : 'Settled'}
                   </div>
                 )}
               </div>
@@ -286,7 +287,7 @@ function StatementSheet({
                         <td style={{ padding: '10px', textAlign: 'right', fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: '13px', color: isCredit ? '#2e7d32' : '#bbb', whiteSpace: 'nowrap' }}>
                           {isCredit ? fmtGBP(row.amount) : '—'}
                         </td>
-                        <td style={{ padding: '10px', textAlign: 'right', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', whiteSpace: 'nowrap', color: row.balance > 0 ? '#c0392b' : row.balance < 0 ? '#2e7d32' : '#555' }}>
+                        <td style={{ padding: '10px', textAlign: 'right', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', whiteSpace: 'nowrap', color: row.balance > 0 ? '#c0392b' : row.balance < 0 ? '#c9a84c' : '#555' }}>
                           {row.balance === 0 ? '0.00' : Math.abs(row.balance).toFixed(2)}
                         </td>
                       </tr>
@@ -298,7 +299,7 @@ function StatementSheet({
                     <td colSpan={5} style={{ padding: '12px 10px', fontFamily: "'Playfair Display', serif", fontSize: '14px', fontWeight: 500, color: '#f5f0e8' }}>
                       Total Outstanding
                     </td>
-                    <td style={{ padding: '12px 10px', textAlign: 'right', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '15px', color: isOwed ? '#f4a49a' : '#81c784', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 10px', textAlign: 'right', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '15px', color: isOwed ? '#f4a49a' : isCredit ? '#e8c97a' : '#81c784', whiteSpace: 'nowrap' }}>
                       {totalBalance === 0 ? '0.00' : Math.abs(totalBalance).toFixed(2)}
                     </td>
                   </tr>
@@ -456,8 +457,9 @@ export function AccountClient({ email, memberName, memberId, transactions }: Pro
     return rowsDesc.filter(r => r.category === filterCategory);
   }, [rowsDesc, filterCategory]);
 
-  const isOwed     = totalBalance > 0;
-  const balanceCol = isOwed ? '#c0392b' : '#2e7d32';
+  const isOwed     = totalBalance > 0.005;
+  const isCredit   = totalBalance < -0.005;
+  const balanceCol = isOwed ? '#c0392b' : isCredit ? '#c9a84c' : '#2e7d32';
 
   const thStyle: React.CSSProperties = {
     padding: '9px 12px',
@@ -506,7 +508,7 @@ export function AccountClient({ email, memberName, memberId, transactions }: Pro
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setStatementOpen(true); }}
           style={{
             background: '#fff',
-            border: `2px solid ${isOwed ? 'rgba(192,57,43,.2)' : 'rgba(46,125,50,.2)'}`,
+            border: `2px solid ${isOwed ? 'rgba(192,57,43,.2)' : isCredit ? 'rgba(201,168,76,.25)' : 'rgba(46,125,50,.2)'}`,
             padding: '1.75rem 2rem',
             marginBottom: '2rem',
             display: 'flex',
@@ -518,18 +520,18 @@ export function AccountClient({ email, memberName, memberId, transactions }: Pro
             transition: 'border-color .15s, box-shadow .15s',
           }}
           onMouseEnter={e => {
-            (e.currentTarget as HTMLDivElement).style.borderColor = isOwed ? 'rgba(192,57,43,.5)' : 'rgba(46,125,50,.45)';
+            (e.currentTarget as HTMLDivElement).style.borderColor = isOwed ? 'rgba(192,57,43,.5)' : isCredit ? 'rgba(201,168,76,.5)' : 'rgba(46,125,50,.45)';
             (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 12px rgba(0,0,0,.08)';
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLDivElement).style.borderColor = isOwed ? 'rgba(192,57,43,.2)' : 'rgba(46,125,50,.2)';
+            (e.currentTarget as HTMLDivElement).style.borderColor = isOwed ? 'rgba(192,57,43,.2)' : isCredit ? 'rgba(201,168,76,.25)' : 'rgba(46,125,50,.2)';
             (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
           }}
         >
           <div>
             <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#1a2e1f', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               {isOwed ? 'Amount Outstanding' : 'Account Balance'}
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: isOwed ? '#c0392b' : '#2e7d32', background: isOwed ? 'rgba(192,57,43,.08)' : 'rgba(46,125,50,.08)', padding: '2px 7px', borderRadius: '2px' }}>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '9px', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: isOwed ? '#c0392b' : isCredit ? '#c9a84c' : '#2e7d32', background: isOwed ? 'rgba(192,57,43,.08)' : isCredit ? 'rgba(201,168,76,.1)' : 'rgba(46,125,50,.08)', padding: '2px 7px', borderRadius: '2px' }}>
                 View statement
               </span>
             </div>
@@ -537,7 +539,7 @@ export function AccountClient({ email, memberName, memberId, transactions }: Pro
               {fmtGBP(totalBalance)}
             </div>
             <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#1a2e1f', marginTop: '6px' }}>
-              {isOwed ? 'Balance owed to Barnes Bowling Club' : totalBalance < 0 ? 'Credit on account' : 'Account clear — no outstanding balance'}
+              {isOwed ? 'Owes the club' : isCredit ? 'The club owes you' : 'Settled'}
             </div>
             {isOwed && (
               <a
@@ -697,7 +699,7 @@ export function AccountClient({ email, memberName, memberId, transactions }: Pro
                         <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, color: isCredit ? '#2e7d32' : '#aaa', whiteSpace: 'nowrap' }}>
                           {isCredit ? fmtGBP(row.amount) : '—'}
                         </td>
-                        <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap', color: row.balance > 0 ? '#c0392b' : row.balance < 0 ? '#2e7d32' : '#1a2e1f' }}>
+                        <td style={{ ...tdBase, textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap', color: row.balance > 0 ? '#c0392b' : row.balance < 0 ? '#c9a84c' : '#1a2e1f' }}>
                           {row.balance === 0 ? '£0.00' : (row.balance > 0 ? fmtGBP(row.balance) : `−${fmtGBP(row.balance)}`)}
                         </td>
                       </tr>

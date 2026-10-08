@@ -3,6 +3,8 @@ import { Footer } from '@/components/Footer';
 import { redirect } from 'next/navigation';
 import { requireViewerSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+
+export const dynamic = 'force-dynamic';
 import { AdminAccountForm } from './AdminAccountForm';
 import { AdminTransactionsClient } from './AdminTransactionsClient';
 import { AccountsPDFButton } from './AccountsPDFButton';

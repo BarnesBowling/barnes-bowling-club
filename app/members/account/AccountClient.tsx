@@ -16,7 +16,8 @@ export interface Transaction {
   date: string;
   description: string;
   category: string;
-  amount: number;
+  amount: number;       // always positive; use type to determine sign
+  type: 'debit' | 'credit';
   created_at: string;
   metadata?: GuestFeeMetadata | null;
 }
@@ -234,7 +235,7 @@ function StatementSheet({
                 </thead>
                 <tbody>
                   {rowsDesc.map((row, i) => {
-                    const isCredit  = row.amount < 0;
+                    const isCredit  = row.type === 'credit';
                     const isFirst   = i === 0;
                     const rowBg     = isFirst
                       ? (isCredit ? 'rgba(46,125,50,.12)' : 'rgba(192,57,43,.1)')
@@ -436,14 +437,16 @@ export function AccountClient({ email, memberName, memberId, transactions }: Pro
   }
 
   // Build display rows with running balance (transactions pre-sorted asc by date)
+  // balance = sum(debits) − sum(credits); positive = owes club, negative = club owes member
   const { rowsDesc, totalBalance, totalCharged, totalPaid } = useMemo(() => {
     let running = 0;
     const withBalance = transactions.map(t => {
-      running += t.amount;
+      const signed = t.type === 'credit' ? -t.amount : t.amount;
+      running += signed;
       return { ...t, balance: running };
     });
-    const charged = transactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
-    const paid    = transactions.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+    const charged = transactions.reduce((s, t) => s + (t.type === 'debit'  ? t.amount : 0), 0);
+    const paid    = transactions.reduce((s, t) => s + (t.type === 'credit' ? t.amount : 0), 0);
     return {
       rowsDesc:     [...withBalance].reverse(),
       totalBalance: running,
@@ -662,7 +665,7 @@ export function AccountClient({ email, memberName, memberId, transactions }: Pro
                   </tr>
                 ) : (
                   filteredRows.flatMap((row, i) => {
-                    const isCredit      = row.amount < 0;
+                    const isCredit      = row.type === 'credit';
                     const rowBg         = i % 2 === 0 ? '#fff' : 'rgba(45,90,61,.018)';
                     const hasGuestMeta  = row.category === 'guest_fee' && !!row.metadata;
                     const isExpanded    = expandedRows.has(row.id);

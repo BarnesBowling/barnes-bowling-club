@@ -6,6 +6,8 @@ import { verifyMemberSession, SESSION_COOKIE } from '@/lib/memberSession';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { PaymentColumns } from './PaymentColumns';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PaymentPage() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(SESSION_COOKIE);

@@ -203,6 +203,8 @@ async function updateMembershipAppClubUse(formData: FormData) {
   redirect('/admin#membership-applications');
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function Admin() {
   try { await requireAdminSession(); } catch { redirect('/login?redirect=/admin'); }
 

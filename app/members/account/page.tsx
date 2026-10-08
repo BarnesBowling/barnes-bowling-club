@@ -6,6 +6,8 @@ import { verifyMemberSession, SESSION_COOKIE } from '@/lib/memberSession';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { AccountClient } from './AccountClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AccountPage() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(SESSION_COOKIE);
@@ -35,14 +37,14 @@ export default async function AccountPage() {
       ).data ?? []
     : [];
 
-  // Convert to signed amounts for AccountClient (debit=positive, credit=negative)
   const transactions = rawTransactions.map(t => ({
     id:           t.id,
     member_email: email,
     date:         t.date,
     description:  t.description,
     category:     t.category,
-    amount:       t.type === 'credit' ? -Math.abs(Number(t.amount)) : Math.abs(Number(t.amount)),
+    amount:       Math.abs(Number(t.amount)),
+    type:         t.type as 'debit' | 'credit',
     created_at:   t.created_at,
     metadata:     t.metadata ?? null,
   }));

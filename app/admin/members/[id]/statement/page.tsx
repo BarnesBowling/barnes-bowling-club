@@ -3,6 +3,8 @@ import { Footer } from '@/components/Footer';
 import { redirect, notFound } from 'next/navigation';
 import { requireViewerSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+
+export const dynamic = 'force-dynamic';
 import type { StatementEntry } from './StatementPDFButton';
 import { EmailStatementButton } from './EmailStatementButton';
 import { PAYMENT_INFO } from './paymentInfo';

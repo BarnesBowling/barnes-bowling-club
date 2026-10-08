@@ -3,6 +3,8 @@ import { Footer } from '@/components/Footer';
 import { redirect } from 'next/navigation';
 import { requireViewerSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+
+export const dynamic = 'force-dynamic';
 import { formatBalance } from '@/lib/ledger/balance';
 
 export default async function StatementsPage() {

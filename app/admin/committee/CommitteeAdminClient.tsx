@@ -98,7 +98,7 @@ export function CommitteeAdminClient({ initialOfficers }: { initialOfficers: Off
       const res = await fetch(urls.signedUrl, {
         method: 'PUT',
         body: file,
-        headers: { 'Content-Type': file.type || 'image/jpeg' },
+        headers: { 'Content-Type': file.type || 'image/jpeg', 'cache-control': 'public, max-age=31536000, immutable' },
         duplex: 'half',
       } as RequestInit);
       if (!res.ok) throw new Error(`Upload failed: ${res.status}`);

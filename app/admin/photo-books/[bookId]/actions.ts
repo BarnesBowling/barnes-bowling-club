@@ -40,7 +40,7 @@ export async function uploadPhoto(
 
   const { error } = await supabaseAdmin.storage
     .from('photo-books')
-    .upload(path, arrayBuffer, { contentType: file.type, upsert: false });
+    .upload(path, arrayBuffer, { contentType: file.type, upsert: false, cacheControl: '31536000' });
 
   if (error) return { error: error.message };
 

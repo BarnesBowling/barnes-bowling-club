@@ -83,7 +83,7 @@ async function uploadToSignedUrl(signedUrl: string, file: Blob, contentType: str
   const res = await fetch(signedUrl, {
     method: 'PUT',
     body: file,
-    headers: { 'Content-Type': contentType },
+    headers: { 'Content-Type': contentType, 'cache-control': 'public, max-age=31536000, immutable' },
     duplex: 'half',
   } as RequestInit);
   if (!res.ok) throw new Error(`Upload failed: ${res.status} ${res.statusText}`);

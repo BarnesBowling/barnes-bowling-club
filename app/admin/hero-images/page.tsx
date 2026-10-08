@@ -74,7 +74,7 @@ export default function AdminHeroImagesPage() {
       const uploadResp = await fetch(signedUrl, {
         method: 'PUT',
         body: file,
-        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        headers: { 'Content-Type': file.type || 'application/octet-stream', 'cache-control': 'public, max-age=31536000, immutable' },
       });
       if (!uploadResp.ok) {
         const detail = await uploadResp.text().catch(() => '');

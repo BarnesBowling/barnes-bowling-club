@@ -3,10 +3,7 @@ import { Footer } from '@/components/Footer';
 import { redirect } from 'next/navigation';
 import { requireViewerSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-
-function fmtGBP(n: number): string {
-  return `£${Math.abs(n).toFixed(2)}`;
-}
+import { formatBalance } from '@/lib/ledger/balance';
 
 export default async function StatementsPage() {
   let session: { email: string; role: 'admin' | 'viewer' };
@@ -104,7 +101,7 @@ export default async function StatementsPage() {
                         {member.status}
                       </td>
                       <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', textAlign: 'right', fontWeight: 700, color: owing ? '#c0392b' : credit ? '#2e7d32' : 'var(--text-dark)', whiteSpace: 'nowrap' }}>
-                        {balance >= 0 ? fmtGBP(balance) : `−${fmtGBP(balance)}`}
+                        {formatBalance(balance)}
                       </td>
                       <td style={{ padding: '11px 12px', borderBottom: '1px solid rgba(45,90,61,.07)', textAlign: 'right' }}>
                         <a

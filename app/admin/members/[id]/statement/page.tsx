@@ -3,33 +3,10 @@ import { Footer } from '@/components/Footer';
 import { redirect, notFound } from 'next/navigation';
 import { requireViewerSession } from '@/lib/adminAuth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { StatementPDFButton } from './StatementPDFButton';
 import type { StatementEntry } from './StatementPDFButton';
 import { EmailStatementButton } from './EmailStatementButton';
-import { RecordPaymentButton } from './RecordPaymentButton';
 import { PAYMENT_INFO } from './paymentInfo';
-import { guestFeeDetail } from './statementUtils';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  membership_fee: 'Membership Fee',
-  joining_fee:    'Joining Fee',
-  guest_fee:      'Guest Fee',
-  event_fee:      'Event Fee',
-  manser_fee:     'Manser Fee',
-  wrong_bias_fee: 'Wrong Bias Fee',
-  miscellaneous:  'Miscellaneous',
-  payment:        'Payment',
-};
-
-function fmtDate(iso: string): string {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  });
-}
-
-function fmtGBP(n: number): string {
-  return `£${Math.abs(n).toFixed(2)}`;
-}
+import { StatementTransactionsClient } from './StatementTransactionsClient';
 
 export default async function MemberStatementPage({
   params,
@@ -63,7 +40,6 @@ export default async function MemberStatementPage({
   ]);
 
   if (memberError) {
-    // PGRST116 = no rows returned (member genuinely doesn't exist)
     if (memberError.code === 'PGRST116') notFound();
     throw new Error(`Failed to load member statement: ${memberError.message}`);
   }
@@ -75,39 +51,6 @@ export default async function MemberStatementPage({
     type: e.type as 'debit' | 'credit',
     metadata: e.metadata as Record<string, unknown> | null,
   }));
-
-  let running = 0;
-  const rows = entries.map(e => {
-    running += e.type === 'credit' ? -e.amount : e.amount;
-    return { ...e, balance: running };
-  });
-
-  const finalBalance   = running;
-  const totalCharged   = entries.reduce((s, e) => s + (e.type === 'debit'   ? e.amount : 0), 0);
-  const totalPaid      = entries.reduce((s, e) => s + (e.type === 'credit'  ? e.amount : 0), 0);
-
-  const thStyle: React.CSSProperties = {
-    padding: '10px 12px',
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: '10px',
-    fontWeight: 600,
-    letterSpacing: '.1em',
-    textTransform: 'uppercase',
-    color: 'rgba(255,255,255,.85)',
-    textAlign: 'left',
-    whiteSpace: 'nowrap',
-    background: 'var(--green-deep)',
-    borderBottom: 'none',
-  };
-
-  const tdStyle: React.CSSProperties = {
-    padding: '11px 12px',
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: '13px',
-    color: 'var(--text-dark)',
-    borderBottom: '1px solid rgba(45,90,61,.07)',
-    verticalAlign: 'top',
-  };
 
   return (
     <>
@@ -188,200 +131,21 @@ export default async function MemberStatementPage({
             </div>
           </div>
 
-          {/* ── Summary boxes ───────────────────────────────────────────── */}
-          {entries.length > 0 && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '1px',
-              background: 'rgba(45,90,61,.12)',
-              border: '1px solid rgba(45,90,61,.12)',
-            }}>
-              {[
-                { label: 'Total Charged', value: totalCharged, color: '#c0392b' },
-                { label: 'Total Paid',    value: totalPaid,    color: '#2e7d32' },
-                {
-                  label: finalBalance > 0.005 ? 'Outstanding' : finalBalance < -0.005 ? 'In Credit' : 'Balance',
-                  value: finalBalance,
-                  color: finalBalance > 0.005 ? '#c0392b' : finalBalance < -0.005 ? '#2e7d32' : 'var(--text-dark)',
-                },
-              ].map(({ label, value, color }) => (
-                <div key={label} style={{ background: '#fff', padding: '1rem 1.25rem' }}>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: '4px' }}>
-                    {label}
-                  </div>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '20px', fontWeight: 700, color }}>
-                    £{Math.abs(value).toFixed(2)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <StatementPDFButton
-              member={member}
-              entries={entries}
-            />
+          <div>
             <EmailStatementButton
               memberId={id}
               hasEmail={!!member.email}
               initialLastEmailed={(member as { statement_last_emailed_at?: string | null }).statement_last_emailed_at ?? null}
             />
-            {session.role === 'admin' && (
-              <RecordPaymentButton
-                memberId={id}
-                memberName={member.full_name}
-                outstandingBalance={finalBalance}
-              />
-            )}
           </div>
 
-          <section>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
-              Transaction History
-            </h2>
-
-            {rows.length === 0 ? (
-              <div style={{
-                padding: '2rem',
-                background: '#fff',
-                border: '1px solid rgba(45,90,61,.1)',
-                fontFamily: "'Libre Baskerville', serif",
-                fontSize: '14px',
-                color: 'var(--text-muted)',
-                fontStyle: 'italic',
-              }}>
-                No transactions recorded for this member.
-              </div>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', minWidth: '680px' }}>
-                  <thead>
-                    <tr>
-                      <th style={thStyle}>Date</th>
-                      <th style={thStyle}>Description</th>
-                      <th style={thStyle}>Category</th>
-                      <th style={{ ...thStyle, textAlign: 'right' }}>Debit</th>
-                      <th style={{ ...thStyle, textAlign: 'right' }}>Credit</th>
-                      <th style={{ ...thStyle, textAlign: 'right' }}>Balance</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((e, i) => {
-                      const isCredit  = e.type === 'credit';
-                      const rowBg     = i % 2 === 0 ? '#fff' : 'rgba(45,90,61,.02)';
-                      const balOwing  = e.balance > 0.005;
-                      const balCredit = e.balance < -0.005;
-
-                      const detail = guestFeeDetail(e);
-
-                      return (
-                        <tr key={e.id} style={{ background: rowBg }}>
-                          <td style={{ ...tdStyle, whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
-                            {fmtDate(e.date)}
-                          </td>
-                          <td style={tdStyle}>
-                            <div style={{ fontWeight: 500 }}>
-                              {e.description}{detail ? ` – ${detail}` : ''}
-                            </div>
-                          </td>
-                          <td style={tdStyle}>
-                            <span style={{
-                              display: 'inline-block',
-                              padding: '2px 7px',
-                              background: e.category === 'payment' ? 'rgba(46,125,50,.12)' : 'rgba(45,90,61,.07)',
-                              fontSize: '10px',
-                              fontWeight: 600,
-                              letterSpacing: '.06em',
-                              textTransform: 'uppercase',
-                              color: e.category === 'payment' ? '#2e7d32' : 'var(--green-deep)',
-                              whiteSpace: 'nowrap',
-                              fontFamily: "'DM Sans', sans-serif",
-                            }}>
-                              {CATEGORY_LABELS[e.category] ?? e.category}
-                            </span>
-                          </td>
-                          <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap', color: '#c0392b' }}>
-                            {!isCredit ? fmtGBP(e.amount) : ''}
-                          </td>
-                          <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap', color: '#2e7d32' }}>
-                            {isCredit ? fmtGBP(e.amount) : ''}
-                          </td>
-                          <td style={{
-                            ...tdStyle,
-                            textAlign: 'right',
-                            fontWeight: 700,
-                            whiteSpace: 'nowrap',
-                            color: balOwing ? '#c0392b' : balCredit ? '#2e7d32' : 'var(--text-dark)',
-                          }}>
-                            {e.balance >= 0
-                              ? fmtGBP(e.balance)
-                              : `−${fmtGBP(e.balance)}`}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td
-                        colSpan={5}
-                        style={{
-                          ...tdStyle,
-                          padding: '14px 12px',
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontWeight: 700,
-                          fontSize: '13px',
-                          color: 'var(--green-deep)',
-                          borderTop: '2px solid rgba(45,90,61,.2)',
-                          borderBottom: 'none',
-                          background: 'rgba(45,90,61,.04)',
-                          textAlign: 'right',
-                        }}
-                      >
-                        Final Balance
-                      </td>
-                      <td style={{
-                        ...tdStyle,
-                        padding: '14px 12px',
-                        fontWeight: 700,
-                        fontSize: '14px',
-                        textAlign: 'right',
-                        whiteSpace: 'nowrap',
-                        borderTop: '2px solid rgba(45,90,61,.2)',
-                        borderBottom: 'none',
-                        background: 'rgba(45,90,61,.04)',
-                        color: finalBalance > 0.005 ? '#c0392b' : finalBalance < -0.005 ? '#2e7d32' : 'var(--text-dark)',
-                      }}>
-                        {finalBalance >= 0
-                          ? fmtGBP(finalBalance)
-                          : `−${fmtGBP(finalBalance)}`}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td colSpan={6} style={{
-                        padding: '8px 12px',
-                        fontFamily: "'DM Sans', sans-serif",
-                        fontSize: '11px',
-                        color: 'var(--text-muted)',
-                        fontStyle: 'italic',
-                        borderBottom: 'none',
-                        background: 'rgba(45,90,61,.04)',
-                        textAlign: 'right',
-                      }}>
-                        {finalBalance > 0.005
-                          ? 'Amount outstanding'
-                          : finalBalance < -0.005
-                          ? 'Member has a credit on account'
-                          : 'Account fully settled'}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            )}
-          </section>
+          <StatementTransactionsClient
+            entries={entries}
+            memberId={id}
+            memberName={member.full_name}
+            member={member}
+            isAdmin={session.role === 'admin'}
+          />
 
           {/* ── How to Pay ─────────────────────────────────────────────── */}
           <section style={{

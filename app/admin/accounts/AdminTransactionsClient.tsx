@@ -206,12 +206,12 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
 
   function cancelEdit() { setEditId(null); setEditForm(null); }
 
-  function handleSave(id: string) {
+  function handleSave(id: string, memberId: string) {
     if (!editForm) return;
     const amount = parseFloat(editForm.amount);
     if (isNaN(amount) || amount <= 0) { showMsg(false, 'Amount must be a positive number.'); return; }
     startTransition(async () => {
-      const res = await updateTransaction(id, { date: editForm.date, description: editForm.description, category: editForm.category, amount, type: editForm.type });
+      const res = await updateTransaction(id, memberId, { date: editForm.date, description: editForm.description, category: editForm.category, amount, type: editForm.type });
       if (res.error) { showMsg(false, res.error); return; }
       setRows(prev => prev.map(r => r.id !== id ? r : {
         ...r, date: editForm.date, description: editForm.description,
@@ -223,10 +223,10 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
     });
   }
 
-  function handleDelete(id: string, description: string) {
+  function handleDelete(id: string, description: string, memberId: string) {
     if (!confirm(`Delete "${description}"? This cannot be undone.`)) return;
     startTransition(async () => {
-      const res = await deleteTransactionById(id);
+      const res = await deleteTransactionById(id, memberId);
       if (res.error) { showMsg(false, res.error); return; }
       setRows(prev => prev.filter(r => r.id !== id));
       if (editId === id) { setEditId(null); setEditForm(null); }
@@ -627,7 +627,7 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                             </div>
 
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                              <button onClick={() => handleSave(t.id)} disabled={pending}
+                              <button onClick={() => handleSave(t.id, t.member_id)} disabled={pending}
                                 style={{ ...btnSave, opacity: pending ? .65 : 1 }}>
                                 {pending ? 'Saving…' : 'Save'}
                               </button>
@@ -672,7 +672,7 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                       <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                           <button onClick={() => startEdit(t)} style={btnEdit}>Edit</button>
-                          <button onClick={() => handleDelete(t.id, t.description)} disabled={pending}
+                          <button onClick={() => handleDelete(t.id, t.description, t.member_id)} disabled={pending}
                             style={{ ...btnDel, opacity: pending ? .65 : 1 }}>
                             Delete
                           </button>

@@ -6,16 +6,20 @@ import { revalidatePath } from 'next/cache';
 
 export async function updateTransaction(
   id: string,
+  memberId: string,
   data: { date: string; description: string; category: string; amount: number; type: string },
 ): Promise<{ error?: string }> {
   try {
     await requireAdminSession();
-    const { error } = await supabaseAdmin
+    const { count, error } = await supabaseAdmin
       .from('member_ledger')
-      .update(data)
+      .update(data, { count: 'exact' })
       .eq('id', id);
     if (error) return { error: error.message };
+    if (count === 0) return { error: 'Entry not found — it may have already been deleted.' };
     revalidatePath('/admin/accounts');
+    revalidatePath('/admin/statements');
+    revalidatePath(`/admin/members/${memberId}/statement`);
     revalidatePath('/members/account');
     return {};
   } catch (e) {
@@ -23,12 +27,18 @@ export async function updateTransaction(
   }
 }
 
-export async function deleteTransactionById(id: string): Promise<{ error?: string }> {
+export async function deleteTransactionById(id: string, memberId: string): Promise<{ error?: string }> {
   try {
     await requireAdminSession();
-    const { error } = await supabaseAdmin.from('member_ledger').delete().eq('id', id);
+    const { count, error } = await supabaseAdmin
+      .from('member_ledger')
+      .delete({ count: 'exact' })
+      .eq('id', id);
     if (error) return { error: error.message };
+    if (count === 0) return { error: 'Entry not found — it may have already been deleted.' };
     revalidatePath('/admin/accounts');
+    revalidatePath('/admin/statements');
+    revalidatePath(`/admin/members/${memberId}/statement`);
     revalidatePath('/members/account');
     return {};
   } catch (e) {

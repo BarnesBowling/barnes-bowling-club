@@ -154,6 +154,8 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
   // ── Status message ────────────────────────────────────────────────────────
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   // ── Bulk email state ──────────────────────────────────────────────────────
   const [bulkEmailOpen, setBulkEmailOpen]       = useState(false);
@@ -195,6 +197,20 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
     }
     return result;
   }, [rows, memberMap, balanceById, memberOverrides]);
+
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return rows.filter(t => {
+      if (t.id === editId) return true;
+      if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
+      if (q) {
+        const name = (t.club_members?.full_name ?? '').toLowerCase();
+        const desc = t.description.toLowerCase();
+        if (!name.includes(q) && !desc.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [rows, search, categoryFilter, editId]);
 
   // ── Transaction handlers ──────────────────────────────────────────────────
 
@@ -529,31 +545,65 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
         </section>
       )}
 
-      {/* ── Recent transactions ───────────────────────────────────────────── */}
+      {/* ── All Transactions ──────────────────────────────────────────────── */}
       <section>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1.25rem' }}>
-          Recent transactions
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--green-deep)', marginBottom: '1rem' }}>
+          All Transactions ({rows.length})
         </h2>
+
+        {/* Search & filter controls */}
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Search member or description…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ ...inp, flex: '1 1 200px', maxWidth: '320px', height: '36px' }}
+          />
+          <select
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+            style={{ ...inp, height: '36px', width: 'auto', flex: '0 0 auto', cursor: 'pointer' }}
+          >
+            <option value="all">All categories</option>
+            <option value="guest_fee">Guest Fee</option>
+            <option value="payment">Payment</option>
+            <option value="wrong_bias_fee">Wrong Bias Fee</option>
+            <option value="miscellaneous">Miscellaneous</option>
+          </select>
+          {(search.trim() || categoryFilter !== 'all') && (
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+              Showing {filteredRows.length} of {rows.length}
+            </span>
+          )}
+        </div>
 
         {rows.length === 0 ? (
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
             No transactions recorded yet.
           </p>
         ) : (
-          <div className="admin-table-wrap" style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', minWidth: '680px' }}>
+          <div className="admin-table-wrap" style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '70vh' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', minWidth: '800px' }}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Date</th>
-                  <th style={thStyle}>Member</th>
-                  <th style={thStyle}>Description</th>
-                  <th style={thStyle}>Category</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Amount</th>
-                  <th style={{ ...thStyle, width: '110px' }}></th>
+                  <th style={{ ...thStyle, position: 'sticky', top: 0, zIndex: 1 }}>Date</th>
+                  <th style={{ ...thStyle, position: 'sticky', top: 0, zIndex: 1 }}>Member</th>
+                  <th style={{ ...thStyle, position: 'sticky', top: 0, zIndex: 1 }}>Description</th>
+                  <th style={{ ...thStyle, position: 'sticky', top: 0, zIndex: 1 }}>Category</th>
+                  <th style={{ ...thStyle, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Charge</th>
+                  <th style={{ ...thStyle, textAlign: 'right', position: 'sticky', top: 0, zIndex: 1 }}>Payment</th>
+                  <th style={{ ...thStyle, width: '110px', position: 'sticky', top: 0, zIndex: 1 }}></th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((t, i) => {
+                {filteredRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ ...tdStyle, fontStyle: 'italic', color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
+                      No transactions match this filter.
+                    </td>
+                  </tr>
+                ) : filteredRows.map((t, i) => {
                   const isCredit  = t.type === 'credit';
                   const cm        = t.club_members;
                   const isEditing = editId === t.id;
@@ -561,7 +611,7 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                   if (isEditing && editForm) {
                     return (
                       <tr key={t.id}>
-                        <td colSpan={6} style={{ padding: 0, background: 'rgba(45,90,61,.03)', borderBottom: '2px solid rgba(45,90,61,.18)', borderTop: '1px solid rgba(45,90,61,.12)' }}>
+                        <td colSpan={7} style={{ padding: 0, background: 'rgba(45,90,61,.03)', borderBottom: '2px solid rgba(45,90,61,.18)', borderTop: '1px solid rgba(45,90,61,.12)' }}>
                           <div style={{ padding: '1.25rem 1.5rem' }}>
 
                             {/* Member label (readonly) */}
@@ -645,7 +695,12 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                         {fmtDate(t.date)}
                       </td>
                       <td style={tdStyle}>
-                        <div style={{ fontWeight: 500 }}>{cm?.full_name ?? t.member_id}</div>
+                        <a
+                          href={`/admin/members/${t.member_id}/statement`}
+                          style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 500, color: 'var(--green-deep)', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                        >
+                          {cm?.full_name ?? t.member_id}
+                        </a>
                         {cm?.membership_number && (
                           <div style={{ fontSize: '11px', color: 'rgba(45,90,61,.4)' }}>{cm.membership_number}</div>
                         )}
@@ -666,8 +721,11 @@ export function AdminTransactionsClient({ initialTransactions, members }: Props)
                           {CATEGORY_LABELS[t.category] ?? t.category}
                         </span>
                       </td>
-                      <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', color: isCredit ? '#2e7d32' : '#c0392b' }}>
-                        {isCredit ? `−${fmtGBP(t.amount)}` : fmtGBP(t.amount)}
+                      <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', color: '#c0392b' }}>
+                        {!isCredit ? fmtGBP(t.amount) : ''}
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', color: '#2e7d32' }}>
+                        {isCredit ? fmtGBP(t.amount) : ''}
                       </td>
                       <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>

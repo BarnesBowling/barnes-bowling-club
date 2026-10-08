@@ -22,8 +22,7 @@ export default async function AdminAccountsPage() {
       .from('member_ledger')
       .select('*, club_members(full_name, membership_number)')
       .order('date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(100),
+      .order('created_at', { ascending: false }),
   ]);
 
   return (
